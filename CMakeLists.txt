@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(Watson VERSION 0.78.3 LANGUAGES CXX C)
+project(Watson VERSION 0.78.3 LANGUAGES CXX)
 
 if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
@@ -63,8 +63,8 @@ if (APPLE)
 	set(APP_ICON ${CMAKE_SOURCE_DIR}/assets/app_icon.icns)
 endif (APPLE)
 
-file(GLOB_RECURSE SOURCES "src/*.c")
-file(GLOB_RECURSE HEADERS "src/*.h")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE HEADERS "src/*.hpp")
 
 set(RESOURCES
 	"assets/fonts"
