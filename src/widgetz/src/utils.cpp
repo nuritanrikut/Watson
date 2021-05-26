@@ -24,6 +24,8 @@ distribution.
 
 #include "../widgetz_internal.hpp"
 
+#include "../../macros.hpp"
+
 /*
 Title: Public
 
@@ -489,7 +491,6 @@ scale - Scaling factor. 0 results in a black color, 1 results in no change
 ALLEGRO_COLOR wz_scale_color( ALLEGRO_COLOR c, float scale )
 {
     ALLEGRO_COLOR ret;
-    //ret.a = c.a * scale;
     ret.a = c.a;
     ret.r = c.r * scale;
     ret.g = c.g * scale;
@@ -503,9 +504,6 @@ ALLEGRO_COLOR wz_scale_color( ALLEGRO_COLOR c, float scale )
 
     if( ret.b > 1 )
         ret.b = 1;
-
-    //if(ret.a > 1)
-    //	ret.a = 1;
 
     return ret;
 }

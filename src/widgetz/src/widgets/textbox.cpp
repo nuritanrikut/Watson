@@ -23,6 +23,8 @@ distribution.
 
 #include "../../widgetz_internal.hpp"
 
+#include "../../../macros.hpp"
+
 /*
 Title: Text Box
 

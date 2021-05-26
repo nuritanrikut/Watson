@@ -12,7 +12,7 @@ WZ_WIDGET *wz_get_widget_dir( WZ_WIDGET *wgt, int dir );
 ALLEGRO_COLOR wz_blend_colors( ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac );
 int wz_get_text_pos( ALLEGRO_FONT *font, ALLEGRO_USTR *text, float x );
 
-void wz_def_draw_box( struct WZ_THEME *theme, float x, float y, float width, float height, int style );
+void wz_def_draw_box( WZ_THEME *theme, float x, float y, float width, float height, int style );
 void wz_def_draw_button( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_USTR *text, int style );
 
 int wz_box_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event );

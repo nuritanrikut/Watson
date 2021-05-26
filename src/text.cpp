@@ -1,11 +1,7 @@
 #include "text.hpp"
 
-#define MAX_BF_BITMAPS 32
-#define BF_CODEPOINT_START 0x0860
-
-bool callback( int line_num, const char *line, int size, void *extra )
+bool callback( int line_num, const char * /*line*/, int /*size*/, void *extra )
 {
-    //(* (int *) extra) ++;// = *line;
     *(int *)extra = line_num;
     return 1;
 }
@@ -54,7 +50,7 @@ void draw_multiline_text_vbf( ALLEGRO_FONT *font,
     ALLEGRO_BITMAP *tmp[MAX_BF_BITMAPS], *bmp = NULL, *currbuf = al_get_target_bitmap();
     ALLEGRO_USTR *ustr = al_ustr_new( "" );
     ALLEGRO_FONT *newfont = NULL;
-    char *fmt_cpy = static_cast<char*>(malloc( strlen( format ) + 1 )), *pos;
+    char *fmt_cpy = static_cast<char *>( malloc( strlen( format ) + 1 ) ), *pos;
     const char *btag = format;
     int i, bn = 0;
     int texth = al_get_font_line_height( font );

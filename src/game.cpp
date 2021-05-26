@@ -1,1577 +1,1635 @@
 #include "game.hpp"
-//xxx todo: in clue creation - check that the clue includes one non-guessed block
-//xxx todo: add TOGETHER_FIRST_WITH_ONLY_ONE logic
-//xxx todo: improve composite clue checking (or what-ifs up to a given level)
-//xxx todo: check for difficulty counting the number of positive clue checks (even for repeated clues)
-//xxx todo: pass to binary and bitwise operations
 
-char *clue_description[NUMBER_OF_RELATIONS] = {
-    // Horizontal
-    [NEXT_TO] = "Neighbors",
-    [NOT_NEXT_TO] = "Middle not next to other",
-    [ONE_SIDE] = "Second to the right of first",
-    [CONSECUTIVE] = "Middle has other two one on each side",
-    [NOT_MIDDLE] = "First and third two away, middle not in between",
-    // Vertical
-    [TOGETHER_2] = "First and second on same column",
-    [TOGETHER_3] = "All three on same column",
-    [NOT_TOGETHER] = "Second not on same column as first",
-    [TOGETHER_NOT_MIDDLE] = "First and third on same column, second not",
-    [TOGETHER_FIRST_WITH_ONLY_ONE] = "Unused",
-    // Positional
-    [REVEAL] = "First on given column" };
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <ctime>
+#include <cstring>
 
-int DEFAULT_REL_PERCENT[NUMBER_OF_RELATIONS] = { [NEXT_TO] = 20,
-                                                 [NOT_NEXT_TO] = 5,
-                                                 [ONE_SIDE] = 2,
-                                                 [CONSECUTIVE] = 3,
-                                                 [NOT_MIDDLE] = 5,
-                                                 [TOGETHER_2] = 25,
-                                                 [TOGETHER_3] = 1,
-                                                 [NOT_TOGETHER] = 20,
-                                                 [TOGETHER_NOT_MIDDLE] = 1,
-                                                 [TOGETHER_FIRST_WITH_ONLY_ONE] = 5,
-                                                 [REVEAL] = 1 };
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_color.h>
+#include <allegro5/allegro_audio.h>
 
-int REL_PERCENT[NUMBER_OF_RELATIONS] = { [NEXT_TO] = -1 };
+#include <spdlog/spdlog.h>
 
-//xxx todo: fix rel_percent_max when rel_percent changes!!!
-int REL_PERCENT_MAX;
+#include "macros.hpp"
+#include "game_data.hpp"
+#include "sound.hpp"
+#include "tiled_block.hpp"
+#include "board.hpp"
+#include "allegro_stuff.hpp"
+#include "bitmaps.hpp"
+#include "dialog.hpp"
+#include "text.hpp"
+#include "gui.hpp"
 
-// Prototypes
-void get_clue( Game *game, int i, int j, int rel, Clue *clue );
-int filter_clues( Game *game );
-
-void create_puzzle( Game *game )
+Game::Game()
+    : set(),
+      nset(), // settings for new game
+      gui( set, nset ),
+      display( nullptr ),
+      noexit( true ),
+      restart( 0 ),
+      redraw( 0 ),
+      mouse_move( 0 ),
+      keypress( 0 ),
+      resizing( 0 ),
+      resize_update( 0 ),
+      mouse_button_down( 0 ),
+      win_gui( 0 ),
+      tb_down( nullptr ),
+      tb_up( nullptr ),
+      mouse_up_time( 0 ),
+      mouse_down_time( 0 ),
+      wait_for_double_click( 0 ),
+      hold_click_check( 0 ),
+      mbdown_x( 0 ),
+      mbdown_y( 0 ),
+      touch_down( 0 ),
+      resize_time( 0 ),
+      old_time( 0 ),
+      blink_time( 0 ),
+      play_time( 0 ),
+      swap_mouse_buttons( 0 ),
+      game_state( GAME_NULL ),
+      desktop_xsize( 0 ),
+      desktop_ysize( 0 ),
+      fullscreen( 0 ),
+      game_data(),
+      board(),
+      undo( nullptr )
 {
-    int i, j;
-    int permutation[8];
-
-    game->guessed = 0;
-    for( i = 0; i < 8; i++ )
-    {
-        permutation[i] = i;
-    }
-
-    for( i = 0; i < game->column_height; i++ )
-    {
-        shuffle( permutation, game->number_of_columns );
-        for( j = 0; j < game->number_of_columns; j++ )
-        {
-            game->puzzle[j][i] = permutation[j];
-            game->where[i][permutation[j]] = j;
-        }
-    }
-};
-
-int rand_int( int n )
-{ // make static
-    int limit = RAND_MAX - RAND_MAX % n;
-    int rnd;
-
-    do
-    {
-        rnd = rand();
-    } while( rnd >= limit );
-    return rnd % n;
-};
-
-static int rand_sign( void )
-{
-    return ( rand() % 2 == 0 ) ? -1 : 1;
-};
-
-void shuffle( int p[], int n )
-{
-    int i, j, tmp;
-
-    for( i = n - 1; i > 0; i-- )
-    {
-        j = rand_int( i + 1 );
-        tmp = p[j];
-        p[j] = p[i];
-        p[i] = tmp;
-    }
-};
-
-void remove_clue( Game *game, int i )
-{
-    // swap clue[i] with last clue, reduce clue_n
-    game->clue_n--;
-    game->clue[i] = game->clue[game->clue_n];
-};
-
-int check_this_clue( Game *game, Clue *clue )
-{
-    int i, m, ret = 0, hide_first;
-    int j0, k0, j1, k1, j2, k2;
-
-    j0 = clue->j[0];
-    k0 = clue->k[0];
-    j1 = clue->j[1];
-    k1 = clue->k[1];
-    j2 = clue->j[2];
-    k2 = clue->k[2];
-
-    ret = 0;
-    hide_first = 0;
-
-    switch( clue->rel )
-    {
-        case REVEAL:
-            if( game->guess[clue->i[0]][j0] < 0 )
-            {
-                guess_tile( game, clue->i[0], j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | clue->i[0] << 7 | 1 << 10;
-            }
-            break;
-        case ONE_SIDE:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( game->tile[i][j1][k1] )
-                {
-                    hide_tile_and_check( game, i, j1, k1 );
-                    ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                }
-                if( game->tile[i][j0][k0] )
-                    break;
-            }
-            for( i = game->number_of_columns - 1; i >= 0; i-- )
-            {
-                if( game->tile[i][j0][k0] )
-                {
-                    hide_tile_and_check( game, i, j0, k0 );
-                    ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                }
-                if( game->tile[i][j1][k1] )
-                    break;
-            }
-            break;
-
-        case TOGETHER_2:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( !game->tile[i][j0][k0] || !game->tile[i][j1][k1] )
-                {
-                    if( game->tile[i][j0][k0] )
-                    {
-                        hide_tile_and_check( game, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    }
-                    if( game->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
-            break;
-        case TOGETHER_3:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( !game->tile[i][j0][k0] || !game->tile[i][j1][k1] || !game->tile[i][j2][k2] )
-                { // if one exists but one doesn't
-                    if( game->tile[i][j0][k0] )
-                    {
-                        hide_tile_and_check( game, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    }
-                    if( game->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        ;
-                    }
-                    if( game->tile[i][j2][k2] )
-                    {
-                        hide_tile_and_check( game, i, j2, k2 );
-                        ret = 1 | k2 << 1 | j2 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
-            break;
-
-        case TOGETHER_NOT_MIDDLE:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( ( game->guess[i][j0] == k0 ) || ( game->guess[i][j2] == k2 ) )
-                {
-                    if( game->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                    }
-                }
-                if( ( !game->tile[i][j0][k0] ) || ( game->guess[i][j1] == k1 ) || !game->tile[i][j2][k2] )
-                {
-                    if( game->tile[i][j0][k0] )
-                    {
-                        hide_tile_and_check( game, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    }
-                    if( game->tile[i][j2][k2] )
-                    {
-                        hide_tile_and_check( game, i, j2, k2 );
-                        ret = 1 | k2 << 1 | j2 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
-            break;
-
-        case NOT_TOGETHER:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( ( game->guess[i][j0] == k0 ) && game->tile[i][j1][k1] )
-                {
-                    hide_tile_and_check( game, i, j1, k1 );
-                    ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                }
-                if( ( game->guess[i][j1] == k1 ) && game->tile[i][j0][k0] )
-                {
-                    hide_tile_and_check( game, i, j0, k0 );
-                    ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    ;
-                }
-            }
-            break;
-
-        case NEXT_TO:
-            if( !game->tile[1][j0][k0] && game->tile[0][j1][k1] )
-            {
-                hide_tile_and_check( game, 0, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | 0 << 7;
-            }
-            if( !game->tile[1][j1][k1] && game->tile[0][j0][k0] )
-            {
-                hide_tile_and_check( game, 0, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | 0 << 7;
-            }
-            if( !game->tile[game->number_of_columns - 2][j0][k0] && game->tile[game->number_of_columns - 1][j1][k1] )
-            {
-                hide_tile_and_check( game, game->number_of_columns - 1, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | ( game->number_of_columns - 1 ) << 7;
-            }
-            if( !game->tile[game->number_of_columns - 2][j1][k1] && game->tile[game->number_of_columns - 1][j0][k0] )
-            {
-                hide_tile_and_check( game, game->number_of_columns - 1, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | ( game->number_of_columns - 1 ) << 7;
-                ;
-            }
-
-            for( i = 1; i < game->number_of_columns - 1; i++ )
-            {
-                if( !game->tile[i - 1][j0][k0] && !game->tile[i + 1][j0][k0] )
-                {
-                    if( game->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        ;
-                    }
-                }
-                if( !game->tile[i - 1][j1][k1] && !game->tile[i + 1][j1][k1] )
-                {
-                    if( game->tile[i][j0][k0] )
-                    {
-                        hide_tile_and_check( game, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
-            break;
-
-        case NOT_NEXT_TO:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( i < game->number_of_columns - 1 )
-                {
-                    if( ( game->guess[i][j0] == k0 ) && game->tile[i + 1][j1][k1] )
-                    {
-                        hide_tile_and_check( game, i + 1, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | ( i + 1 ) << 7;
-                        ;
-                    }
-
-                    if( ( game->guess[i][j1] == k1 ) && game->tile[i + 1][j0][k0] )
-                    {
-                        hide_tile_and_check( game, i + 1, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | ( i + 1 ) << 7;
-                        ;
-                    }
-                }
-                if( i > 0 )
-                {
-                    if( ( game->guess[i][j0] == k0 ) && game->tile[i - 1][j1][k1] )
-                    {
-                        hide_tile_and_check( game, i - 1, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | ( i - 1 ) << 7;
-                        ;
-                    }
-
-                    if( ( game->guess[i][j1] == k1 ) && game->tile[i - 1][j0][k0] )
-                    {
-                        hide_tile_and_check( game, i - 1, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | ( i - 1 ) << 7;
-                        ;
-                    }
-                }
-            }
-            break;
-
-        case CONSECUTIVE:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                for( m = 0; m < 2; m++ )
-                {
-                    if( game->tile[i][j0][k0] )
-                    {
-                        if( ( i < game->number_of_columns - 2 ) && ( i < 2 ) )
-                        {
-                            if( ( !game->tile[i + 1][j1][k1] ) || ( !game->tile[i + 2][j2][k2] ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-                        if( ( i >= 2 ) && ( i >= game->number_of_columns - 2 ) )
-                        {
-                            if( ( !game->tile[i - 2][j2][k2] ) || ( !game->tile[i - 1][j1][k1] ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-
-                        if( ( i >= 2 ) && ( i < game->number_of_columns - 2 ) )
-                        {
-                            if( ( ( !game->tile[i + 1][j1][k1] ) || ( !game->tile[i + 2][j2][k2] ) )
-                                && ( ( !game->tile[i - 2][j2][k2] ) || ( !game->tile[i - 1][j1][k1] ) ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-                        if( hide_first )
-                        {
-                            hide_first = 0;
-                            hide_tile_and_check( game, i, j0, k0 );
-                            ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                        }
-                    }
-                    SWAP( j0, j2 );
-                    SWAP( k0, k2 );
-                }
-
-                if( game->tile[i][j1][k1] )
-                {
-                    if( ( i == 0 ) || ( i == game->number_of_columns - 1 ) )
-                    {
-                        hide_first = 1;
-                    }
-                    else
-                    {
-                        if( ( ( !game->tile[i - 1][j0][k0] ) && !( game->tile[i + 1][j0][k0] ) )
-                            || ( ( !game->tile[i - 1][j2][k2] ) && !( game->tile[i + 1][j2][k2] ) ) )
-                        { // error here! incorrect check!
-                            hide_first = 1;
-                        }
-                    }
-                    if( hide_first )
-                    {
-                        hide_first = 0;
-                        hide_tile_and_check( game, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
-            break;
-
-        case NOT_MIDDLE:
-            for( i = 0; i < game->number_of_columns; i++ )
-            { // apply mask
-                for( m = 0; m < 2; m++ )
-                {
-                    if( game->tile[i][j0][k0] )
-                    {
-                        if( ( i < game->number_of_columns - 2 ) && ( i < 2 ) )
-                        {
-                            if( ( game->guess[i + 1][j1] == k1 ) || ( !game->tile[i + 2][j2][k2] ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-                        if( ( i >= 2 ) && ( i >= game->number_of_columns - 2 ) )
-                        {
-                            if( ( game->guess[i - 1][j1] == k1 ) || ( !game->tile[i - 2][j2][k2] ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-
-                        if( ( i >= 2 ) && ( i < game->number_of_columns - 2 ) )
-                        {
-                            if( ( ( game->guess[i + 1][j1] == k1 ) || ( !game->tile[i + 2][j2][k2] ) )
-                                && ( ( !game->tile[i - 2][j2][k2] ) || ( game->guess[i - 1][j1] == k1 ) ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-                        if( hide_first )
-                        {
-                            hide_first = 0;
-                            ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                            ;
-                            hide_tile_and_check( game, i, j0, k0 );
-                        }
-                    }
-                    SWAP( j0, j2 );
-                    SWAP( k0, k2 );
-                }
-                if( ( i >= 1 ) && ( i <= game->number_of_columns - 2 ) )
-                {
-                    if( ( ( game->guess[i - 1][j0] == k0 ) && ( game->guess[i + 1][j2] == k2 ) )
-                        || ( ( game->guess[i - 1][j2] == k2 ) && ( game->guess[i + 1][j0] == k0 ) ) )
-                    {
-                        if( game->tile[i][j1][k1] )
-                        {
-                            hide_tile_and_check( game, i, j1, k1 );
-                            ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        }
-                    }
-                }
-            }
-            break;
-        case TOGETHER_FIRST_WITH_ONLY_ONE:
-            //xxx todo: check this
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( !game->tile[i][j1][k1] && !game->tile[i][j2][k2] )
-                {
-                    if( game->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    }
-                }
-                else if( game->guess[i][j1] == k1 )
-                {
-                    if( game->tile[i][j2][k2] )
-                    {
-                        hide_tile_and_check( game, i, j2, k2 );
-                        ret = 1 | k2 << 1 | j2 << 4 | i << 7;
-                    }
-                }
-                else if( game->guess[i][j2] == k2 )
-                {
-                    if( game->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                    }
-                }
-            }
-            break;
-        default:
-            break;
-    }
-    return ret;
 }
 
-int check_solution( Game *game )
+bool Game::init()
 {
-    int i, j;
-    for( i = 0; i < game->number_of_columns; i++ )
-        for( j = 0; j < game->column_height; j++ )
-            if( !game->tile[i][j][game->puzzle[i][j]] )
-                return 0;
+    // seed random number generator. comment out for debug
+    srand( (unsigned int)time( NULL ) );
 
-    return 1;
-}
+    SPDLOG_DEBUG( "Watson v" PRE_VERSION " - " PRE_DATE " has started." );
+    if( init_allegro() )
+        return false;
 
-// save a backup copy of game data if type==0, restore the data if type==1
-void switch_game( Game *game, int type )
-{
-    static int tile[8][8][8];
-    static int guess[8][8];
-    static int guessed;
+#ifndef _WIN32
+    // use anti-aliasing if available (seems to cause problems in windows)
+    al_set_new_display_option( ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST );
+    al_set_new_display_option( ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST );
+#endif
 
-    if( type == 0 )
+    fullscreen = 0;
+
+    // use vsync if available
+    al_set_new_display_option( ALLEGRO_VSYNC, 1, ALLEGRO_SUGGEST );
+
+    get_desktop_resolution( 0, &desktop_xsize, &desktop_ysize );
+
+    if( fullscreen )
     {
-        memcpy( &tile, &game->tile, sizeof( tile ) );
-        memcpy( &guess, &game->guess, sizeof( guess ) );
-        guessed = game->guessed;
+        al_set_new_display_flags( ALLEGRO_FULLSCREEN | ALLEGRO_OPENGL );
+        display = al_create_display( desktop_xsize, desktop_ysize );
     }
-    SWAP( game->tile, tile );
-    SWAP( game->guess, guess );
-    SWAP( game->guessed, guessed );
-}
-
-// returns: clue number | 1<<8 | k<<9 | j<<12 | k<<15
-// where i,j,k is a tile that can be ruled out with this clue
-int get_hint( Game *game )
-{ // still not working properly
-    int i, ret = 0, tro = 0;
-
-    switch_game( game, 0 ); // store game
-    for( i = 0; i < game->clue_n; i++ )
-    {
-        if( ( tro = check_this_clue( game, &game->clue[i] ) ) )
-        {
-            ret = i;
-            break;
-        }
-    }
-    switch_game( game, 1 ); // restore game
-    return ret | tro << 8;
-}
-int advanced_check_clues( Game *game )
-{
-    int info, m;
-    int i, j, k;
-
-    for( i = 0; i < game->number_of_columns; i++ )
-    {
-        for( j = 0; j < game->column_height; j++ )
-        {
-            for( k = 0; k < game->number_of_columns; k++ )
-            {
-                if( game->tile[i][j][k] )
-                {
-                    switch_game( game, 0 ); // save state
-                    guess_tile( game, i, j, k );
-                    do
-                    { // repeat until no more information remains in clues
-                        info = 0;
-                        for( m = 0; m < game->clue_n; m++ )
-                        {
-                            if( check_this_clue( game, &game->clue[m] ) )
-                            {
-                                info = 1;
-                            }
-                        }
-                    } while( info );
-                    if( !check_panel_consistency( game ) )
-                    {
-                        switch_game( game, 1 ); // restore
-                        hide_tile_and_check( game, i, j, k );
-                        return 1;
-                    }
-                    else
-                    {
-                        switch_game( game, 1 ); // restore state
-                    }
-                }
-            }
-        }
-    }
-
-    return 0;
-}
-
-int check_clues( Game *game )
-{
-    // check whether the clues add new info (within reason -- this can be tuned)
-    // for now it does not combine clues (analyze each one separately)
-    // if so, discover the info in game->tile
-    // return 1 if new info was found, 0 if not
-    int info, m, ret;
-
-    ret = 0;
-    do
-    { // repeat until no more information remains in clues
-        info = 0;
-        for( m = 0; m < game->clue_n; m++ )
-        {
-            if( check_this_clue( game, &game->clue[m] ) )
-            {
-                ret = 1;
-                info = 1;
-            }
-        }
-        if( !info && game->advanced )
-        { // check "what if" depth 1
-            while( advanced_check_clues( game ) )
-            {
-                info = 1;
-            }
-        }
-    } while( info );
-
-    return ret;
-}
-
-void create_game_with_clues( Game *game )
-{
-    int i;
-
-    init_game( game );
-    create_puzzle( game );
-
-    game->clue_n = 0;
-    for( i = 0; i < 100; i++ )
-    { // xxx todo add a check to see if we have found solution or not after 100
-        game->clue_n++;
-        do
-        {
-            get_clue( game,
-                      rand_int( game->number_of_columns ),
-                      rand_int( game->column_height ),
-                      -1,
-                      &game->clue[game->clue_n - 1] );
-        } while( !check_this_clue( game, &game->clue[game->clue_n - 1] ) ); // should be while !check_clues?
-        check_clues( game );
-        if( game->guessed == game->number_of_columns * game->column_height )
-            break;
-    }
-
-    if( !check_solution( game ) ) // debug
-        fprintf( stderr, "ERROR: SOLUTION DOESN'T MATCH CLUES\n" );
-
-    filter_clues( game );
-    fprintf(
-        stdout, "%dx%d game created with %d clues.\n", game->number_of_columns, game->column_height, game->clue_n );
-
-    //clean guesses and tiles
-    init_game( game );
-
-    // reveal reveal clues and remove them from clue list
-    for( i = 0; i < game->clue_n; i++ )
-    {
-        if( game->clue[i].rel == REVEAL )
-        {
-            guess_tile( game, game->clue[i].i[0], game->clue[i].j[0], game->clue[i].k[0] );
-            remove_clue( game, i );
-            i--;
-        }
-    }
-
-    // mark clues unhidden
-    for( i = 0; i < game->clue_n; i++ )
-        game->clue[i].hidden = 0;
-}
-
-// checks if clue is compatible with current panel (not necessarily with solution)
-int is_clue_compatible( Game *game, Clue *clue )
-{
-    int i, j, ret = 0;
-    int j0, k0, j1, k1, j2, k2;
-
-    j0 = clue->j[0];
-    k0 = clue->k[0];
-    j1 = clue->j[1];
-    k1 = clue->k[1];
-    j2 = clue->j[2];
-    k2 = clue->k[2];
-
-    ret = 0;
-
-    switch( clue->rel )
-    {
-        case REVEAL:
-            if( game->tile[clue->i[0]][j0][k0] )
-                ret = 1;
-            break;
-        case ONE_SIDE:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( game->tile[i][j1][k1] && ( ret == -1 ) )
-                {
-                    ret = 1;
-                    break; //loop
-                }
-
-                if( game->tile[i][j0][k0] )
-                {
-                    ret = -1;
-                }
-            }
-            if( ret != 1 )
-                ret = 0;
-            break; //switch
-
-        case TOGETHER_2:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( game->tile[i][j0][k0] && game->tile[i][j1][k1] )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
-            break;
-
-        case TOGETHER_3:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( game->tile[i][j0][k0] && game->tile[i][j1][k1] && game->tile[i][j2][k2] )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
-            break;
-
-        case TOGETHER_NOT_MIDDLE:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( ( game->tile[i][j0][k0] ) && ( game->guess[i][j1] != k1 ) && game->tile[i][j2][k2] )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
-            break;
-
-        case NOT_TOGETHER:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( ( game->guess[i][j0] != k0 ) && game->tile[i][j1][k1] )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
-            break;
-
-        case NEXT_TO:
-            for( i = 0; i < game->number_of_columns - 1; i++ )
-            {
-                if( ( game->tile[i][j0][k0] && game->tile[i + 1][j1][k1] )
-                    || ( game->tile[i][j1][k1] && game->tile[i + 1][j0][k0] ) )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
-            break;
-
-        case NOT_NEXT_TO:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                for( j = 0; j < game->number_of_columns; j++ )
-                {
-                    if( game->tile[i][j0][k0] && game->tile[j][j1][k1] )
-                    {
-                        if( ( i - j != 1 ) && ( j - i ) != 1 )
-                        {
-                            ret = 1;
-                            break;
-                        }
-                    }
-                }
-                if( ret )
-                    break;
-            }
-            break;
-
-        case CONSECUTIVE:
-            for( i = 0; i < game->number_of_columns - 2; i++ )
-            {
-                if( ( game->tile[i][j0][k0] && game->tile[i + 1][j1][k1] && game->tile[i + 2][j2][k2] )
-                    || ( game->tile[i][j2][k2] && game->tile[i + 1][j1][k1] && game->tile[i + 2][j0][k0] ) )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
-            break;
-
-        case NOT_MIDDLE:
-            for( i = 0; i < game->number_of_columns - 2; i++ )
-            {
-                if( ( game->tile[i][j0][k0] && ( game->guess[i + 1][j1] != k1 ) && game->tile[i + 2][j2][k2] )
-                    || ( game->tile[i][j2][k2] && ( game->guess[i + 1][j1] != k1 ) && game->tile[i + 2][j0][k0] ) )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
-            break;
-        case TOGETHER_FIRST_WITH_ONLY_ONE:
-            //xxx todo: check this:
-            for( i = 0; i < game->number_of_columns; i++ )
-            {
-                if( game->tile[i][j0][k0] && ( game->tile[i][j1][k1] || game->tile[i][j2][k2] )
-                    && !( ( game->guess[i][j1] == k1 ) && ( game->guess[i][j2] == k2 ) ) )
-                    ret = 1;
-            }
-
-            break;
-        default:
-            break;
-    }
-    return ret;
-}
-
-int check_panel_consistency( Game *game )
-{
-    int m;
-    for( m = 0; m < game->clue_n; m++ )
-    {
-        if( !is_clue_compatible( game, &game->clue[m] ) )
-            return 0;
-    }
-    return 1;
-}
-
-int check_panel_correctness( Game *game )
-{
-    int i, j;
-    for( i = 0; i < game->number_of_columns; i++ )
-    {
-        for( j = 0; j < game->column_height; j++ )
-        {
-            if( !game->tile[i][j][game->puzzle[i][j]] )
-            {
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
-
-int check_clues_for_solution( Game *game )
-{
-    int m, info;
-
-    init_game( game );
-
-    do
-    { // repeat until no more information remains in clues
-        info = 0;
-        for( m = 0; m < game->clue_n; m++ )
-        {
-            if( check_this_clue( game, &game->clue[m] ) )
-            {
-                info = 1;
-            }
-        }
-        if( !info && game->advanced )
-        { // check "what if" depth 1
-            while( advanced_check_clues( game ) )
-            {
-                info = 1;
-            }
-        }
-    } while( info );
-
-    if( game->guessed == game->number_of_columns * game->column_height )
-        return 1;
     else
-        return 0;
+    {
+        al_set_new_display_flags( ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | ALLEGRO_OPENGL );
+        display = al_create_display( 800, 600 );
+    }
+
+    if( !display )
+    {
+        SPDLOG_ERROR( "Failed to create display!" );
+        return false;
+    }
+    else
+    {
+        SPDLOG_DEBUG( "Display created." );
+    }
+
+    al_set_target_backbuffer( display );
+    al_clear_to_color( BLACK_COLOR );
+
+    al_set_window_title( display, "Watson" );
+    al_init_user_event_source( &gui.user_event_src );
+
+    if( !load_game_f() )
+    {
+        set.saved = 1;
+        SPDLOG_DEBUG( "Saved game found." );
+    }
+    else
+    {
+        SPDLOG_DEBUG( "No saved game found." );
+    }
+
+    return true;
 }
 
-int filter_clues( Game *game )
+bool Game::run()
 {
-    int m, i, j, ret = 0;
-    // revert clue order
-    //    for(i=0; i<game->clue_n/2; i++){
-    //        SWAP(game->clue[i], game->clue[game->clue_n-i-1]);
-    //    }
-    //
-    for( m = 0; m < game->clue_n; m++ )
-    { // test reduction
-        SWAP( game->clue[game->clue_n - 1], game->clue[m] );
-        init_game( game );
-        game->clue_n--;
-        if( check_clues_for_solution( game ) )
+    game_state = GAME_INTRO;
+
+    gui.init_guis( 0, 0, al_get_display_width( display ), al_get_display_height( display ) );
+
+    while( noexit )
+    {
+        game_loop();
+    }
+
+    return true;
+}
+
+bool Game::cleanup()
+{
+    destroy_everything();
+    al_destroy_display( display );
+    al_destroy_event_queue( gui.event_queue );
+
+    return true;
+}
+
+void Game::draw_stuff()
+{
+    //xxx todo: there's still the issue that the timer and some fonts appear broken in some android devices
+    // ex: samsung galaxy s2
+    // probably has to do with memory->video bitmaps
+    int x, y;
+
+    al_clear_to_color( BLACK_COLOR );
+
+    if( game_state == GAME_INTRO )
+    {
+        draw_title();
+    }
+    else
+    {
+        draw_TiledBlock( &board.all, 0, 0 );
+
+        if( board.rule_out )
         {
-            ret = 1;
+            if( board.blink )
+            {
+                highlight_TiledBlock( board.rule_out );
+                highlight_TiledBlock( board.highlight );
+            }
         }
         else
         {
-            game->clue_n++;
+            if( board.highlight )
+                highlight_TiledBlock( board.highlight );
         }
-    }
 
-    // join clues if possible
-    //xxx todo: check this
-    for( i = game->clue_n - 1; i > 0; i-- )
-    {
-        if( game->clue[i].rel == TOGETHER_2 || game->clue[i].rel == NOT_TOGETHER )
+        if( board.dragging )
+        { // redraw tile to get it on top
+            get_TiledBlock_offset( board.dragging->parent, &x, &y );
+            draw_TiledBlock( board.dragging, x, y );
+        }
+
+        if( board.zoom )
         {
-            for( j = i - 1; j >= 0; j-- )
-            {
-                if( ( game->clue[j].rel == TOGETHER_2 || game->clue[j].rel == NOT_TOGETHER )
-                    && game->clue[i].rel == TOGETHER_2 )
-                {
-                    if( ( ( game->clue[j].j[0] == game->clue[i].j[0] ) && ( game->clue[j].k[0] == game->clue[i].k[0] ) )
-                        || ( ( game->clue[j].j[1] == game->clue[i].j[0] )
-                             && ( game->clue[j].k[1] == game->clue[i].k[0] ) ) )
-                    {
-                        game->clue[j].j[2] = game->clue[i].j[1];
-                        game->clue[j].k[2] = game->clue[i].k[1];
-                        game->clue[j].rel = game->clue[j].rel == TOGETHER_2 ? TOGETHER_3 : TOGETHER_NOT_MIDDLE;
-                        remove_clue( game, i );
-                        break;
-                    }
-                    else if( game->clue[j].rel == TOGETHER_2 )
-                    {
-                        if( ( ( game->clue[j].j[0] == game->clue[i].j[1] )
-                              && ( game->clue[j].k[0] == game->clue[i].k[1] ) )
-                            || ( ( game->clue[j].j[1] == game->clue[i].j[1] )
-                                 && ( game->clue[j].k[1] == game->clue[i].k[1] ) ) )
-                        {
-                            game->clue[j].j[2] = game->clue[i].j[0];
-                            game->clue[j].k[2] = game->clue[i].k[0];
-                            game->clue[j].rel = TOGETHER_3;
-                            remove_clue( game, i );
-                            break;
-                        }
-                    }
-                }
-                else if( game->clue[j].rel == TOGETHER_2 && game->clue[i].rel == NOT_TOGETHER )
-                {
-                    if( ( game->clue[j].j[0] == game->clue[i].j[0] ) && ( game->clue[j].k[0] == game->clue[i].k[0] ) )
-                    {
-                        game->clue[i].j[2] = game->clue[j].j[1];
-                        game->clue[i].k[2] = game->clue[j].k[1];
-                        game->clue[i].rel = TOGETHER_NOT_MIDDLE;
-                        game->clue[j] = game->clue[i];
-                        remove_clue( game, i );
-                        break;
-                    }
-                    else if( ( game->clue[j].j[1] == game->clue[i].j[0] )
-                             && ( game->clue[j].k[1] == game->clue[i].k[0] ) )
-                    {
-                        game->clue[i].j[2] = game->clue[j].j[0];
-                        game->clue[i].k[2] = game->clue[j].k[0];
-                        game->clue[i].rel = TOGETHER_NOT_MIDDLE;
-                        game->clue[j] = game->clue[i];
-                        remove_clue( game, i );
-                        break;
-                    }
-                }
-            }
+            al_draw_filled_rectangle( 0, 0, board.max_xsize, board.max_ysize, al_premul_rgba( 0, 0, 0, 150 ) );
+            al_use_transform( &board.zoom_transform );
+            // draw dark background in case of transparent elements
+            al_draw_filled_rectangle( board.zoom->x,
+                                      board.zoom->y,
+                                      board.zoom->x + board.zoom->width,
+                                      board.zoom->y + board.zoom->height,
+                                      board.zoom->parent->bg_color );
+            draw_TiledBlock( board.zoom, 0, 0 );
+            al_use_transform( &board.identity_transform );
         }
     }
 
-    //sort clues
-    for( i = 0; i < game->clue_n; i++ )
-    {
-        switch( game->clue[i].rel )
-        {
-            case TOGETHER_2:
-                if( game->clue[i].j[0] > game->clue[i].j[1] )
-                {
-                    SWAP( game->clue[i].i[0], game->clue[i].i[1] );
-                    SWAP( game->clue[i].j[0], game->clue[i].j[1] );
-                    SWAP( game->clue[i].k[0], game->clue[i].k[1] );
-                }
-                break;
-            case TOGETHER_3:
-                if( game->clue[i].j[0] > game->clue[i].j[2] )
-                {
-                    SWAP( game->clue[i].i[0], game->clue[i].i[2] );
-                    SWAP( game->clue[i].j[0], game->clue[i].j[2] );
-                    SWAP( game->clue[i].k[0], game->clue[i].k[2] );
-                }
-                if( game->clue[i].j[0] > game->clue[i].j[1] )
-                {
-                    SWAP( game->clue[i].i[0], game->clue[i].i[1] );
-                    SWAP( game->clue[i].j[0], game->clue[i].j[1] );
-                    SWAP( game->clue[i].k[0], game->clue[i].k[1] );
-                }
-                if( game->clue[i].j[1] > game->clue[i].j[2] )
-                {
-                    SWAP( game->clue[i].i[1], game->clue[i].i[2] );
-                    SWAP( game->clue[i].j[1], game->clue[i].j[2] );
-                    SWAP( game->clue[i].k[1], game->clue[i].k[2] );
-                }
-
-                break;
-            case TOGETHER_NOT_MIDDLE:
-                if( game->clue[i].j[0] > game->clue[i].j[2] )
-                {
-                    SWAP( game->clue[i].i[0], game->clue[i].i[2] );
-                    SWAP( game->clue[i].j[0], game->clue[i].j[2] );
-                    SWAP( game->clue[i].k[0], game->clue[i].k[2] );
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    //simplify clues that are redundant with one another
-    //    for(i=0;i<game->clue_n;i++){
-    //        for(j=i+1; j<game->clue_n+j++){
-    //            if((game->clue[i].rel = TOGETHER_2) && (game->clue[j].rel =)
-    //        }
-    //    }
-
-    return ret;
+    gui.draw_guis();
 }
 
-int get_random_tile( Game *game, int i, int *j, int *k )
-{ // random item in column i
-    int m, jj, kk = 0;
-
-    m = 0;
-    for( jj = 0; jj < game->column_height; jj++ )
-        for( kk = 0; kk < game->number_of_columns; kk++ )
-            if( game->guess[i][jj] < 0 )
-                if( game->tile[i][jj][kk] )
-                    m++;
-
-    if( m == 0 )
-        return 0;
-    m = rand_int( m );
-    for( jj = 0; jj < game->column_height; jj++ )
+void Game::handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mclick )
+{
+    if( game_state == GAME_INTRO )
     {
-        for( kk = 0; kk < game->number_of_columns; kk++ )
+        game_state = GAME_PLAYING;
+        return;
+    }
+
+    if( swap_mouse_buttons )
+    {
+        if( mclick == 1 )
+            mclick = 2;
+        else if( mclick == 2 )
+            mclick = 1;
+    }
+
+    board.clear_info_panel(); // remove text if there was any
+
+    if( board.highlight )
+    {
+        board.highlight = NULL;
+    }
+
+    if( board.rule_out )
+    {
+        board.rule_out = NULL;
+    }
+
+    gui.emit_event( EVENT_REDRAW );
+
+    if( !tiled_block )
+        return;
+
+    if( game_state == GAME_OVER )
+    {
+        show_info_text( &board, al_ustr_new( "Press R to start a new puzzle." ) );
+    }
+
+    if( set.fat_fingers )
+    {
+        if( !board.zoom || ( tiled_block->parent != board.zoom ) )
         {
-            if( game->tile[i][jj][kk] && ( game->guess[i][jj] < 0 ) )
+            if( ( ( tiled_block->parent ) && ( tiled_block->parent->type == TB_TIME_PANEL ) )
+                || ( tiled_block->type == TB_TIME_PANEL ) )
             {
-                m--;
-                if( m < 0 )
-                    break;
+                zoom_TB( &board.time_panel );
+                return;
+            }
+            else if( tiled_block->type == TB_PANEL_TILE )
+            {
+                zoom_TB( board.zoom = tiled_block->parent );
+                return;
             }
         }
-        if( m < 0 )
-            break;
     }
-    *j = jj;
-    *k = kk;
-    return 1;
-};
 
-int random_relation( void )
-{
-    int m, s, i;
-    int rel;
+    if( board.zoom )
+        board.zoom = NULL;
 
-    rel = -1;
-    m = rand_int( REL_PERCENT_MAX );
-    s = 0;
-    for( i = 0; i < NUMBER_OF_RELATIONS; i++ )
-    {
-        s += REL_PERCENT[i];
-        if( m < s )
-        {
-            rel = i;
-            break;
-        }
-    }
-    if( rel < 0 )
-        return random_relation();
-    return rel;
-};
-
-// get a new solved item at column ii
-void get_random_item_col( Game *game, int i, int *j, int *k )
-{
-    *j = rand_int( game->column_height );
-    *k = game->puzzle[i][*j];
-};
-
-// get a new solved item not in rows ej1 or ej2
-void get_random_item_col_except( Game *game, int i, int *j, int *k, int ej1, int ej2 )
-{
-    int m = ( ej1 == ej2 ) ? 1 : 2;
-    *j = rand_int( game->column_height - m );
-
-    for( m = 0; m < 2; m++ ) // skip ej1 and ej2
-        if( ( *j == ej1 ) || ( *j == ej2 ) )
-            *j = ( *j + 1 ) % game->column_height;
-    *k = game->puzzle[i][*j];
-};
-
-void get_clue( Game *game, int i, int j, int rel, Clue *clue )
-{
-    int k, ii, jj, kk, jjj, kkk, m, s;
-
-    if( rel < 0 )
-    {
-        do
-        { // to avoid problem when game->number_of_columns is too small in the NOT_MIDDLE case
-            rel = random_relation();
-        } while( ( rel == NOT_MIDDLE ) && ( i < 2 ) && ( i > game->number_of_columns - 3 ) );
-    }
-    clue->rel = (RELATION)rel;
-
-    k = game->puzzle[i][j];
-
-    switch( rel )
-    {
-        case CONSECUTIVE:
-            s = rand_int( 3 );
-            // check that i-s, i-s+1, i-s+2 are all in range
-            if( i - s + 2 > game->number_of_columns - 1 )
-                s += ( i - s + 2 ) - ( game->number_of_columns - 1 );
-            else if( i - s < 0 )
-                s = i;
-
-            for( m = 0; m < 3; m++ )
+    int i, j, k;
+    switch( tiled_block->type )
+    { // which board component was clicked
+        case TB_PANEL_TILE:
+            if( game_state != GAME_PLAYING )
+                break;
+            k = tiled_block->index;
+            j = tiled_block->parent->index;
+            i = tiled_block->parent->parent->index;
+            if( mclick == 1 )
             {
-                ii = i - s + m;
-                if( ii != i )
-                    get_random_item_col(
-                        game, ii, &jj, &kk ); // get a new solved item at column ii (solve if necessary)
+                save_state();
+                if( game_data.tile[i][j][k] )
+                { // hide tile
+                    hide_tile_and_check( &game_data, i, j, k );
+                    if( !set.sound_mute )
+                        play_sound( SOUND_HIDE_TILE );
+                }
+            }
+            else if( ( mclick == 2 ) || ( mclick == 4 ) )
+            { // hold or right click
+                if( game_data.tile[i][j][k] )
+                {
+                    save_state();
+                    guess_tile( &game_data, i, j, k );
+                    if( !set.sound_mute )
+                        play_sound( SOUND_GUESS_TILE );
+                }
                 else
-                {
-                    jj = j;
-                    kk = k;
+                { // tile was hidden, unhide
+                    if( !is_guessed( &game_data, j, k ) )
+                    {
+                        game_data.tile[i][j][k] = 1;
+                        if( !set.sound_mute )
+                            play_sound( SOUND_UNHIDE_TILE );
+                    }
                 }
-                clue->i[m] = ii;
-                clue->j[m] = jj;
-                clue->k[m] = kk;
             }
-            if( rand_int( 2 ) )
-            { // random swap of outer elements
-                SWAP( clue->i[0], clue->i[2] );
-                SWAP( clue->j[0], clue->j[2] );
-                SWAP( clue->k[0], clue->k[2] );
-            }
+            update_board();
             break;
-        case ONE_SIDE:
-            s = rand_int( game->number_of_columns - 1 );
-            ii = ( i + s + 1 ) % game->number_of_columns;
-            get_random_item_col( game, ii, &jj, &kk );
-            if( ii < i )
-            {
-                SWAP( i, ii );
-                SWAP( j, jj );
-                SWAP( k, kk );
-            }
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = ii;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = ii;
-            clue->j[2] = jj;
-            clue->k[2] = kk; // filler
-            break;
-        case NEXT_TO:
-            ii = i + rand_sign();
-            if( ii >= game->number_of_columns )
-                ii = i - 1;
-            else if( ii < 0 )
-                ii = i + 1;
-            get_random_item_col( game, ii, &jj, &kk );
-            if( rand_int( 2 ) )
-            {
-                SWAP( i, ii );
-                SWAP( j, jj );
-                SWAP( k, kk );
-            }
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = ii;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = i;
-            clue->j[2] = j;
-            clue->k[2] = k;
-            break;
-        case NOT_NEXT_TO:
-            if( i >= game->number_of_columns - 1 )
-                s = -1;
-            else if( i <= 0 )
-                s = +1;
-            else
-                s = rand_sign();
-            ii = i + s;
-            get_random_item_col( game, ii, &jj, &kk );
-            kk = ( kk + 1 ) % game->number_of_columns; // get an item that is NOT the neighbor one
-            // avoid same item
-            if( ( kk == game->puzzle[i][j] ) && ( j == jj ) )
-                kk = ( kk + 1 ) % game->number_of_columns;
-            if( ( i - s >= 0 ) && ( i - s < game->number_of_columns ) )
-                if( game->puzzle[i - s][jj] == kk ) // avoid the neighbor from the other side
-                    kk = ( kk + 1 ) % game->number_of_columns;
 
-            if( rand_int( 2 ) )
+        case TB_PANEL_BLOCK:
+            if( game_state != GAME_PLAYING )
+                break;
+            if( ( ( mclick == 2 ) || ( mclick == 4 ) )
+                && ( game_data.guess[tiled_block->parent->index][tiled_block->index] >= 0 ) )
             {
-                SWAP( i, ii );
-                SWAP( j, jj );
-                SWAP( k, kk );
+                // we found guessed block - unguess it
+                save_state();
+                unguess_tile( &game_data, tiled_block->parent->index, tiled_block->index );
+                if( !set.sound_mute )
+                    play_sound( SOUND_UNHIDE_TILE );
             }
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = ii;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = i;
-            clue->j[2] = j;
-            clue->k[2] = k;
+            update_board();
             break;
-        case NOT_MIDDLE:
-            if( i > game->number_of_columns - 3 )
-                s = -1;
-            else if( i < 2 )
-                s = 1;
-            else
-                s = rand_sign();
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            ii = i + s;
-            get_random_item_col( game, ii, &jj, &kk );
-            clue->i[1] = ii;
-            clue->j[1] = jj;
-            clue->k[1] = ( kk + 1 + rand_int( game->number_of_columns - 1 ) ) % game->number_of_columns;
-            ii = i + 2 * s;
-            get_random_item_col( game, ii, &jj, &kk );
-            clue->i[2] = ii;
-            clue->j[2] = jj;
-            clue->k[2] = kk;
-            if( rand_int( 2 ) )
-            { // random swap of outer elements
-                SWAP( clue->i[0], clue->i[2] );
-                SWAP( clue->j[0], clue->j[2] );
-                SWAP( clue->k[0], clue->k[2] );
-            }
-            break;
-        case TOGETHER_2:
-            get_random_item_col_except( game, i, &jj, &kk, j, j ); // except row j (and j)
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = i;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = i;
-            clue->j[2] = jj;
-            clue->k[2] = kk; // filler
-            break;
-        case TOGETHER_3:
-            get_random_item_col_except( game, i, &jj, &kk, j, j );    // except row j (and j)
-            get_random_item_col_except( game, i, &jjj, &kkk, j, jj ); // except row j and jj
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = i;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = i;
-            clue->j[2] = jjj;
-            clue->k[2] = kkk;
-            break;
-        case NOT_TOGETHER:
-            get_random_item_col_except( game, i, &jj, &kk, j, j ); // except row j (and j)
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = i;
-            clue->j[1] = jj;
-            clue->k[1] = ( kk + 1 + rand_int( game->number_of_columns - 1 ) ) % game->number_of_columns;
-            clue->i[2] = i;
-            clue->j[2] = j;
-            clue->k[2] = k; // filler
-            break;
-        case TOGETHER_NOT_MIDDLE:
-            get_random_item_col_except( game, i, &jj, &kk, j, j );    // except row j (and j)
-            get_random_item_col_except( game, i, &jjj, &kkk, j, jj ); // except row j and jj
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = i;
-            clue->j[1] = jj;
-            clue->k[1] = ( kk + 1 + rand_int( game->number_of_columns - 1 ) ) % game->number_of_columns;
-            clue->i[2] = i;
-            clue->j[2] = jjj;
-            clue->k[2] = kkk;
-            break;
-        case REVEAL:
-            ii = rand_int( game->number_of_columns );
-            get_random_item_col( game, ii, &jj, &kk );
-            for( m = 0; m < 3; m++ )
+
+        case TB_HCLUE_TILE:
+        case TB_VCLUE_TILE:
+            if( game_state != GAME_PLAYING )
+                break;
+            // check that this is a real clue
+            if( tiled_block->bmp && ( tiled_block->index >= 0 ) )
             {
-                clue->i[m] = ii;
-                clue->j[m] = jj;
-                clue->k[m] = kk;
+                if( ( mclick == 2 ) || ( mclick == 3 ) )
+                { // toggle hide-show clue on double or right click
+                    SWITCH( tiled_block->hidden );
+                    SWITCH( game_data.clue[tiled_block->index].hidden );
+                    if( !set.sound_mute )
+                        play_sound( SOUND_HIDE_TILE );
+                }
+                else if( mclick == 1 )
+                { // explain clue in info panel
+                    if( !tiled_block->hidden )
+                    {
+                        if( !set.sound_mute )
+                            play_sound( SOUND_CLICK );
+                        explain_clue( &game_data.clue[tiled_block->index] );
+                        board.highlight = tiled_block; // highlight clue
+                    }
+                }
+                else if( mclick == 4 )
+                { // hold-click
+                    mouse_grab( mx, my );
+                }
             }
             break;
-        case TOGETHER_FIRST_WITH_ONLY_ONE:
-            // xxx todo: check this
-            get_random_item_col_except( game, i, &jj, &kk, j, j );    // except row j (and j)
-            get_random_item_col_except( game, i, &jjj, &kkk, j, jj ); // except row j and jj
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            // same as together_not_middle but sorted (so we don't know which is middle)
-            if( jj < jjj )
-            {
-                clue->i[1] = i;
-                clue->j[1] = jj;
-                clue->k[1] = ( kk + 1 + rand_int( game->number_of_columns - 1 ) ) % game->number_of_columns;
-                clue->i[2] = i;
-                clue->j[2] = jjj;
-                clue->k[2] = kkk;
-            }
-            else
-            {
-                clue->i[1] = i;
-                clue->j[1] = jjj;
-                clue->k[1] = kkk;
-                clue->i[2] = i;
-                clue->j[2] = jj;
-                clue->k[2] = ( kk + 1 + rand_int( game->number_of_columns - 1 ) ) % game->number_of_columns;
-            }
+
+        case TB_BUTTON_CLUE: // time panel
+            if( game_state != GAME_PLAYING )
+                break;
+            if( !set.sound_mute )
+                play_sound( SOUND_CLICK );
+            show_hint();
+            break;
+        case TB_BUTTON_SETTINGS:
+            if( !set.sound_mute )
+                play_sound( SOUND_CLICK );
+            gui.show_settings();
+            break;
+
+        case TB_BUTTON_HELP:
+            if( !set.sound_mute )
+                play_sound( SOUND_CLICK );
+            gui.show_help();
+            break;
+
+        case TB_BUTTON_UNDO:
+            execute_undo();
+            update_board();
+            break;
+
+        case TB_BUTTON_TILES:
+            gui.emit_event( EVENT_SWITCH_TILES );
+            break;
+
+        default:
             break;
     }
-};
-
-void reset_rel_params( void )
-{
-    int i;
-
-    for( i = 0; i < NUMBER_OF_RELATIONS; i++ )
-        REL_PERCENT[i] = DEFAULT_REL_PERCENT[i];
 }
 
-void init_game( Game *game )
+void Game::update_board()
 {
     int i, j, k;
 
-    // if REL_PERCENT is not set, use defaults
-    if( REL_PERCENT[NEXT_TO] == -1 )
-        reset_rel_params();
-
-    // initialize REL_PERCENT_MAX (total sum) for random relation creation
-    REL_PERCENT_MAX = 0;
-    for( i = 0; i < NUMBER_OF_RELATIONS; i++ )
+    for( i = 0; i < game_data.number_of_columns; i++ )
     {
-        REL_PERCENT_MAX += REL_PERCENT[i];
-    }
-
-    for( i = 0; i < game->number_of_columns; i++ )
-    {
-        for( j = 0; j < game->column_height; j++ )
+        auto column = board.panel.sub[i];
+        for( j = 0; j < game_data.column_height; j++ )
         {
-            game->guess[i][j] = -1;
-            game->tile_col[j][i] = -1;
-            for( k = 0; k < game->number_of_columns; k++ )
+            auto block = column->sub[j];
+
+            if( game_data.guess[i][j] >= 0 )
             {
-                game->tile[i][j][k] = 1;
+                block->number_of_subblocks = 0;
+                block->bmp = &( board.guess_bmp[j][game_data.guess[i][j]] );
+            }
+            else
+            {
+                block->number_of_subblocks = board.number_of_columns;
+                block->bmp = NULL;
+                for( k = 0; k < game_data.number_of_columns; k++ )
+                {
+                    if( game_data.tile[i][j][k] )
+                    {
+                        block->sub[k]->hidden = 0;
+                    }
+                    else
+                    {
+                        block->sub[k]->hidden = 1;
+                    }
+                }
             }
         }
     }
-    game->guessed = 0;
 }
 
-// return -1 if there is more than one tile left in block
-// last tile number otherwise
-int last_tile_in_block( Game *game, int i, int j )
+void Game::mouse_grab( int mx, int my )
 {
-    int k, m = -1, count = 0;
+    gui.emit_event( EVENT_REDRAW );
+    board.dragging = get_TiledBlock_at( mx, my );
+    if( board.dragging && board.dragging->bmp )
+    {
+        if( ( board.dragging->type == TB_HCLUE_TILE ) || ( board.dragging->type == TB_VCLUE_TILE ) )
+        {
+            board.dragging_origin_x = board.dragging->x;
+            board.dragging_origin_y = board.dragging->y;
+            board.dragging_relative_position_of_grabbing_x = board.dragging->x - mx + 5;
+            board.dragging_relative_position_of_grabbing_y = board.dragging->y - my + 5;
+            board.dragging->x = mx + board.dragging_relative_position_of_grabbing_x;
+            board.dragging->y = my + board.dragging_relative_position_of_grabbing_y;
+            return;
+        }
+    }
 
-    if( game->guess[i][j] >= 0 )
+    board.dragging = NULL;
+}
+
+void Game::mouse_drop( int mx, int my )
+{
+    TiledBlock *tiled_block;
+
+    gui.emit_event( EVENT_REDRAW );
+    if( !board.dragging )
+        return;
+    board.dragging->x = board.dragging_origin_x;
+    board.dragging->y = board.dragging_origin_y;
+
+    tiled_block = get_TiledBlock_at( mx, my );
+    if( tiled_block && ( tiled_block->type == board.dragging->type ) )
+    {
+        swap_clues( board.dragging, tiled_block );
+        if( board.highlight == board.dragging )
+            board.highlight = tiled_block;
+        else if( board.highlight == tiled_block )
+            board.highlight = board.dragging;
+        if( !set.sound_mute )
+            play_sound( SOUND_HIDE_TILE );
+    }
+    board.dragging = NULL;
+    board.clear_info_panel();
+}
+
+TiledBlock *Game::get_TiledBlock_at( int x, int y )
+{
+    float xx = x, yy = y;
+    TiledBlock *tiled_block;
+
+    if( board.zoom )
+    {
+        al_transform_coordinates( &board.zoom_transform_inv, &xx, &yy );
+        tiled_block = get_TiledBlock( board.zoom, xx, yy );
+        if( tiled_block && ( tiled_block->parent == board.zoom ) )
+            return tiled_block;
+        else
+            return NULL;
+    }
+
+    return get_TiledBlock( &board.all, x, y );
+}
+
+void Game::show_hint()
+{
+    if( game_state != GAME_PLAYING )
+        return;
+    if( !check_panel_correctness( &game_data ) )
+    {
+        show_info_text( &board, al_ustr_new( "Something is wrong. An item was ruled out incorrectly." ) );
+        return;
+    }
+
+    int i = get_hint( &game_data );
+    if( !i )
+    {
+        show_info_text( &board, al_ustr_new( "No hint available." ) );
+        return;
+    }
+
+    board.highlight = board.clue_tiledblock[i & 255];
+    board.rule_out = board.panel.sub[( i >> 15 ) & 7]->sub[( i >> 12 ) & 7]->sub[( i >> 9 ) & 7];
+
+    char *b0 = symbol_char[game_data.clue[i & 255].j[0]][game_data.clue[i & 255].k[0]];
+    char *b1 = symbol_char[game_data.clue[i & 255].j[1]][game_data.clue[i & 255].k[1]];
+    char *b2 = symbol_char[game_data.clue[i & 255].j[2]][game_data.clue[i & 255].k[2]];
+    char *b3 = symbol_char[( i >> 12 ) & 7][( i >> 9 ) & 7];
+
+    show_info_text( &board, get_hint_info_text( game_data.clue[i & 255].rel, b0, b1, b2, b3 ) );
+}
+
+void Game::update_guessed()
+{
+    int i, j, k, count, val;
+
+    game_data.guessed = 0;
+
+    for( i = 0; i < game_data.number_of_columns; i++ )
+    {
+        for( j = 0; j < game_data.column_height; j++ )
+        {
+            count = 0;
+            val = -1;
+            for( k = 0; k < game_data.number_of_columns; k++ )
+            {
+                if( game_data.tile[i][j][k] )
+                {
+                    count++;
+                    val = k;
+                    if( count > 1 )
+                        break;
+                }
+            }
+            if( count == 1 )
+            {
+                game_data.guess[i][j] = val;
+                game_data.guessed++;
+            }
+            else
+                game_data.guess[i][j] = -1;
+        }
+    }
+}
+
+void Game::execute_undo()
+{
+    PanelState *undo_old;
+
+    if( !undo )
+        return;
+    memcpy( &game_data.tile, &undo->tile, sizeof( game_data.tile ) );
+    undo_old = undo->parent;
+    free( undo );
+    undo = undo_old;
+    if( !set.sound_mute )
+        play_sound( SOUND_UNHIDE_TILE );
+    update_guessed();
+}
+
+void Game::save_state()
+{
+    PanelState *foo = new PanelState();
+    foo->parent = undo;
+    undo = foo;
+    memcpy( &undo->tile, &game_data.tile, sizeof( undo->tile ) );
+}
+
+void Game::destroy_undo()
+{
+    PanelState *foo;
+
+    while( undo )
+    {
+        foo = undo->parent;
+        free( undo );
+        undo = foo;
+    }
+}
+
+void Game::switch_solve_puzzle()
+{
+    std::swap( game_data.guess, game_data.puzzle );
+    update_board();
+}
+
+int Game::save_game_f()
+{
+    ALLEGRO_PATH *path = al_get_standard_path( ALLEGRO_USER_DATA_PATH );
+
+    SPDLOG_DEBUG( "ALLEGRO_USER_DATA_PATH = %s", al_path_cstr( path, '/' ) );
+
+    if( !al_make_directory( al_path_cstr( path, '/' ) ) )
+    {
+        SPDLOG_ERROR( "could not open or create path %s.\n", al_path_cstr( path, '/' ) );
         return -1;
-
-    for( k = 0; k < game->number_of_columns; k++ )
-    { // find if there is only 1 tile left
-        if( game->tile[i][j][k] )
-        {
-            m = k;
-            count++;
-        }
-        if( count > 1 )
-            return -1;
-    }
-    return m;
-};
-
-// return -1 if there is more than one block with given tile
-// last block number (column) otherwise
-int last_tile_in_row( Game *game, int j, int k )
-{
-    int i, m = -1, count = 0;
-
-    for( i = 0; i < game->number_of_columns; i++ )
-    { // find if there is only 1 tile left
-        if( game->guess[i][j] == k )
-            return -1;
-        if( game->tile[i][j][k] )
-        {
-            m = i;
-            count++;
-        }
-        if( count > 1 )
-            return -1;
-    }
-    return m;
-};
-
-// check any obviously guessable clues in row
-int check_row( Game *game, int j )
-{
-    int i, m, k;
-
-    for( i = 0; i < game->number_of_columns; i++ )
-    { // find if there is only 1 tile left
-        m = last_tile_in_block( game, i, j );
-        if( m >= 0 )
-        {
-            guess_tile( game, i, j, m );
-            return 1;
-        }
     }
 
-    for( k = 0; k < game->number_of_columns; k++ )
+    al_set_path_filename( path, "Watson.sav" );
+
+    ALLEGRO_FILE *fp = al_fopen( al_path_cstr( path, '/' ), "wb" );
+    if( !fp )
     {
-        m = last_tile_in_row( game, j, k ); // check if there is only 1 left of this tile
-        if( m >= 0 )
-        {
-            guess_tile( game, m, j, k );
-            return 1;
-        }
+        SPDLOG_ERROR( "Couldn't open %s for writing.\n", (char *)al_path_cstr( path, '/' ) );
+        al_destroy_path( path );
+        return -1;
     }
+    al_fwrite( fp, &game_data.number_of_columns, sizeof( game_data.number_of_columns ) );
+    al_fwrite( fp, &game_data.column_height, sizeof( game_data.column_height ) );
+    al_fwrite( fp, &game_data.puzzle, sizeof( game_data.puzzle ) );
+    al_fwrite( fp, &game_data.clue_n, sizeof( game_data.clue_n ) );
+    al_fwrite( fp, &game_data.clue, sizeof( game_data.clue ) );
+    al_fwrite( fp, &game_data.tile, sizeof( game_data.tile ) );
+    al_fwrite( fp, &game_data.time, sizeof( game_data.time ) );
+    al_fclose( fp );
+
+    SPDLOG_DEBUG( "Saved game at %s.", al_path_cstr( path, '/' ) );
+    al_destroy_path( path );
     return 0;
-};
-
-void hide_tile_and_check( Game *game, int i, int j, int k )
-{
-    game->tile[i][j][k] = 0;
-    check_row( game, j );
-};
-
-void guess_tile( Game *game, int i, int j, int k )
-{
-    int m;
-
-    game->guess[i][j] = k;
-    game->guessed++;
-    for( m = 0; m < game->number_of_columns; m++ )
-        if( m != k )
-            game->tile[i][j][m] = 0; // hide all tiles from this block
-
-    for( m = 0; m < game->number_of_columns; m++ )
-    {
-        if( m != i )
-            game->tile[m][j][k] = 0; // hide this tile in all blocks
-    }
-
-    check_row( game, j );
-};
-
-int is_guessed( Game *game, int j, int k )
-{
-    int i;
-
-    for( i = 0; i < game->number_of_columns; i++ )
-    {
-        if( game->guess[i][j] == k )
-            return 1;
-    }
-
-    return 0;
-};
-
-void unguess_tile( Game *game, int i, int j )
-{
-    int m, k;
-
-    k = game->guess[i][j];
-    game->guess[i][j] = -1;
-    game->guessed--;
-
-    for( m = 0; m < game->number_of_columns; m++ )
-    {
-        if( !is_guessed( game, j, m ) )
-            game->tile[i][j][m] = 1;
-        if( game->guess[m][j] < 0 )
-            game->tile[m][j][k] = 1;
-    }
-};
-
-int is_vclue( RELATION rel )
-{
-    return ( ( rel == TOGETHER_2 ) || ( rel == TOGETHER_3 ) || ( rel == NOT_TOGETHER ) || ( rel == TOGETHER_NOT_MIDDLE )
-             || ( rel == TOGETHER_FIRST_WITH_ONLY_ONE ) );
 }
 
-// only for debug puprposes. Check if clue is compatible with solution
-int is_clue_valid( Game *game, Clue *clue )
+int Game::load_game_f()
 {
-    int ret = 0;
-    int i0, i1, i2, j0, k0, j1, k1, j2, k2;
+    ALLEGRO_PATH *path = al_get_standard_path( ALLEGRO_USER_DATA_PATH );
 
-    j0 = clue->j[0];
-    k0 = clue->k[0];
-    j1 = clue->j[1];
-    k1 = clue->k[1];
-    j2 = clue->j[2];
-    k2 = clue->k[2];
-    i0 = game->where[j0][k0];
-    i1 = game->where[j1][k1];
-    i2 = game->where[j2][k2];
+    al_set_path_filename( path, "Watson.sav" );
 
-    ret = 1;
+    ALLEGRO_FILE *fp = al_fopen( al_path_cstr( path, '/' ), "rb" );
+    if( !fp )
+    {
+        SPDLOG_ERROR( "Couldn't open %s for reading.", (char *)al_path_cstr( path, '/' ) );
+        al_destroy_path( path );
+        return -1;
+    }
+
+    if( al_fread( fp, &game_data.number_of_columns, sizeof( game_data.number_of_columns ) )
+        != sizeof( game_data.number_of_columns ) )
+    {
+        al_destroy_path( path );
+        SPDLOG_ERROR( "Error reading %s.", (char *)al_path_cstr( path, '/' ) );
+        return -1;
+    }
+
+    al_fread( fp, &game_data.column_height, sizeof( game_data.column_height ) );
+    al_fread( fp, &game_data.puzzle, sizeof( game_data.puzzle ) );
+    al_fread( fp, &game_data.clue_n, sizeof( game_data.clue_n ) );
+    al_fread( fp, &game_data.clue, sizeof( game_data.clue ) );
+    al_fread( fp, &game_data.tile, sizeof( game_data.tile ) );
+    al_fread( fp, &game_data.time, sizeof( game_data.time ) );
+    al_fclose( fp );
+
+    update_guessed();
+
+    al_destroy_path( path );
+
+    return 0;
+}
+
+ALLEGRO_USTR *Game::get_hint_info_text( RELATION relation, char *b0, char *b1, char *b2, char *b3 )
+{
+    switch( relation )
+    {
+        case CONSECUTIVE:
+            return al_ustr_newf(
+                "The column of %s is between %s and %s, so we can rule out %s from here.", b1, b0, b2, b3 );
+            break;
+        case NEXT_TO:
+            return al_ustr_newf(
+                "The columns of %s and %s are next to each other, so we can rule out %s from here.", b0, b1, b3 );
+            break;
+        case NOT_NEXT_TO:
+            return al_ustr_newf(
+                "The column of %s is NOT next to the column of %s, so we can rule out %s from here.", b0, b1, b3 );
+            break;
+        case NOT_MIDDLE:
+            return al_ustr_newf( "There is exactly one column between %s and %s, and %s is NOT in that "
+                                 "column, so we can rule out %s from here.",
+                                 b0,
+                                 b2,
+                                 b1,
+                                 b3 );
+            break;
+        case ONE_SIDE:
+            return al_ustr_newf(
+                "The column of %s is strictly to the left of %s, so we can rule out %s from here.", b0, b1, b3 );
+            break;
+        case TOGETHER_2:
+            return al_ustr_newf( "%s and %s are on the same column, so we can rule out %s from here.", b0, b1, b3 );
+            break;
+        case TOGETHER_3:
+            return al_ustr_newf(
+                "%s, %s and %s are on the same column, so we can rule out %s from here.", b0, b1, b2, b3 );
+            break;
+        case NOT_TOGETHER:
+            return al_ustr_newf( "%s and %s are NOT on the same column, so we can rule out %s from here.", b0, b1, b3 );
+            break;
+        case TOGETHER_NOT_MIDDLE:
+            return al_ustr_newf(
+                "%s and %s are on the same column, and %s is NOT in that column, so we can rule out %s from here.",
+                b0,
+                b2,
+                b1,
+                b3 );
+            break;
+        case TOGETHER_FIRST_WITH_ONLY_ONE:
+            return al_ustr_newf(
+                "%s is on the same column of either %s or %s, but NOT BOTH, so we can rule out %s from here.",
+                b0,
+                b1,
+                b2,
+                b3 );
+            break;
+
+        default:
+            return nullptr;
+            break;
+    }
+}
+void Game::explain_clue( Clue *clue )
+{
+    char *b0, *b1, *b2;
+    b0 = symbol_char[clue->j[0]][clue->k[0]];
+    b1 = symbol_char[clue->j[1]][clue->k[1]];
+    b2 = symbol_char[clue->j[2]][clue->k[2]];
 
     switch( clue->rel )
     {
-        case ONE_SIDE:
-            if( game->where[j0][k0] >= game->where[j1][k1] )
-                ret = 0;
-            break;
-        case TOGETHER_2:
-            if( game->where[j0][k0] != game->where[j1][k1] )
-                ret = 0;
-            break;
-        case TOGETHER_3:
-            if( ( game->where[j0][k0] != game->where[j1][k1] ) || ( game->where[j0][k0] != game->where[j2][k2] ) )
-                ret = 0;
-            break;
-        case TOGETHER_NOT_MIDDLE:
-            if( ( game->where[j0][k0] == game->where[j1][k1] ) || ( game->where[j0][k0] != game->where[j2][k2] ) )
-                ret = 0;
-            break;
-        case NOT_TOGETHER:
-            if( ( game->where[j0][k0] == game->where[j1][k1] ) || ( game->where[j1][k1] == game->where[j2][k2] ) )
-                ret = 0;
+        case CONSECUTIVE:
+            show_info_text(
+                &board,
+                al_ustr_newf(
+                    "The column of %s is between %s and %s, but they could be on either side.", b1, b0, b2 ) );
             break;
         case NEXT_TO:
-            if( ( game->where[j0][k0] - game->where[j1][k1] != 1 )
-                && ( game->where[j0][k0] - game->where[j1][k1] != -1 ) )
-                ret = 0;
-            if( ( game->where[j2][k2] - game->where[j1][k1] != 1 )
-                && ( game->where[j2][k2] - game->where[j1][k1] != -1 ) )
-                ret = 0;
+            show_info_text(
+                &board,
+                al_ustr_newf(
+                    "The columns of %s and %s are next to each other, but they could be on either side.", b0, b1 ) );
             break;
-
         case NOT_NEXT_TO:
-            if( ( game->where[j0][k0] - game->where[j1][k1] == 1 )
-                || ( game->where[j0][k0] - game->where[j1][k1] == -1 ) )
-                ret = 0;
-            if( ( game->where[j2][k2] - game->where[j1][k1] == 1 )
-                || ( game->where[j2][k2] - game->where[j1][k1] == -1 ) )
-                ret = 0;
+            show_info_text( &board, al_ustr_newf( "The column of %s is NOT next to the column of %s.", b0, b1 ) );
             break;
-
-        case CONSECUTIVE:
-            if( !( ( i1 == i0 + 1 ) && ( i2 == i0 + 2 ) ) && !( ( i1 == i2 + 1 ) && ( i0 = i2 + 2 ) ) )
-                ret = 0;
-            break;
-
         case NOT_MIDDLE:
-            if( i0 - i2 == 2 )
-            {
-                if( i0 - i1 == 1 )
-                    ret = 0;
-            }
-            else if( i2 - i0 == 2 )
-            {
-                if( i1 - i0 == 1 )
-                    ret = 0;
-            }
-            else
-                ret = 0;
+            show_info_text(
+                &board,
+                al_ustr_newf(
+                    "There is exactly one column between %s and %s, and %s is NOT in that column.", b0, b2, b1 ) );
             break;
-
+        case ONE_SIDE:
+            show_info_text( &board, al_ustr_newf( "The column of %s is strictly to the left of %s.", b0, b1 ) );
+            break;
+        case TOGETHER_2:
+            show_info_text( &board, al_ustr_newf( "%s and %s are on the same column.", b0, b1 ) );
+            break;
+        case TOGETHER_3:
+            show_info_text( &board, al_ustr_newf( "%s, %s and %s are on the same column.", b0, b1, b2 ) );
+            break;
+        case NOT_TOGETHER:
+            show_info_text( &board, al_ustr_newf( "%s and %s are NOT on the same column.", b0, b1 ) );
+            break;
+        case TOGETHER_NOT_MIDDLE:
+            show_info_text(
+                &board, al_ustr_newf( "%s and %s are on the same column, and %s is NOT in that column.", b0, b2, b1 ) );
+            break;
         case TOGETHER_FIRST_WITH_ONLY_ONE:
-            if( ( game->where[j0][k0] == game->where[j1][k1] ) == ( game->where[j0][k0] == game->where[j2][k2] ) )
-                ret = 0;
+            show_info_text( &board,
+                            al_ustr_newf( "%s is on the same column of either %s or %s, but NOT BOTH.", b0, b1, b2 ) );
             break;
         default:
             break;
     }
-    return ret;
+}
+
+void Game::swap_clues( TiledBlock *c1, TiledBlock *c2 )
+{
+    std::swap( c1->bmp, c2->bmp );
+
+    if( c1->index >= 0 )
+        board.clue_tiledblock[c1->index] = c2;
+    if( c2->index >= 0 )
+        board.clue_tiledblock[c2->index] = c1;
+    std::swap( c1->index, c2->index );
+    std::swap( c1->hidden, c2->hidden );
 };
+
+void Game::zoom_TB( TiledBlock *tiled_block )
+{
+    float c = 2.5;
+    int x, y, dw = al_get_display_width( al_get_current_display() ),
+              dh = al_get_display_height( al_get_current_display() );
+    int tr_x, tr_y;
+
+    if( !tiled_block )
+        return;
+    get_TiledBlock_offset( tiled_block, &x, &y );
+
+    tr_x = -( c - 1 ) * ( x + tiled_block->width / 2 );
+    if( c * x + tr_x < 0 )
+        tr_x = -c * x;
+    else if( c * ( x + tiled_block->width ) + tr_x > dw )
+        tr_x = dw - c * ( x + tiled_block->width );
+
+    tr_y = -( c - 1 ) * ( y + tiled_block->height / 2 );
+    if( c * y + tr_y < 0 )
+        tr_y = -c * y;
+    else if( c * ( y + tiled_block->height ) + tr_y > dh )
+        tr_y = dh - c * ( y + tiled_block->height );
+
+    al_identity_transform( &board.identity_transform );
+    al_identity_transform( &board.zoom_transform );
+    al_build_transform( &board.zoom_transform, tr_x, tr_y, c, c, 0 );
+    if( tiled_block->parent )
+        get_TiledBlock_offset( tiled_block->parent, &x, &y );
+    al_translate_transform( &board.zoom_transform, c * x, c * y );
+    board.zoom_transform_inv = board.zoom_transform;
+    al_invert_transform( &board.zoom_transform_inv );
+    board.zoom = tiled_block;
+    if( !set.sound_mute )
+        play_sound( SOUND_CLICK );
+}
+
+void Game::halt( ALLEGRO_EVENT_QUEUE *queue )
+{
+    ALLEGRO_DISPLAY *disp = al_get_current_display();
+    al_acknowledge_drawing_halt( disp );
+    SPDLOG_DEBUG( "ACKNOWLEDGED HALT" );
+    ALLEGRO_EVENT ev;
+    al_set_default_voice( NULL ); // otherwise it keeps streaming when the app is on background
+    do
+    {
+        al_wait_for_event( queue, &ev );
+    } while( ev.type != ALLEGRO_EVENT_DISPLAY_RESUME_DRAWING );
+    al_restore_default_mixer();
+    al_acknowledge_drawing_resume( disp );
+    SPDLOG_DEBUG( "ACKNOWLEDGED RESUME" );
+    al_rest( 0.01 );
+    al_flush_event_queue( queue );
+}
+
+void Game::animate_win()
+{
+    int k, ii, jj, kk = 0;
+    int x, y;
+    ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
+    ALLEGRO_BITMAP *bmp = al_clone_bitmap( currbuf );
+    ALLEGRO_EVENT ev;
+    int arr[64];
+
+    al_set_target_bitmap( bmp );
+    al_clear_to_color( BLACK_COLOR );
+    draw_stuff();
+    al_set_target_bitmap( currbuf );
+
+    for( k = 0; k < board.number_of_columns * board.column_height; k++ )
+    {
+        arr[k] = k;
+    }
+
+    shuffle( arr, board.number_of_columns * board.column_height );
+
+    for( k = 0; k < board.number_of_columns * board.column_height; k++ )
+    {
+        al_clear_to_color( BLACK_COLOR );
+        al_draw_bitmap( bmp, 0, 0, 0 );
+        for( kk = 0; kk <= k; kk++ )
+        {
+            ii = arr[kk] / board.column_height;
+            jj = arr[kk] % board.column_height;
+            get_TiledBlock_offset( board.panel.sub[ii]->sub[jj], &x, &y );
+            al_draw_filled_rectangle( x,
+                                      y,
+                                      x + board.panel.sub[ii]->sub[jj]->width,
+                                      y + board.panel.sub[ii]->sub[jj]->height,
+                                      al_premul_rgba( 0, 0, 0, 200 ) );
+        }
+        al_flip_display();
+        if( !set.sound_mute )
+        {
+            play_sound( SOUND_STONE );
+        }
+        while( al_get_next_event( gui.event_queue, &ev ) )
+        {
+            if( ev.type == ALLEGRO_EVENT_DISPLAY_HALT_DRAWING )
+            {
+                halt( gui.event_queue );
+                al_acknowledge_resize( al_get_current_display() );
+                return;
+                // should do something else here
+            }
+        }
+        al_rest( std::max( 0.15, 0.6 * ( 1 - sqrt( (float)k / ( board.column_height * board.number_of_columns ) ) ) ) );
+    }
+}
+
+void Game::draw_generating_puzzle( Settings *settings )
+{
+    ALLEGRO_USTR *msg;
+    if( game_state == GAME_INTRO )
+        return;
+
+    if( !settings->advanced )
+        msg = al_ustr_newf(
+            "Generating %d x %d puzzle, please wait...", settings->number_of_columns, settings->column_height );
+    else
+        msg = al_ustr_newf( "Generating %d x %d advanced puzzle, please wait (this could take a while)...",
+                            settings->number_of_columns,
+                            settings->column_height );
+
+    gui.draw_text_gui( msg );
+}
+
+int Game::switch_tiles()
+{
+    // cycle through tyle types (font, bitmap, classic)
+    SPDLOG_DEBUG( "Swtiching tiles." );
+    al_set_target_backbuffer( display );
+    destroy_all_bitmaps( &board );
+    board.type_of_tiles = ( board.type_of_tiles + 1 ) % 3;
+    if( init_bitmaps( &board ) )
+    { // cycle through all three options
+        board.type_of_tiles = ( board.type_of_tiles + 1 ) % 3;
+        if( init_bitmaps( &board ) )
+            board.type_of_tiles = ( board.type_of_tiles + 1 ) % 3;
+        if( init_bitmaps( &board ) )
+        {
+            SPDLOG_ERROR( "Error switching tiles." );
+            exit( -1 );
+        }
+    }
+    board.max_xsize = al_get_display_width( display );
+    board.max_ysize = al_get_display_height( display );
+    board.create_board( &game_data, 0 );
+    al_set_target_backbuffer( display );
+    update_board();
+    al_convert_bitmaps();
+    al_clear_to_color( BLACK_COLOR );
+    al_flip_display();
+    return 0;
+}
+
+void Game::win_or_lose()
+{
+    if( check_solution( &game_data ) )
+    {
+        game_state = GAME_OVER;
+        show_info_text( &board, al_ustr_new( "Elementary, watson!" ) );
+        animate_win();
+        if( !set.sound_mute )
+            play_sound( SOUND_WIN );
+    }
+    else
+    {
+        show_info_text( &board, al_ustr_new( "Something is wrong. Try again, go to settings to start a new puzzle." ) );
+        if( !set.sound_mute )
+            play_sound( SOUND_WRONG );
+        execute_undo();
+        update_board();
+        gui.emit_event( EVENT_REDRAW );
+    }
+}
+
+void Game::destroy_everything()
+{
+    board.destroy_board();
+    destroy_sound();
+    destroy_undo();
+    gui.remove_all_guis();
+    gui.destroy_base_gui();
+}
+
+int Game::toggle_fullscreen()
+{
+    ALLEGRO_DISPLAY *newdisp;
+    float display_factor;
+
+    get_desktop_resolution( 0, &desktop_xsize, &desktop_ysize );
+
+    if( !fullscreen )
+    {
+        SPDLOG_DEBUG( "Entering full screen mode." );
+        al_set_new_display_flags( ALLEGRO_FULLSCREEN | ALLEGRO_OPENGL );
+        display_factor = 1;
+    }
+    else
+    {
+        SPDLOG_DEBUG( "Exiting full screen mode." );
+        al_set_new_display_flags( ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | ALLEGRO_OPENGL );
+        display_factor = 0.9;
+    }
+
+    newdisp = al_create_display( desktop_xsize * display_factor, desktop_ysize * display_factor );
+    if( !newdisp )
+    {
+        fprintf( stderr, "Error switching fullscreen mode.\n" );
+        return 0;
+    }
+
+    SWITCH( fullscreen );
+    board.destroy_board();
+
+    al_destroy_display( display );
+
+    display = newdisp;
+    al_set_target_backbuffer( display );
+    board.max_xsize = desktop_xsize * display_factor;
+    board.max_ysize = desktop_ysize * display_factor;
+
+    board.create_board( &game_data, fullscreen ? 2 : 1 );
+    al_set_target_backbuffer( display );
+
+    if( !fullscreen )
+    {
+        al_resize_display( display, board.xsize, board.ysize );
+        al_set_window_position( display, ( desktop_xsize - board.xsize ) / 2, ( desktop_ysize - board.ysize ) / 2 );
+        al_acknowledge_resize( display );
+        al_set_target_backbuffer( display );
+    }
+
+    update_board();
+    al_convert_bitmaps();
+    return 1;
+}
+
+void Game::handle_allegro_event_display_close()
+{
+    gui.emit_event( EVENT_EXIT );
+}
+
+void Game::handle_allegro_event_display_resize()
+{
+    if( board.dragging )
+        mouse_drop( -1, -1 );
+    if( fullscreen )
+        return;
+    al_acknowledge_resize( display );
+    resizing = 1;
+    resize_time = al_get_time();
+}
+
+void Game::handle_allegro_event_redraw()
+{
+    redraw = 1;
+}
+
+void Game::handle_event_switch_tiles()
+{
+    switch_tiles();
+    al_flush_event_queue( gui.event_queue );
+    redraw = 1;
+}
+
+void Game::handle_event_restart()
+{
+    restart = 1;
+    set = nset;
+}
+
+void Game::handle_event_exit()
+{
+    noexit = 0;
+}
+
+void Game::handle_event_save()
+{
+    if( game_state != GAME_PLAYING )
+        return;
+    if( !save_game_f() )
+    {
+        show_info_text( &board, al_ustr_new( "Game saved" ) );
+        set.saved = 1;
+    }
+    else
+    {
+        show_info_text( &board, al_ustr_new( "Error: game could not be saved." ) );
+    }
+}
+
+bool Game::handle_event_load()
+{
+    if( load_game_f() )
+    {
+        show_info_text( &board, al_ustr_new( "Error game could not be loaded." ) );
+        return false;
+    }
+    else
+    {
+        restart = 2;
+        return true;
+        //goto RESTART;
+    }
+}
+
+void Game::handle_event_settings()
+{
+    gui.show_settings();
+    gui.emit_event( EVENT_REDRAW );
+}
+
+void Game::handle_allegro_event_touch_begin( ALLEGRO_EVENT &ev )
+{
+    if( gui.gui_n )
+        return;
+    ev.mouse.x = ev.touch.x;
+    ev.mouse.y = ev.touch.y;
+    ev.mouse.button = 1;
+    touch_down = 1;
+}
+
+void Game::handle_allegro_event_mouse_button_down( ALLEGRO_EVENT &ev )
+{
+    if( gui.gui_n )
+        return;
+    if( mouse_button_down )
+        return;
+    mouse_down_time = al_get_time(); // workaround ev.any.timestamp for touch;
+    mbdown_x = ev.mouse.x;
+    mbdown_y = ev.mouse.y;
+    tb_down = get_TiledBlock_at( ev.mouse.x, ev.mouse.y );
+
+    if( board.zoom && !tb_down )
+    {
+        board.zoom = NULL;
+        redraw = 1;
+        return;
+    }
+
+    if( wait_for_double_click )
+    {
+        wait_for_double_click = 0;
+        if( ( tb_up == tb_down ) && ( mouse_down_time - mouse_up_time < DELTA_DOUBLE_CLICK ) )
+        {
+            handle_mouse_click( tb_down, ev.mouse.x, ev.mouse.y, 3 ); // double click
+            return;
+        }
+    }
+    mouse_button_down = ev.mouse.button;
+}
+
+void Game::handle_allegro_event_touch_end( ALLEGRO_EVENT &ev )
+{
+    ev.mouse.x = ev.touch.x;
+    ev.mouse.y = ev.touch.y;
+    ev.mouse.button = 1;
+    touch_down = 0;
+}
+
+void Game::handle_allegro_event_mouse_button_up( ALLEGRO_EVENT &ev )
+{
+    if( wait_for_double_click )
+        wait_for_double_click = 0;
+
+    if( board.dragging )
+    {
+        mouse_drop( ev.mouse.x, ev.mouse.y );
+        mouse_button_down = 0;
+    }
+
+    if( hold_click_check == 2 )
+    {
+        hold_click_check = 0;
+        mouse_button_down = 0;
+        return;
+    }
+    hold_click_check = 0;
+
+    if( !mouse_button_down )
+        return;
+
+    mouse_up_time = al_get_time(); //workaround ev.any.timestamp for touch;
+    tb_up = get_TiledBlock_at( ev.mouse.x, ev.mouse.y );
+    if( ( tb_up ) && ( tb_up == tb_down ) )
+    {
+        if( ( ( tb_up->type == TB_HCLUE_TILE ) || ( tb_up->type == TB_VCLUE_TILE ) ) && ( mouse_button_down == 1 ) )
+        {
+            if( mouse_up_time - mouse_down_time < DELTA_SHORT_CLICK )
+            {
+                wait_for_double_click = 1;
+            }
+        }
+        if( !wait_for_double_click )
+            handle_mouse_click( tb_up, ev.mouse.x, ev.mouse.y, mouse_button_down );
+    }
+    mouse_button_down = 0;
+}
+
+void Game::handle_allegro_event_touch_move( ALLEGRO_EVENT &ev )
+{
+    if( gui.gui_n )
+        return;
+    if( !ev.touch.primary )
+        return;
+    ev.mouse.x = ev.touch.x;
+    ev.mouse.y = ev.touch.y;
+}
+
+void Game::handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev )
+{
+    if( gui.gui_n )
+        return;
+    if( board.dragging )
+    {
+        board.dragging->x = ev.mouse.x + board.dragging_relative_position_of_grabbing_x;
+        board.dragging->y = ev.mouse.y + board.dragging_relative_position_of_grabbing_y;
+    }
+    mouse_move = 1;
+    // don't grab if movement was small
+    if( ( abs( ev.mouse.x - mbdown_x ) < 10 ) && ( ( ev.mouse.y - mbdown_y ) < 10 ) )
+        return;
+
+    if( mouse_button_down && !hold_click_check )
+        if( tb_down && ( ( tb_down->type == TB_HCLUE_TILE ) || ( tb_down->type == TB_VCLUE_TILE ) ) )
+        {
+            handle_mouse_click( tb_down, mbdown_x, mbdown_y, 4 );
+            hold_click_check = 1;
+        }
+}
+
+void Game::handle_allegro_event_key_char( ALLEGRO_EVENT &ev )
+{
+    if( gui.gui_n )
+        return;
+    keypress = 1;
+    switch( ev.keyboard.keycode )
+    {
+        case ALLEGRO_KEY_ESCAPE:
+            gui.confirm_exit();
+            break;
+        case ALLEGRO_KEY_BACK: // android: back key
+            gui.show_settings();
+            break;
+        case ALLEGRO_KEY_R:
+            gui.confirm_restart( &set );
+            break;
+        case ALLEGRO_KEY_S: // debug: show solution
+            if( game_state != GAME_PLAYING )
+                break;
+            switch_solve_puzzle();
+            redraw = 1;
+            break;
+        case ALLEGRO_KEY_T:
+            gui.emit_event( EVENT_SWITCH_TILES );
+            break;
+        case ALLEGRO_KEY_H:
+            gui.show_help();
+            break;
+        case ALLEGRO_KEY_C:
+            show_hint();
+            redraw = 1;
+            break;
+        case ALLEGRO_KEY_F:
+            if( toggle_fullscreen() )
+            {
+                al_register_event_source( gui.event_queue, al_get_display_event_source( display ) );
+            }
+            al_flush_event_queue( gui.event_queue );
+            redraw = 1;
+            break;
+        case ALLEGRO_KEY_U:
+            if( game_state != GAME_PLAYING )
+                break;
+            execute_undo();
+            update_board();
+            // why flush?
+            al_flush_event_queue( gui.event_queue );
+            redraw = 1;
+            break;
+        default:
+            break;
+    }
+}
+
+void Game::handle_events()
+{
+    ALLEGRO_EVENT ev;
+    while( al_get_next_event( gui.event_queue, &ev ) )
+    { // empty out the event queue
+        if( ev.type == ALLEGRO_EVENT_DISPLAY_HALT_DRAWING )
+        {
+            SPDLOG_DEBUG( "RECEIVED HALT" );
+            halt( gui.event_queue );
+            resize_update = 1;
+        }
+
+        if( gui.gui_n && gui.gui_send_event( &ev ) )
+            continue;
+
+        switch( ev.type )
+        {
+            case ALLEGRO_EVENT_DISPLAY_CLOSE:
+                handle_allegro_event_display_close();
+                break;
+
+            case ALLEGRO_EVENT_DISPLAY_RESIZE:
+                handle_allegro_event_display_resize();
+                break;
+
+            case EVENT_REDRAW:
+                handle_allegro_event_redraw();
+                break;
+
+            case EVENT_SWITCH_TILES:
+                handle_event_switch_tiles();
+                break;
+
+            case EVENT_RESTART:
+                handle_event_restart();
+                return;
+
+            case EVENT_EXIT:
+                handle_event_exit();
+                break;
+
+            case EVENT_SAVE:
+                handle_event_save();
+                break;
+
+            case EVENT_LOAD:
+                handle_event_load();
+                break;
+
+            case EVENT_SETTINGS:
+                handle_event_settings();
+                break;
+
+            case ALLEGRO_EVENT_TOUCH_BEGIN:
+                handle_allegro_event_touch_begin( ev );
+                // fallthru
+            case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+                handle_allegro_event_mouse_button_down( ev );
+                break;
+
+            case ALLEGRO_EVENT_TOUCH_END:
+                handle_allegro_event_touch_end( ev );
+                // fallthru
+            case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
+                handle_allegro_event_mouse_button_up( ev );
+                break;
+
+            case ALLEGRO_EVENT_TOUCH_MOVE:
+                handle_allegro_event_touch_move( ev );
+                //fallthru
+            case ALLEGRO_EVENT_MOUSE_AXES:
+                handle_allegro_event_mouse_axes( ev );
+                break;
+
+            case ALLEGRO_EVENT_KEY_CHAR:
+                handle_allegro_event_key_char( ev );
+                break;
+        }
+    }
+}
+
+void Game::game_inner_loop()
+{
+    double dt = al_current_time() - old_time;
+    al_rest( FIXED_DT - dt ); //rest at least fixed_dt
+    dt = al_get_time() - old_time;
+    if( game_state == GAME_PLAYING )
+        game_data.time += dt;
+    old_time = al_get_time();
+
+    gui.update_base_gui( dt );
+
+    handle_events();
+
+    if( resizing )
+    {
+        if( al_get_time() - resize_time > RESIZE_DELAY )
+        {
+            resizing = 0;
+            resize_update = 1;
+        }
+    }
+
+    if( resize_update )
+    {
+        resize_update = 0;
+        al_acknowledge_resize( display );
+        destroy_board_bitmaps( &board );
+        board.max_xsize = al_get_display_width( display );
+        board.max_ysize = al_get_display_height( display );
+        board.create_board( &game_data, 0 );
+        gui.update_guis( board.all.x, board.all.y, board.xsize, board.ysize );
+        al_set_target_backbuffer( display );
+        update_board();
+        al_convert_bitmaps(); // turn bitmaps to video bitmaps
+        redraw = 1;
+        // android workaround, try removing:
+        al_clear_to_color( BLACK_COLOR );
+        al_flip_display();
+    }
+
+    if( resizing ) // skip redraw and other stuff
+        return;
+
+    if( wait_for_double_click && ( al_get_time() - mouse_up_time > DELTA_DOUBLE_CLICK ) )
+    {
+        wait_for_double_click = 0;
+        tb_down = get_TiledBlock_at( mbdown_x, mbdown_y );
+        handle_mouse_click( tb_down, mbdown_x, mbdown_y, 1 ); // single click
+    }
+
+    if( mouse_button_down && !hold_click_check && !board.dragging )
+    {
+        if( al_get_time() - mouse_down_time > DELTA_HOLD_CLICK )
+        {
+            hold_click_check = 1;
+            if( tb_down )
+            {
+                int tbdx, tbdy;
+                if( touch_down )
+                {
+                    ALLEGRO_TOUCH_INPUT_STATE touch;
+                    al_get_touch_input_state( &touch );
+                    tbdx = touch.touches[0].x;
+                    tbdy = touch.touches[0].y;
+                }
+                else
+                {
+                    ALLEGRO_MOUSE_STATE mouse;
+                    al_get_mouse_state( &mouse );
+                    tbdx = mouse.x;
+                    tbdy = mouse.y;
+                }
+                tb_up = get_TiledBlock_at( tbdx, tbdy );
+
+                if( tb_up == tb_down )
+                {
+                    handle_mouse_click( tb_up, tbdx, tbdy, 4 ); // hold click
+                    hold_click_check = 2;
+                }
+            }
+        }
+    }
+
+    if( mouse_move )
+    {
+        mouse_move = 0;
+        if( board.dragging )
+            redraw = 1;
+    }
+
+    if( keypress )
+    {
+        if( game_state == GAME_INTRO )
+            game_state = GAME_PLAYING;
+        keypress = 0;
+    }
+
+    if( old_time - play_time > 1 )
+    { // runs every second
+        if( game_state == GAME_INTRO )
+            game_state = GAME_PLAYING;
+        if( game_state == GAME_PLAYING )
+        {
+            play_time = al_get_time();
+            update_timer( (int)game_data.time, &board ); // this draws on a timer bitmap
+
+            if( game_data.guessed == game_data.column_height * game_data.number_of_columns )
+            {
+                win_or_lose(); // check if player has won
+                al_flush_event_queue( gui.event_queue );
+            }
+            gui.emit_event( EVENT_REDRAW );
+        }
+    }
+
+    if( board.rule_out && ( al_get_time() - blink_time > BLINK_DELAY ) )
+    {
+        SWITCH( board.blink );
+        blink_time = al_get_time();
+        redraw = 1;
+    }
+
+    if( ( game_state == GAME_OVER ) && noexit && !win_gui )
+    {
+        gui.show_win_gui( game_data.time );
+        win_gui = 1;
+    }
+
+    if( redraw )
+    {
+        redraw = 0;
+        al_set_target_backbuffer( display );
+        draw_stuff();
+        al_flip_display();
+    }
+}
+
+void Game::game_loop()
+{
+    if( restart )
+    {
+        SPDLOG_DEBUG( "Restarting game" );
+        gui.remove_all_guis();
+    }
+
+    // 2 is for loaded game
+    if( restart != 2 )
+    {
+        game_data.advanced = set.advanced; // use "what if" depth 1?
+        game_data.number_of_columns = set.number_of_columns;
+        game_data.column_height = set.column_height;
+        game_data.time = 0;
+        draw_stuff();
+        draw_generating_puzzle( &set );
+        al_flip_display();
+        create_game_with_clues( &game_data );
+    }
+    else
+    {
+        // board should be updated only after destroying the board
+        SPDLOG_DEBUG( "Resuming loaded game" );
+        set.advanced = game_data.advanced;
+        set.number_of_columns = game_data.number_of_columns;
+        set.column_height = game_data.column_height;
+    }
+
+    if( restart == 1 )
+        game_data.time = 0; // new game, otherwise it's a load game
+
+    get_desktop_resolution( 0, &desktop_xsize, &desktop_ysize );
+
+    float max_display_factor;
+
+    if( !fullscreen )
+        max_display_factor = 0.9;
+    else
+        max_display_factor = 1;
+
+    if( restart )
+    {
+        al_set_target_backbuffer( display );
+        board.destroy_board();
+        destroy_undo();
+        al_set_target_backbuffer( display );
+    }
+
+    restart = 0;
+
+    board.max_xsize = desktop_xsize * max_display_factor;
+    board.max_ysize = desktop_ysize * max_display_factor; // change this later to something adequate
+    board.type_of_tiles = set.type_of_tiles;
+    board.number_of_columns = game_data.number_of_columns;
+    board.column_height = game_data.column_height;
+
+    if( board.create_board( &game_data, 1 ) )
+    {
+        SPDLOG_ERROR( "Failed to create game board." );
+        noexit = false;
+        return;
+    }
+
+    if( !fullscreen )
+    {
+        al_set_target_backbuffer( display );
+        al_resize_display( display, board.xsize, board.ysize );
+        al_set_window_position( display, ( desktop_xsize - board.xsize ) / 2, ( desktop_ysize - board.ysize ) / 2 );
+        al_acknowledge_resize( display );
+        al_set_target_backbuffer( display );
+    }
+
+    al_convert_bitmaps(); // turn bitmaps to memory bitmaps after resize (bug in allegro doesn't autoconvert)
+
+    gui.update_guis( board.all.x, board.all.y, board.xsize, board.ysize );
+
+    if( !gui.event_queue )
+    {
+        gui.event_queue = al_create_event_queue();
+        if( !gui.event_queue )
+        {
+            SPDLOG_ERROR( "failed to create event queue." );
+            al_destroy_display( display );
+            noexit = false;
+            return;
+        }
+
+        al_register_event_source( gui.event_queue, al_get_display_event_source( display ) );
+        if( al_is_keyboard_installed() )
+            al_register_event_source( gui.event_queue, al_get_keyboard_event_source() );
+        if( al_is_mouse_installed() )
+            al_register_event_source( gui.event_queue, al_get_mouse_event_source() );
+        if( al_is_touch_input_installed() )
+        {
+            al_register_event_source( gui.event_queue, al_get_touch_input_event_source() );
+            al_set_mouse_emulation_mode( ALLEGRO_MOUSE_EMULATION_NONE );
+        }
+
+        al_register_event_source( gui.event_queue, &gui.user_event_src );
+    }
+
+    update_board();
+    al_set_target_backbuffer( display );
+
+    //  initialize flags
+    redraw = 1;
+    noexit = 1;
+    mouse_move = 0;
+    restart = 0;
+    keypress = 0;
+    resizing = 0;
+    mouse_button_down = 0;
+    resize_update = 0;
+    resize_time = 0;
+    if( game_state != GAME_INTRO )
+        game_state = GAME_PLAYING;
+    board.time_start = al_get_time();
+    blink_time = 0;
+    board.blink = 0;
+    mbdown_x = 0;
+    mbdown_y = 0;
+    touch_down = 0;
+    tb_down = tb_up = NULL;
+    win_gui = 0;
+
+    show_info_text(
+        &board,
+        al_ustr_newf( "Click on clue for info. Click %s for help, %s for settings, or %s for a hint at any time.",
+                      symbol_char[board.column_height][1],
+                      symbol_char[board.column_height][2],
+                      symbol_char[board.column_height][0] ) );
+
+    al_set_target_backbuffer( display );
+    al_clear_to_color( BLACK_COLOR );
+    al_flip_display();
+    al_flush_event_queue( gui.event_queue );
+    play_time = old_time = al_get_time();
+
+    while( noexit )
+    {
+        game_inner_loop();
+    }
+}

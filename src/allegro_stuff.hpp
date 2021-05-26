@@ -1,21 +1,12 @@
 #pragma once
 
-#include <stdio.h>
+#include <cstdio>
+
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
+
 #include "macros.hpp"
-
-#define NULL_COLOR ( al_map_rgba_f( 0, 0, 0, 0 ) )
-#define WHITE_COLOR ( al_map_rgba_f( 1, 1, 1, 1 ) )
-#define WINE_COLOR ( al_map_rgba_f( 0.4, 0.1, 0.1, 1 ) )
-#define GREY_COLOR ( al_map_rgba_f( 0.5, 0.5, 0.5, 1 ) )
-#define WINDOW_BG_COLOR ( al_map_rgba_f( 0.3, 0.3, 0.3, 1 ) )
-#define WINDOW_BD_COLOR ( al_map_rgba_f( 1, 1, 1, 1 ) )
-#define DARK_GREY_COLOR ( al_map_rgba_f( .2, .2, .2, 1 ) )
-#define BLACK_COLOR ( al_map_rgb( 0, 0, 0 ) )
-
-#define al_rewind( x ) al_fseek( x, 0, ALLEGRO_SEEK_SET )
 
 struct MemFile
 {

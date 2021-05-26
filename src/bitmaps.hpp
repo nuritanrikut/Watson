@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <stdio.h>
-#include "game.hpp"
+#include <cstdio>
+
+#include "game_data.hpp"
 #include "macros.hpp"
 #include "board.hpp"
 #include "tiled_block.hpp"
@@ -17,12 +18,11 @@
 void destroy_board_bitmaps( Board *board );
 void destroy_all_bitmaps( Board *board );
 int init_bitmaps( Board *board );
-int init_bitmaps_classic( Board *board );
-int update_bitmaps( Game *game, Board *board );
-int update_font_bitmaps( Game *game, Board *board );
+int init_bitmaps_classic();
+int update_bitmaps( GameData *game_data, Board *board );
+int update_font_bitmaps( GameData *game_data, Board *board );
 void fit_board( Board *board );
 ALLEGRO_BITMAP *create_title_bmp( void );
-//void explain_clue(Game *game, Board *board, int i);
 void destroy_settings_bitmaps( Board *board );
 void create_settings_bitmaps( Board *board );
 void update_timer( int seconds, Board *board );

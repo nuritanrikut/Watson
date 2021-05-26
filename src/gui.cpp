@@ -1,17 +1,20 @@
 #include "gui.hpp"
-#include <stdio.h>
-#include <math.h>
+
+#include <cstdio>
+#include <cmath>
+#include <algorithm>
+
+#include <spdlog/spdlog.h>
+
 #include "widgetz/widgetz.hpp"
 #include "allegro_stuff.hpp"
-#include "main.hpp"
 #include "text.hpp"
-#include "game.hpp"
+#include "game_data.hpp"
 
-#define GUI_BG_COLOR al_map_rgb( 100, 100, 100 ) //al_map_rgb(108, 122, 137);//(0.1, 0.6, 0.8, 1)
-#define GUI_TEXT_COLOR al_map_rgb( 255, 255, 255 )
+/// TODO replace %VERSION% and %DATE% below
 
 const char ABOUT_TEXT[] =
-    "Watson v" PRE_VERSION " - " PRE_DATE ", by Koro.\n"
+    "Watson v%VERSION% - %DATE%, by Koro.\n"
     "\n"
     "Watson is an open source clone of \"Sherlock\", an old game by Evertt Kaser which is itself based on the a "
     "classic puzzle known as \"Zebra puzzle\" or \"Einstein's riddle\".\n"
@@ -20,7 +23,8 @@ const char ABOUT_TEXT[] =
     "thanks to the friendly folks from Freenode #allegro for all the tips and advice. The game GUI uses the WidgetZ "
     "library by SiegeLord.\n"
     "\n"
-    "The tile set is rendered from TTF fonts obtained from fontlibrary.org. The icons are from www.icons8.com. These "
+    "The tile settings_current is rendered from TTF fonts obtained from fontlibrary.org. The icons are from "
+    "www.icons8.com. These "
     "icons are located in <appdir>/icons and can be replaced. The sounds are from freesound.org. The text font is "
     "Linux Libertine by Philipp H. Poll. All these assets can be found in their corresponding directories."
     "\n"
@@ -53,15 +57,13 @@ const char HELP_TEXT[] =
     "\n"
     "DEBUG: S: show/hide solution.\n";
 
-float GUI_XFACTOR = MOBILE ? 0.9 : 0.5;
-float GUI_YFACTOR = MOBILE ? 0.9 : 0.5;
+constexpr double GUI_XFACTOR = 0.5;
+constexpr double GUI_YFACTOR = 0.5;
 
 WZ_SKIN_THEME skin_theme;
 ALLEGRO_FONT *gui_font = NULL;
 int gui_font_h;
 WZ_WIDGET *base_gui = NULL;
-
-Settings nset = { 0 };
 
 char hi_name[10][64];
 double hi_score[10];
@@ -98,15 +100,85 @@ enum
     EDITBOX_HISCORE,
 };
 
+Gui::Gui( Settings &settings_c, Settings &settings_n ) : settings_current( settings_c ), settings_new( settings_n )
+{
+    event_queue = NULL;
+    gui_n = 0;
+}
+
+// work in progress
+// actually highscores must include string + int. Maybe do one file for each mode.
+void Gui::get_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score )
+{
+    ALLEGRO_PATH *path;
+    ALLEGRO_FILE *fp;
+    char filename[100];
+    int i;
+
+    path = al_get_standard_path( ALLEGRO_USER_DATA_PATH );
+    snprintf( filename, 99, "Watson%dx%d-%d.hi", number_of_columns, h, advanced );
+    al_set_path_filename( path, filename );
+
+    fp = al_fopen( al_path_cstr( path, '/' ), "rb" );
+    if( !fp || !( al_fread( fp, name, 64 * sizeof( char ) * 10 ) == 64 * sizeof( char ) * 10 )
+        || !( al_fread( fp, score, 10 * sizeof( double ) ) == 10 * sizeof( double ) ) )
+    {
+        SPDLOG_ERROR( "Error reading %s.", (char *)al_path_cstr( path, '/' ) );
+        memset( name, 0, 64 * sizeof( char ) * 10 );
+        for( i = 0; i < 10; i++ )
+        {
+            score[i] = 600;
+        }
+    }
+
+    al_fclose( fp );
+    al_destroy_path( path );
+}
+
+void Gui::save_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score )
+{
+    ALLEGRO_PATH *path;
+    ALLEGRO_FILE *fp;
+    char filename[100];
+
+    path = al_get_standard_path( ALLEGRO_USER_DATA_PATH );
+    SPDLOG_DEBUG( "ALLEGRO_USER_DATA_PATH = %s", al_path_cstr( path, '/' ) );
+
+    if( !al_make_directory( al_path_cstr( path, '/' ) ) )
+    {
+        SPDLOG_ERROR( "could not open or create path %s.\n", al_path_cstr( path, '/' ) );
+        al_destroy_path( path );
+        return;
+    }
+
+    snprintf( filename, 99, "Watson%dx%d-%d.hi", number_of_columns, h, advanced );
+    al_set_path_filename( path, filename );
+    fp = al_fopen( al_path_cstr( path, '/' ), "wb" );
+    if( !fp )
+    {
+        SPDLOG_ERROR( "Couldn't open %s for writing.\n", (char *)al_path_cstr( path, '/' ) );
+        al_destroy_path( path );
+        al_fclose( fp );
+        return;
+    }
+
+    al_fwrite( fp, name, 64 * sizeof( char ) * 10 );
+    al_fwrite( fp, score, sizeof( double ) * 10 );
+    al_fclose( fp );
+
+    SPDLOG_DEBUG( "Saved highscores at %s.", al_path_cstr( path, '/' ) );
+    al_destroy_path( path );
+}
+
 // even if wgt->own = 1, the original function duplicates the string
 // this avoids a memory leak
-void wz_set_text_own( WZ_WIDGET *wgt, ALLEGRO_USTR *text )
+void Gui::wz_set_text_own( WZ_WIDGET *wgt, ALLEGRO_USTR *text )
 {
     wz_set_text( wgt, text );
     al_ustr_free( text );
 }
 
-void draw_guis( void )
+void Gui::draw_guis( void )
 {
     WZ_WIDGET *gui;
 
@@ -123,7 +195,7 @@ void draw_guis( void )
 }
 
 // unused
-void init_theme_noskin( void )
+void Gui::init_theme_noskin( void )
 {
     memset( &skin_theme, 0, sizeof( skin_theme ) );
     memcpy( &skin_theme, &wz_def_theme, sizeof( wz_def_theme ) );
@@ -133,12 +205,8 @@ void init_theme_noskin( void )
     skin_theme.theme.color2 = WHITE_COLOR;
 }
 
-void init_theme( void )
+void Gui::init_theme( void )
 {
-#ifdef ALLEGRO_ANDROID
-    al_android_set_apk_file_interface();
-#endif
-
     memset( &skin_theme, 0, sizeof( skin_theme ) );
     memcpy( &skin_theme, &wz_skin_theme, sizeof( skin_theme ) );
     gui_font = load_font_mem( text_font_mem, TEXT_FONT_FILE, -gui_font_h );
@@ -154,16 +222,15 @@ void init_theme( void )
     wz_init_skin_theme( &skin_theme );
 }
 
-void scale_gui( Board *board, float factor )
+void Gui::scale_gui( float factor )
 {
     gui_font_h *= factor;
     al_destroy_font( gui_font );
     gui_font = load_font_mem( text_font_mem, TEXT_FONT_FILE, -gui_font_h );
     skin_theme.theme.font = gui_font;
-    //    wz_resize(blah) resize all guis
 }
 
-void destroy_theme()
+void Gui::destroy_theme()
 {
     ndestroy_bitmap( skin_theme.button_up_bitmap );
     ndestroy_bitmap( skin_theme.button_down_bitmap );
@@ -176,16 +243,16 @@ void destroy_theme()
     skin_theme.theme.font = NULL;
 }
 
-WZ_WIDGET *create_fill_layout( WZ_WIDGET *parent,
-                               float x,
-                               float y,
-                               float width,
-                               float height,
-                               float hspace,
-                               float vspace,
-                               int halign,
-                               int valign,
-                               int id )
+WZ_WIDGET *Gui::create_fill_layout( WZ_WIDGET *parent,
+                                    float x,
+                                    float y,
+                                    float width,
+                                    float height,
+                                    float hspace,
+                                    float vspace,
+                                    int halign,
+                                    int valign,
+                                    int id )
 {
     WZ_WIDGET *wgt =
         (WZ_WIDGET *)wz_create_fill_layout( parent, x, y, width, height, hspace, vspace, halign, valign, id );
@@ -194,7 +261,7 @@ WZ_WIDGET *create_fill_layout( WZ_WIDGET *parent,
     return wgt;
 }
 
-WZ_WIDGET *new_widget( int id, int x, int y )
+WZ_WIDGET *Gui::new_widget( int id, int x, int y )
 {
     WZ_WIDGET *wgt;
     wgt = wz_create_widget( 0, x, y, id );
@@ -202,7 +269,7 @@ WZ_WIDGET *new_widget( int id, int x, int y )
     return wgt;
 }
 
-void update_guis( int x, int y, int width, int height )
+void Gui::update_guis( int x, int y, int width, int height )
 {
     gui_font_h = height / 30;
     al_destroy_font( gui_font );
@@ -218,7 +285,7 @@ void update_guis( int x, int y, int width, int height )
     emit_event( EVENT_REDRAW );
 }
 
-void init_guis( int x, int y, int width, int height )
+void Gui::init_guis( int x, int y, int width, int height )
 {
     gui_font_h = height / 35;
     init_theme();
@@ -227,20 +294,48 @@ void init_guis( int x, int y, int width, int height )
     base_gui->height = height;
 }
 
-void remove_all_guis( void )
+void Gui::add_gui( WZ_WIDGET *base, WZ_WIDGET *gui )
+{
+    wz_register_sources( gui, event_queue );
+    if( base )
+    {
+        if( base->last_child )
+            wz_enable( base->last_child, 0 );
+        wz_attach( gui, base );
+        wz_update( base, 0 );
+        gui_n++;
+    }
+    else
+    {
+        wz_update( gui, 0 );
+    }
+
+    emit_event( EVENT_REDRAW );
+}
+
+void Gui::remove_gui( WZ_WIDGET *wgt )
+{
+    if( wgt->prev_sib )
+        wz_enable( wgt->prev_sib, 1 );
+    wz_destroy( wgt );
+    gui_n--;
+    emit_event( EVENT_REDRAW );
+}
+
+void Gui::remove_all_guis( void )
 {
     while( base_gui->last_child )
         remove_gui( base_gui->last_child );
 }
 
-void destroy_base_gui()
+void Gui::destroy_base_gui()
 {
     remove_all_guis();
     wz_destroy( base_gui );
     destroy_theme();
 }
 
-WZ_WIDGET *create_msg_gui( int id, ALLEGRO_USTR *msg )
+WZ_WIDGET *Gui::create_msg_gui( int id, ALLEGRO_USTR *msg )
 {
     int width = base_gui->width / 2;
     int height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( msg ) );
@@ -282,11 +377,11 @@ WZ_WIDGET *create_msg_gui( int id, ALLEGRO_USTR *msg )
     return gui;
 }
 
-WZ_WIDGET *create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg )
+WZ_WIDGET *Gui::create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg )
 {
     int but_w = 6 * gui_font_h;
     int but_h = gui_font_h * 1.5;
-    int width = max( base_gui->width / 3, 2 * but_w + 3 * gui_font_h );
+    int width = std::max( int( base_gui->width / 3 ), 2 * but_w + 3 * gui_font_h );
     int height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( msg ) );
 
     WZ_WIDGET *wgt, *gui = new_widget( id,
@@ -317,7 +412,7 @@ WZ_WIDGET *create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALL
     return gui;
 }
 
-WZ_WIDGET *create_settings_gui( void )
+WZ_WIDGET *Gui::create_settings_gui( void )
 {
     WZ_WIDGET *gui, *wgt;
     int fh = gui_font_h;
@@ -333,19 +428,19 @@ WZ_WIDGET *create_settings_gui( void )
     int sep = 10;
     int i;
 
-    nset = set;
+    settings_new = settings_current;
 
-    but_w = max( al_get_text_width( skin_theme.theme.font, "Save game" ), but_w );
-    but_w = max( al_get_text_width( skin_theme.theme.font, "Load game" ), but_w );
-    but_w = max( al_get_text_width( skin_theme.theme.font, "Switch tiles" ), but_w );
-    but_w = max( al_get_text_width( skin_theme.theme.font, "About Watson" ), but_w );
+    but_w = std::max( al_get_text_width( skin_theme.theme.font, "Save game" ), but_w );
+    but_w = std::max( al_get_text_width( skin_theme.theme.font, "Load game" ), but_w );
+    but_w = std::max( al_get_text_width( skin_theme.theme.font, "Switch tiles" ), but_w );
+    but_w = std::max( al_get_text_width( skin_theme.theme.font, "About Watson" ), but_w );
     but_h = fh * 2;
 
-    but_sw = max( al_get_text_width( skin_theme.theme.font, "zoom" ), but_sw );
+    but_sw = std::max( al_get_text_width( skin_theme.theme.font, "zoom" ), but_sw );
     but_sw += fh;
     but_w += 2 * fh;
 
-    gui_w = max( gui_w, 3 * ( but_w + sep ) + sep * 3 );
+    gui_w = std::max( gui_w, 3 * ( but_w + sep ) + sep * 3 );
 
     // main gui
     gui = new_widget( GUI_SETTINGS, ( base_gui->width - gui_w ) / 2, ( base_gui->height - rows * rh ) / 2 );
@@ -382,7 +477,7 @@ WZ_WIDGET *create_settings_gui( void )
     {
         wgt = (WZ_WIDGET *)wz_create_toggle_button(
             gui, 0, 0, but_h, but_h, al_ustr_newf( "%c", '4' + i ), 1, GROUP_ROWS, BUTTON_ROWS );
-        if( 4 + i == set.column_height )
+        if( 4 + i == settings_current.column_height )
             ( (WZ_BUTTON *)wgt )->down = 1;
     }
 
@@ -402,27 +497,27 @@ WZ_WIDGET *create_settings_gui( void )
     {
         wgt = (WZ_WIDGET *)wz_create_toggle_button(
             gui, 0, 0, but_h, but_h, al_ustr_newf( "%c", '4' + i ), 1, GROUP_COLS, BUTTON_COLS );
-        if( 4 + i == set.number_of_columns )
+        if( 4 + i == settings_current.number_of_columns )
             ( (WZ_BUTTON *)wgt )->down = 1;
     }
 
     // sound + swtich tiles + zoom
     create_fill_layout( gui, 0, rh * ( rn++ ), gui_w, rh, sep, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, -1 );
     wgt = (WZ_WIDGET *)wz_create_toggle_button( gui, 0, 0, but_w, but_h, al_ustr_new( "Zoom" ), 1, -1, BUTTON_ZOOM );
-    ( (WZ_BUTTON *)wgt )->down = set.fat_fingers;
+    ( (WZ_BUTTON *)wgt )->down = settings_current.fat_fingers;
 
     wz_create_button( gui, 0, 0, but_w, but_h, al_ustr_new( "Switch tiles" ), 1, BUTTON_TILES );
-    button_mute =
-        (WZ_WIDGET *)wz_create_toggle_button( gui,
-                                              0,
-                                              0,
-                                              but_w,
-                                              but_h,
-                                              set.sound_mute ? al_ustr_new( "Sound: off" ) : al_ustr_new( "Sound: on" ),
-                                              1,
-                                              -1,
-                                              BUTTON_SOUND );
-    ( (WZ_BUTTON *)button_mute )->down = !set.sound_mute;
+    button_mute = (WZ_WIDGET *)wz_create_toggle_button( gui,
+                                                        0,
+                                                        0,
+                                                        but_w,
+                                                        but_h,
+                                                        settings_current.sound_mute ? al_ustr_new( "Sound: off" )
+                                                                                    : al_ustr_new( "Sound: on" ),
+                                                        1,
+                                                        -1,
+                                                        BUTTON_SOUND );
+    ( (WZ_BUTTON *)button_mute )->down = !settings_current.sound_mute;
 
     // advanced + save + load buttons
     create_fill_layout( gui, 0, rh * ( rn++ ), gui_w, rh, sep, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, -1 );
@@ -430,7 +525,7 @@ WZ_WIDGET *create_settings_gui( void )
     wz_create_button( gui, 0, 0, but_w, but_h, al_ustr_new( "Save game" ), 1, BUTTON_SAVE );
     wgt =
         (WZ_WIDGET *)wz_create_toggle_button( gui, 0, 0, but_w, but_h, al_ustr_new( "Load game" ), 1, -1, BUTTON_LOAD );
-    ( (WZ_BUTTON *)wgt )->down = !set.saved;
+    ( (WZ_BUTTON *)wgt )->down = !settings_current.saved;
 
     // restart/exit/switch tiles buttons
     create_fill_layout( gui, 0, rh * ( rn++ ), gui_w, rh, sep, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, -1 );
@@ -449,7 +544,7 @@ WZ_WIDGET *create_settings_gui( void )
     return gui;
 }
 
-WZ_WIDGET *create_win_gui( double time )
+WZ_WIDGET *Gui::create_win_gui( double time )
 {
     // Initialize Allegro 5 and the font routines
     WZ_WIDGET *gui;
@@ -457,11 +552,11 @@ WZ_WIDGET *create_win_gui( double time )
     int gui_w, gui_h, but_w, lh;
     int i, j;
 
-    nset = set;
+    settings_new = settings_current;
 
     lh = 1.2 * gui_font_h;
     gui_w = al_get_text_width( gui_font, "You solved the puzzle in 000:000:000" ) + 4 * lh + 2;
-    but_w = 2 * lh + max( al_get_text_width( gui_font, "Settings" ), al_get_text_width( gui_font, "New game" ) );
+    but_w = 2 * lh + std::max( al_get_text_width( gui_font, "Settings" ), al_get_text_width( gui_font, "New game" ) );
 
     // 13 lines of text + 1.5 for button + 2 for margin = lh*16 (+17 * vspace?)
     gui_h = 16.5 * lh + 2;
@@ -470,7 +565,11 @@ WZ_WIDGET *create_win_gui( double time )
     wz_create_fill_layout( gui, 0, 0, gui_w, gui_h, lh, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, -1 );
     wz_create_textbox( gui, 0, 0, gui_w - 2 * lh - 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
 
-    get_highscores( set.number_of_columns, set.column_height, set.advanced, hi_name, (double *)hi_score );
+    get_highscores( settings_current.number_of_columns,
+                    settings_current.column_height,
+                    settings_current.advanced,
+                    hi_name,
+                    (double *)hi_score );
     if( time > 0 )
     {
         for( i = 0; i < 10; i++ )
@@ -497,16 +596,18 @@ WZ_WIDGET *create_win_gui( double time )
             1,
             -1 );
 
-    wz_create_textbox( gui,
-                       0,
-                       0,
-                       gui_w - 2 * lh - 2,
-                       lh,
-                       WZ_ALIGN_CENTRE,
-                       WZ_ALIGN_CENTRE,
-                       al_ustr_newf( "Best times for %d x %d board:", set.number_of_columns, set.column_height ),
-                       1,
-                       -1 );
+    wz_create_textbox(
+        gui,
+        0,
+        0,
+        gui_w - 2 * lh - 2,
+        lh,
+        WZ_ALIGN_CENTRE,
+        WZ_ALIGN_CENTRE,
+        al_ustr_newf(
+            "Best times for %d x %d board:", settings_current.number_of_columns, settings_current.column_height ),
+        1,
+        -1 );
 
     if( !( time > 0 ) )
         wz_create_textbox(
@@ -548,16 +649,8 @@ WZ_WIDGET *create_win_gui( double time )
     {
         hi_pos = i;
 #ifdef ALLEGRO_ANDROID //xxx todo: user input for typing name on android
-        wz_create_textbox( gui,
-                           0,
-                           0,
-                           ( gui_w - 4 * lh - 2 ) / 2.5,
-                           lh,
-                           WZ_ALIGN_LEFT,
-                           WZ_ALIGN_CENTRE,
-                           al_ustr_new( "You" ),
-                           1,
-                           -1 ); // get_highscores(g);
+        wz_create_textbox(
+            gui, 0, 0, ( gui_w - 4 * lh - 2 ) / 2.5, lh, WZ_ALIGN_LEFT, WZ_ALIGN_CENTRE, al_ustr_new( "You" ), 1, -1 );
 #else
         wgt = (WZ_WIDGET *)wz_create_editbox(
             gui, 0, 0, ( gui_w - 4 * lh - 2 ) / 2.5, lh, al_ustr_new( "your name" ), 1, EDITBOX_HISCORE );
@@ -608,7 +701,8 @@ WZ_WIDGET *create_win_gui( double time )
 
 #ifdef ALLEGRO_ANDROID // since we're just using "you" as username, save high score already
         strcpy( hi_name[i], "You" );
-        save_highscores( set.number_of_columns, set.h, set.advanced, hi_name, hi_score );
+        save_highscores(
+            settings_current.number_of_columns, settings_current.h, settings_current.advanced, hi_name, hi_score );
 #else // otherwise it will be filled in later
         hi_name[i][0] = '\0';
 #endif
@@ -626,7 +720,7 @@ WZ_WIDGET *create_win_gui( double time )
     return gui;
 }
 
-WZ_WIDGET *create_params_gui()
+WZ_WIDGET *Gui::create_params_gui()
 {
     WZ_WIDGET *gui, *wgt;
     int i;
@@ -650,11 +744,11 @@ WZ_WIDGET *create_params_gui()
 
     for( i = 0; i <= 10; i++ )
     {
-        rel_w = max( rel_w, al_get_text_width( gui_font, al_cstr( rel[i] ) ) );
+        rel_w = std::max( rel_w, al_get_text_width( gui_font, al_cstr( rel[i] ) ) );
     }
 
-    gui_w = max( base_gui->width / 2.5,
-                 2 * gui_font_h + al_get_text_width( gui_font, "Clue type distribution for puzzle creation" ) );
+    gui_w = std::max( int( base_gui->width / 2.5 ),
+                      2 * gui_font_h + al_get_text_width( gui_font, "Clue type distribution for puzzle creation" ) );
     but_h = lh;
     gui_h = ( NUMBER_OF_RELATIONS + 2 ) * lh;
 
@@ -697,12 +791,11 @@ WZ_WIDGET *create_params_gui()
 
     wgt = (WZ_WIDGET *)wz_create_toggle_button(
         gui, 0, 0, but_w, but_h, al_ustr_new( "Extra hard" ), 1, -1, BUTTON_EXTRA_HARD );
-    ( (WZ_BUTTON *)wgt )->down = nset.advanced ? 1 : 0;
+    ( (WZ_BUTTON *)wgt )->down = settings_new.advanced ? 1 : 0;
 
     wgt = (WZ_WIDGET *)wz_create_button( gui, 0, 0, but_w, but_h, al_ustr_new( "Reset" ), 1, BUTTON_RESET_PARAMS );
 
     wz_create_button( gui, 0, 0, but_w, but_h, al_ustr_new( "OK" ), 1, BUTTON_OK );
-    //    wz_create_textbox(gui, 0, 0, but_w/2, but_h, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new(""), 1, -1);
 
     wgt = (WZ_WIDGET *)wz_create_button( gui, 0, 0, but_w, but_h, al_ustr_new( "Cancel" ), 1, BUTTON_CLOSE );
     wz_set_shortcut( wgt, ALLEGRO_KEY_ESCAPE, 0 );
@@ -710,7 +803,7 @@ WZ_WIDGET *create_params_gui()
     return gui;
 }
 
-WZ_WIDGET *create_text_gui( ALLEGRO_USTR *text )
+WZ_WIDGET *Gui::create_text_gui( ALLEGRO_USTR *text )
 {
     int width = base_gui->width / 3;
     int height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( text ) );
@@ -742,35 +835,35 @@ WZ_WIDGET *create_text_gui( ALLEGRO_USTR *text )
     return gui;
 }
 
-void confirm_restart( Settings *new_set )
+void Gui::confirm_restart( Settings *new_set )
 {
-    nset = *new_set;
+    settings_new = *new_set;
     add_gui( base_gui,
              create_yesno_gui( -1,
                                BUTTON_RESTART_NOW,
                                BUTTON_CLOSE,
                                al_ustr_newf( "Start new %dx%d%s game?",
-                                             nset.number_of_columns,
-                                             nset.column_height,
-                                             nset.advanced ? " advanced" : "" ) ) );
+                                             settings_new.number_of_columns,
+                                             settings_new.column_height,
+                                             settings_new.advanced ? " advanced" : "" ) ) );
 }
 
-void confirm_exit( void )
+void Gui::confirm_exit( void )
 {
     add_gui( base_gui, create_yesno_gui( -1, BUTTON_EXIT_NOW, BUTTON_CLOSE, al_ustr_newf( "Exit game?" ) ) );
 }
 
-void show_help( void )
+void Gui::show_help( void )
 {
     add_gui( base_gui, create_msg_gui( -1, al_ustr_new( HELP_TEXT ) ) );
 }
 
-void show_about( void )
+void Gui::show_about( void )
 {
     add_gui( base_gui, create_msg_gui( -1, al_ustr_new( ABOUT_TEXT ) ) );
 }
 
-void confirm_save( void )
+void Gui::confirm_save( void )
 {
     add_gui(
         base_gui,
@@ -778,36 +871,36 @@ void confirm_save( void )
             -1, BUTTON_SAVE_NOW, BUTTON_CLOSE, al_ustr_new( "Save game? This will overwrite\na previous save." ) ) );
 }
 
-void confirm_load( void )
+void Gui::confirm_load( void )
 {
     add_gui( base_gui,
              create_yesno_gui(
                  -1, BUTTON_LOAD_NOW, BUTTON_CLOSE, al_ustr_new( "Discard current progress and load saved game?" ) ) );
 }
 
-void show_settings( void )
+void Gui::show_settings( void )
 {
     add_gui( base_gui, create_settings_gui() );
 }
 
-void show_win_gui( double time )
+void Gui::show_win_gui( double time )
 {
     add_gui( base_gui, create_win_gui( time ) );
 }
 
-void show_params( void )
+void Gui::show_params( void )
 {
     add_gui( base_gui, create_params_gui() );
 }
 
-int handle_gui_event( ALLEGRO_EVENT *event )
+int Gui::handle_gui_event( ALLEGRO_EVENT *event )
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)event->user.data2;
     WZ_WIDGET *gui = (WZ_WIDGET *)wgt->parent;
 
     if( !gui )
     {
-        deblog( "Can't handle unparented gui." );
+        SPDLOG_DEBUG( "Can't handle unparented gui." );
         return 0;
     }
 
@@ -818,7 +911,11 @@ int handle_gui_event( ALLEGRO_EVENT *event )
             strncpy( hi_name[hi_pos], al_cstr( ( (WZ_TEXTBOX *)wgt )->text ), 63 );
             wgt->flags &= ~WZ_STATE_HAS_FOCUS;
             wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
-            save_highscores( set.number_of_columns, set.column_height, set.advanced, hi_name, hi_score );
+            save_highscores( settings_current.number_of_columns,
+                             settings_current.column_height,
+                             settings_current.advanced,
+                             hi_name,
+                             hi_score );
             remove_gui( gui );
             add_gui( base_gui, create_win_gui( -1 ) );
         }
@@ -872,20 +969,21 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     break;
 
                 case BUTTON_OK:
-                    if( ( nset.number_of_columns != set.number_of_columns )
-                        || ( nset.column_height != set.column_height ) || ( nset.advanced != set.advanced ) )
+                    if( ( settings_new.number_of_columns != settings_current.number_of_columns )
+                        || ( settings_new.column_height != settings_current.column_height )
+                        || ( settings_new.advanced != settings_current.advanced ) )
                     {
-                        confirm_restart( &nset );
+                        confirm_restart( &settings_new );
                     }
                     else
                     {
-                        nset = set;
+                        settings_new = settings_current;
                         remove_gui( gui );
                     }
                     break;
 
                 case BUTTON_RESTART:
-                    confirm_restart( &nset );
+                    confirm_restart( &settings_new );
                     break;
 
                 case BUTTON_TILES:
@@ -893,8 +991,8 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     break;
 
                 case BUTTON_ZOOM:
-                    SWITCH( set.fat_fingers );
-                    nset.fat_fingers = set.fat_fingers;
+                    SWITCH( settings_current.fat_fingers );
+                    settings_new.fat_fingers = settings_current.fat_fingers;
                     break;
 
                 case BUTTON_ABOUT:
@@ -902,8 +1000,8 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     break;
 
                 case BUTTON_SOUND:
-                    SWITCH( set.sound_mute );
-                    if( set.sound_mute )
+                    SWITCH( settings_current.sound_mute );
+                    if( settings_current.sound_mute )
                     {
                         wz_set_text_own( (WZ_WIDGET *)event->user.data2, al_ustr_new( "Sound: off" ) );
                     }
@@ -911,7 +1009,7 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     {
                         wz_set_text_own( (WZ_WIDGET *)event->user.data2, al_ustr_new( "Sound: on" ) );
                     }
-                    nset.sound_mute = set.sound_mute;
+                    settings_new.sound_mute = settings_current.sound_mute;
                     break;
 
                 case BUTTON_PARAMS:
@@ -919,14 +1017,14 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     break;
 
                 case BUTTON_SAVE:
-                    if( set.saved )
+                    if( settings_current.saved )
                         confirm_save();
                     else
                         emit_event( EVENT_SAVE );
                     break;
 
                 case BUTTON_LOAD:
-                    if( !set.saved )
+                    if( !settings_current.saved )
                     { // if no saved game exists, revert button press
                         ( (WZ_BUTTON *)wgt )->down = 1;
                     }
@@ -937,11 +1035,11 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     break;
 
                 case BUTTON_ROWS:
-                    nset.column_height = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
+                    settings_new.column_height = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
                     break;
 
                 case BUTTON_COLS:
-                    nset.number_of_columns = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
+                    settings_new.number_of_columns = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
                     break;
             }
         }
@@ -952,7 +1050,7 @@ int handle_gui_event( ALLEGRO_EVENT *event )
         {
             if( wgt->id == BUTTON_EXTRA_HARD )
             {
-                SWITCH( nset.advanced );
+                SWITCH( settings_new.advanced );
             }
             else if( wgt->id == BUTTON_OK )
             {
@@ -966,13 +1064,13 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     wgt = wgt->next_sib;
                 }
 
-                ALLEGRO_USTR *msg =
-                    al_ustr_newf( "WARNING: The puzzle generation parameters are here for debug purposes and altering "
-                                  "them may make the game unbalanced. You can reset these settings later.\n\n%s",
-                                  nset.advanced ? "You also turned on extra hard mode. This mode is not recommended. "
-                                                  "Puzzle generation will be slower, and solving the puzzles may "
-                                                  "require thinking ahead many steps and very indirect reasoning."
-                                                : "" );
+                ALLEGRO_USTR *msg = al_ustr_newf(
+                    "WARNING: The puzzle generation parameters are here for debug purposes and altering "
+                    "them may make the game unbalanced. You can reset these settings later.\n\n%s",
+                    settings_new.advanced ? "You also turned on extra hard mode. This mode is not recommended. "
+                                            "Puzzle generation will be slower, and solving the puzzles may "
+                                            "require thinking ahead many steps and very indirect reasoning."
+                                          : "" );
                 remove_gui( gui );
                 add_gui( base_gui, create_msg_gui( -1, msg ) );
             }
@@ -980,7 +1078,7 @@ int handle_gui_event( ALLEGRO_EVENT *event )
             {
                 wgt = gui->first_child;
                 reset_rel_params();
-                nset.advanced = set.advanced = 0;
+                settings_new.advanced = settings_current.advanced = 0;
 
                 // update sliders and button
                 while( wgt )
@@ -1003,12 +1101,12 @@ int handle_gui_event( ALLEGRO_EVENT *event )
     return 0;
 }
 
-void update_base_gui( float dt )
+void Gui::update_base_gui( float dt )
 {
     wz_update( base_gui, dt );
 }
 
-int gui_send_event( ALLEGRO_EVENT *event )
+int Gui::gui_send_event( ALLEGRO_EVENT *event )
 {
     int ret = 0;
 
@@ -1026,11 +1124,19 @@ int gui_send_event( ALLEGRO_EVENT *event )
     return ret;
 }
 
-void draw_text_gui( ALLEGRO_USTR *text )
+void Gui::draw_text_gui( ALLEGRO_USTR *text )
 {
     WZ_WIDGET *gui = create_text_gui( text );
 
     wz_update( gui, 0 );
     wz_draw( gui );
     wz_destroy( gui );
+}
+
+void Gui::emit_event( int event_type )
+{
+    static ALLEGRO_EVENT user_event = { 0 };
+
+    user_event.type = event_type;
+    al_emit_user_event( &user_event_src, &user_event, NULL );
 }

@@ -1,95 +1,146 @@
 #pragma once
 
-#include "tiled_block.hpp"
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+
+#define ALLEGRO_UNSTABLE
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_color.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_ttf.h>
+
+#include "allegro_stuff.hpp"
+#include "bitmaps.hpp"
+#include "board.hpp"
+#include "dialog.hpp"
+#include "game_data.hpp"
+#include "gui.hpp"
 #include "macros.hpp"
+#include "sound.hpp"
+#include "text.hpp"
+#include "tiled_block.hpp"
 
-#define MAX_CLUES 100
+#include "board.hpp"
 
-// Structures
-enum GAME_STATE
+constexpr double FPS = 60.0;
+constexpr double DELTA_DOUBLE_CLICK = 0.2;
+constexpr double DELTA_SHORT_CLICK = 0.1;
+constexpr double DELTA_HOLD_CLICK = 0.3;
+constexpr double RESIZE_DELAY = 0.04;
+constexpr double BLINK_DELAY = 0.3;
+constexpr double BLINK_TIME = 0.05;
+constexpr double FIXED_DT = 1.0 / FPS;
+
+struct PanelState
 {
-    GAME_NULL = 0,
-    GAME_INTRO = 1,
-    GAME_PLAYING,
-    GAME_WRONG,
-    GAME_OVER = 3,
-    GAME_SETTINGS,
-    NUMBER_OF_STATES
+    int tile[8][8][8];
+    PanelState *parent;
 };
 
-enum RELATION
+class Game
 {
-    // Horizontal
-    NEXT_TO,
-    NOT_NEXT_TO,
-    ONE_SIDE,
-    CONSECUTIVE,
-    NOT_MIDDLE,
-    // Vertical
-    TOGETHER_2,
-    TOGETHER_3,
-    NOT_TOGETHER,
-    TOGETHER_NOT_MIDDLE,
-    TOGETHER_FIRST_WITH_ONLY_ONE,
-    // Positional
-    REVEAL,
-    NUMBER_OF_RELATIONS
+public:
+    Game();
+
+    bool init();
+    bool run();
+    bool cleanup();
+
+private:
+    void halt( ALLEGRO_EVENT_QUEUE *queue );
+    void emit_event( int event_type );
+
+    void handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mclick );
+    void mouse_grab( int mx, int my );
+    void mouse_drop( int mx, int my );
+    TiledBlock *get_TiledBlock_at( int x, int y );
+    void destroy_undo();
+    ALLEGRO_USTR *get_hint_info_text( RELATION relation, char *b0, char *b1, char *b2, char *b3 );
+    void explain_clue( Clue *clue );
+    void game_loop();
+    void destroy_everything();
+    int toggle_fullscreen();
+    void handle_allegro_event_display_close();
+    void handle_allegro_event_display_resize();
+    void handle_allegro_event_redraw();
+    void handle_event_switch_tiles();
+    void draw_stuff();
+    void update_board();
+    void show_hint();
+    void update_guessed();
+    void execute_undo();
+    void save_state();
+    void switch_solve_puzzle();
+    int save_game_f();
+    int load_game_f();
+    void swap_clues( TiledBlock *c1, TiledBlock *c2 );
+    void zoom_TB( TiledBlock *tiled_block );
+    void animate_win();
+    void draw_generating_puzzle( Settings *settings );
+    int switch_tiles();
+    void win_or_lose();
+    void handle_event_restart();
+    void handle_event_exit();
+    void handle_event_save();
+    bool handle_event_load();
+    void handle_event_settings();
+    void handle_allegro_event_touch_begin( ALLEGRO_EVENT &ev );
+    void handle_allegro_event_mouse_button_down( ALLEGRO_EVENT &ev );
+    void handle_allegro_event_touch_end( ALLEGRO_EVENT &ev );
+    void handle_allegro_event_mouse_button_up( ALLEGRO_EVENT &ev );
+    void handle_allegro_event_touch_move( ALLEGRO_EVENT &ev );
+    void handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev );
+    void handle_allegro_event_key_char( ALLEGRO_EVENT &ev );
+    void handle_events();
+    void game_inner_loop();
+
+private:
+    Settings set;
+    Settings nset; // settings for new game
+
+    Gui gui;
+
+    ALLEGRO_DISPLAY *display;
+
+    bool noexit;
+    int restart;
+    int redraw;
+    int mouse_move;
+    int keypress;
+    int resizing;
+    int resize_update;
+    int mouse_button_down;
+    int win_gui;
+    TiledBlock *tb_down;
+    TiledBlock *tb_up;
+    double mouse_up_time;
+    double mouse_down_time;
+    int wait_for_double_click;
+    int hold_click_check;
+    int mbdown_x;
+    int mbdown_y;
+    int touch_down;
+
+    double resize_time;
+    double old_time;
+    double blink_time;
+    double play_time;
+    int swap_mouse_buttons;
+
+    GAME_STATE game_state;
+    int desktop_xsize;
+    int desktop_ysize;
+    int fullscreen;
+
+    GameData game_data;
+    Board board;
+
+    PanelState *undo;
 };
-
-struct Clue
-{
-    // the three tiles from the clue are j[m], k[m] for m=0,1,2
-    // if clue uses only 1 or 2 tiles, use the first and repeat them arbitrarily
-    // i coordinate points to the column in the solution where the item appears (not shown to user)
-    int i[3], j[3], k[3];
-    RELATION rel; // how they relate
-    int index;
-    int hidden;
-};
-
-struct Game
-{
-    int guess[8][8];   // guessed value for [col][block]
-    int puzzle[8][8];  // [col][clock] = [tile]
-    int tile[8][8][8]; // [col][block][tile]
-    Clue clue[MAX_CLUES];
-    int clue_n;
-    int number_of_columns; // number of columns
-    int column_height;     // column height
-    double time;
-    int guessed;
-    int tile_col[8][8]; // column where puzzle tile [row][tile] is located (in solution);
-    int where[8][8];
-    int advanced;
-};
-
-struct Pair
-{
-    int i;
-    int j;
-};
-
-// Prototypes
-
-int rand_int( int n );
-void init_game( Game *game ); // clean board and guesses xxx todo: add clues?
-void create_game_with_clues( Game *game );
-void create_puzzle( Game *game );
-int get_hint( Game *game );
-int check_solution( Game *game );
-int check_panel_consistency( Game *game );
-int check_panel_correctness( Game *game );
-void shuffle( int p[], int n );
-void guess_tile( Game *game, int i, int j, int k );
-void hide_tile_and_check( Game *game, int i, int j, int k );
-void unguess_tile( Game *game, int i, int j );
-int is_guessed( Game *game, int j, int k ); // is the value k on row j guessed?
-void get_clue( Game *game, int i, int j, int rel, Clue *clue );
-int is_vclue( RELATION rel ); // is this relation a vertical clue?
-void reset_rel_params( void );
-
-// debug
-int is_clue_valid( Game *game, Clue *clue );
-
-// globals
-extern int REL_PERCENT[NUMBER_OF_RELATIONS];

@@ -21,8 +21,11 @@ misrepresented as being the original software.
 distribution.
 */
 
+#include <cmath>
+
 #include "../widgetz_internal.hpp"
-#include <math.h>
+
+#include "../../macros.hpp"
 
 /*
 Title: Internal

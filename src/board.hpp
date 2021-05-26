@@ -1,16 +1,21 @@
 #pragma once
 
-#include <stdio.h>
-#include "game.hpp"
+#include <cstdio>
+#include "game_data.hpp"
 #include "tiled_block.hpp"
 #include "macros.hpp"
 #include <allegro5/allegro_font.h>
 #include "widgetz/widgetz.hpp"
 
-//#include "main.hpp"
-
 struct Board
 {
+    Board();
+
+    int create_board( GameData *game_data, int mode ); // mode = 0: update, 1: create
+    void destroy_board();
+    void destroy_board_clue_blocks();
+    void clear_info_panel();
+
     int number_of_columns;
     int column_height;
     int xsize, ysize;
@@ -33,11 +38,10 @@ struct Board
     int panel_tile_size;
     int clue_unit_size;
     int clue_unit_space;
-    int number_of_hclues;                     // number of hclues
-    int number_of_vclues;                     // number of vclue
+    int number_of_hclues;
+    int number_of_vclues;
     int dragging_origin_x, dragging_origin_y; // initial position of TiledBlock being dragged
-    int dragging_relative_position_of_grabbing_x,
-        dragging_relative_position_of_grabbing_y; // relative poisition of grabbing point
+    int dragging_relative_position_of_grabbing_x, dragging_relative_position_of_grabbing_y;
     int type_of_tiles; // 0 = use ttf font, 1 = use file bitmaps, 2 = use classic tiles from grid
     float time_start;
     int restart;
@@ -75,8 +79,3 @@ enum BLOCK_TYPE
     TB_BUTTON_UNDO,
     TB_BUTTON_TILES
 };
-
-//Prototypes
-int create_board( Game *game, Board *board, int mode ); // mode = 0: update, 1: create
-void destroy_board( Board *board );
-void destroy_board_clue_blocks( Board *board );

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <stdlib.h>
-#include "macros.hpp"
+#include <cstdlib>
 
-#define RESERVED_SAMPLES 64
+#include "macros.hpp"
 
 enum SOUND
 {

@@ -7,11 +7,12 @@
 #include <allegro5/allegro_color.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_memfile.h>
-#include "allegro_stuff.hpp"
 
+#include <spdlog/spdlog.h>
+
+#include "allegro_stuff.hpp"
 #include "dialog.hpp"
 #include "text.hpp"
-#include "main.hpp"
 
 enum SYMBOL
 {
@@ -34,16 +35,14 @@ int GLYPH_SHADOWS = 0;
 char symbol_char[9][8][6];
 
 const float SHADOW_ALPHA = 0.3;
-//const char *TEXT_FONT_FILE = "fonts/aileron-regular.otf";
 
 // prototypes
 
-int make_clue_bitmaps( Game *game, Board *board );
+int make_clue_bitmaps( GameData *game_data, Board *board );
 
-char *CLUE_BG_COLOR[8] = { "808080", "5522F0", "008080", "840543", "BB6000", "DAB520", "FFB6C1", "9ACD32" };
+const char *CLUE_BG_COLOR[8] = { "808080", "5522F0", "008080", "840543", "BB6000", "DAB520", "FFB6C1", "9ACD32" };
 
-//    "800080",
-char *CLUE_FG_COLOR[8] = {
+const char *CLUE_FG_COLOR[8] = {
     "FFFFFF",
     "FFFFFF",
     "FFFFFF",
@@ -54,7 +53,7 @@ char *CLUE_FG_COLOR[8] = {
     "000000",
 };
 
-char *CLUE_BG_COLOR_BMP[8] = {
+const char *CLUE_BG_COLOR_BMP[8] = {
     "999999",
     "999999",
     "999999",
@@ -65,25 +64,14 @@ char *CLUE_BG_COLOR_BMP[8] = {
     "999999",
 };
 
-//char *CLUE_BG_COLOR_BMP[8]={
-//    "777777",
-//    "555555",
-//    "777777",
-//    "555555",
-//    "777777",
-//    "555555",
-//    "777777",
-//    "555555"
-//};
-
-char *CLUE_CODE[8][8] = { { "A", "B", "C", "D", "E", "F", "G", "H" },
-                          { "Q", "R", "S", "T", "U", "V", "W", "X" },
-                          { "I", "J", "K", "L", "M", "N", "O", "P" },
-                          { "a", "b", "c", "d", "e", "f", "g", "h" },
-                          { "1", "2", "3", "4", "5", "6", "7", "8" },
-                          { "!", "\"", "#", "$", "%", "&", "\'", "(" },
-                          { "i", "j", "k", "l", "m", "n", "o", "p" },
-                          { "q", "r", "s", "t", "u", "v", "w", "x" } };
+const char *CLUE_CODE[8][8] = { { "A", "B", "C", "D", "E", "F", "G", "H" },
+                                { "Q", "R", "S", "T", "U", "V", "W", "X" },
+                                { "I", "J", "K", "L", "M", "N", "O", "P" },
+                                { "a", "b", "c", "d", "e", "f", "g", "h" },
+                                { "1", "2", "3", "4", "5", "6", "7", "8" },
+                                { "!", "\"", "#", "$", "%", "&", "\'", "(" },
+                                { "i", "j", "k", "l", "m", "n", "o", "p" },
+                                { "q", "r", "s", "t", "u", "v", "w", "x" } };
 
 void destroy_all_bitmaps( Board *board )
 {
@@ -112,11 +100,6 @@ void destroy_all_bitmaps( Board *board )
     }
     al_destroy_font( default_font );
     destroy_board_bitmaps( board );
-    //    for(i=0;i<board->column_height+1;i++){
-    //        for(j=0;j<board->number_of_columns;j++){
-    //            al_ustr_free(symbol_char[i][j]);
-    //        }
-    //    }
 }
 
 void draw_horizontal_arrow( float x0, float y0, float x1, float y1, ALLEGRO_COLOR color, float thickness )
@@ -175,7 +158,7 @@ void destroy_board_bitmaps( Board *board )
         ndestroy_bitmap( board->symbol_bmp[i] );
     }
 
-    destroy_board_clue_blocks( board );
+    board->destroy_board_clue_blocks();
 
     ndestroy_bitmap( board->time_bmp );
     ndestroy_bitmap( board->info_text_bmp );
@@ -229,7 +212,7 @@ int init_bitmaps( Board *board )
 
     default_font = al_load_font( DEFAULT_FONT_FILE, 16, 0 );
     if( !default_font )
-        errlog( "Error loading default font" );
+        SPDLOG_ERROR( "Error loading default font" );
 
     board->info_text_bmp = NULL;
     board->info_panel.bmp = NULL;
@@ -241,7 +224,7 @@ int init_bitmaps( Board *board )
     board->button_bmp[3] = al_load_bitmap( "buttons/undo.png" );
 
     if( board->type_of_tiles == 2 )
-        return init_bitmaps_classic( board );
+        return init_bitmaps_classic();
 
     if( board->type_of_tiles == 1 )
     { // use bitmaps
@@ -259,7 +242,7 @@ int init_bitmaps( Board *board )
                 basic_bmp[j][k] = al_load_bitmap( pathname );
                 if( !basic_bmp[j][k] )
                 {
-                    errlog( "Error loading %s.", pathname );
+                    SPDLOG_ERROR( "Error loading %s.", pathname );
                     unload_basic_bmps( board, j, k - 1 );
                     al_destroy_path( path );
                     return -1;
@@ -322,8 +305,7 @@ ALLEGRO_COLOR invert_color( ALLEGRO_COLOR c )
     return ( ALLEGRO_COLOR ){ 1 - c.r, 1 - c.g, 1 - c.b, c.a };
 }
 
-#define SYMBOL_COLOR al_map_rgba( 255, 0, 0, 255 )
-int draw_symbols( Game *game, Board *board )
+int draw_symbols( GameData *game_data, Board *board )
 {
     float cus = board->clue_unit_size;
 
@@ -363,7 +345,6 @@ int draw_symbols( Game *game, Board *board )
     al_draw_filled_circle( cus / 2 - 0.2 * cus, cus * 0.8, 0.05 * cus, SYMBOL_COLOR );
     al_draw_filled_circle( cus / 2 + 0.2 * cus, cus * 0.8, 0.05 * cus, SYMBOL_COLOR );
 
-    //    al_draw_textf(tile_font3, WHITE_COLOR, cus/2,cus/2-al_get_font_line_height(tile_font3)/2, ALLEGRO_ALIGN_CENTER, "%s", "...");
     draw_horizontal_arrow( cus * 0.2, cus * 0.5, cus * 0.8, cus * 0.5, SYMBOL_COLOR, cus * 0.05 );
 
     al_set_target_bitmap( board->symbol_bmp[SYM_ONLY_ONE] );
@@ -417,7 +398,7 @@ int draw_symbols( Game *game, Board *board )
     return 0;
 }
 
-int draw_classic_symbols( Game *game, Board *board )
+int draw_classic_symbols( GameData *game_data, Board *board )
 {
     // create symbols
     board->symbol_bmp[SYM_FORBIDDEN] = al_create_bitmap( board->clue_unit_size, board->clue_unit_size );
@@ -457,7 +438,7 @@ int draw_classic_symbols( Game *game, Board *board )
     return 0;
 }
 
-int update_font_bitmaps( Game *game, Board *board )
+int update_font_bitmaps( GameData *game_data, Board *board )
 {
     int i, j, size;
     float FONT_FACTOR = 1;
@@ -467,7 +448,7 @@ int update_font_bitmaps( Game *game, Board *board )
 
     al_set_target_bitmap( NULL );
 
-    size = min( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height );
+    size = std::min( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height );
     tile_font1 = load_font_mem( tile_font_mem, TILE_FONT_FILE, -size * FONT_FACTOR );
     tile_font2 = load_font_mem( tile_font_mem, TILE_FONT_FILE, -board->panel_tile_size * FONT_FACTOR );
     tile_font3 = load_font_mem( tile_font_mem, TILE_FONT_FILE, -board->clue_unit_size * FONT_FACTOR );
@@ -569,7 +550,7 @@ int update_font_bitmaps( Game *game, Board *board )
         }
     }
 
-    if( draw_symbols( game, board ) )
+    if( draw_symbols( game_data, board ) )
         return -1;
 
     al_destroy_font( tile_font1 );
@@ -579,16 +560,16 @@ int update_font_bitmaps( Game *game, Board *board )
     al_set_target_backbuffer( al_get_current_display() );
     // create clue tile bmps
     al_set_target_bitmap( dispbuf );
-    return make_clue_bitmaps( game, board );
+    return make_clue_bitmaps( game_data, board );
 }
 
-int make_clue_bitmaps( Game *game, Board *board )
+int make_clue_bitmaps( GameData *game_data, Board *board )
 {
     int i;
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
     al_set_target_bitmap( NULL );
 
-    for( i = 0; i < game->clue_n; i++ )
+    for( i = 0; i < game_data->clue_n; i++ )
     {
         board->clue_bmp[i] = al_create_bitmap( board->clue_tiledblock[i]->width, board->clue_tiledblock[i]->height );
         if( !board->clue_bmp[i] )
@@ -598,22 +579,22 @@ int make_clue_bitmaps( Game *game, Board *board )
         }
         al_set_target_bitmap( board->clue_bmp[i] );
         al_clear_to_color( board->clue_tiledblock[i]->bg_color );
-        switch( game->clue[i].rel )
+        switch( game_data->clue[i].rel )
         {
             case NEXT_TO:
             case CONSECUTIVE:
             case NOT_NEXT_TO:
             case NOT_MIDDLE:
-                al_draw_bitmap( board->clue_unit_bmp[game->clue[i].j[0]][game->clue[i].k[0]], 0, 0, 0 );
-                al_draw_bitmap( board->clue_unit_bmp[game->clue[i].j[1]][game->clue[i].k[1]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[0]][game_data->clue[i].k[0]], 0, 0, 0 );
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[1]][game_data->clue[i].k[1]],
                                 board->clue_unit_size + board->clue_unit_space,
                                 0,
                                 0 );
-                al_draw_bitmap( board->clue_unit_bmp[game->clue[i].j[2]][game->clue[i].k[2]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[2]][game_data->clue[i].k[2]],
                                 2 * ( board->clue_unit_size + board->clue_unit_space ),
                                 0,
                                 0 );
-                if( game->clue[i].rel == NOT_NEXT_TO )
+                if( game_data->clue[i].rel == NOT_NEXT_TO )
                 {
                     al_draw_bitmap( board->symbol_bmp[SYM_FORBIDDEN], 0, 0, 0 );
                     al_draw_bitmap( board->symbol_bmp[SYM_FORBIDDEN],
@@ -621,20 +602,20 @@ int make_clue_bitmaps( Game *game, Board *board )
                                     0,
                                     0 );
                 }
-                else if( game->clue[i].rel == NOT_MIDDLE )
+                else if( game_data->clue[i].rel == NOT_MIDDLE )
                 {
                     al_draw_bitmap(
                         board->symbol_bmp[SYM_FORBIDDEN], board->clue_unit_size + board->clue_unit_space, 0, 0 );
                 }
 
-                if( ( game->clue[i].rel == NOT_MIDDLE ) || ( game->clue[i].rel == CONSECUTIVE ) )
+                if( ( game_data->clue[i].rel == NOT_MIDDLE ) || ( game_data->clue[i].rel == CONSECUTIVE ) )
                     al_draw_bitmap( board->symbol_bmp[SYM_SWAPPABLE], 0, 0, 0 );
 
                 break;
             case ONE_SIDE:
-                al_draw_bitmap( board->clue_unit_bmp[game->clue[i].j[0]][game->clue[i].k[0]], 0, 0, 0 );
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[0]][game_data->clue[i].k[0]], 0, 0, 0 );
                 al_draw_bitmap( board->symbol_bmp[SYM_ONE_SIDE], board->clue_unit_size + board->clue_unit_space, 0, 0 );
-                al_draw_bitmap( board->clue_unit_bmp[game->clue[i].j[1]][game->clue[i].k[1]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[1]][game_data->clue[i].k[1]],
                                 2 * ( board->clue_unit_size + board->clue_unit_space ),
                                 0,
                                 0 );
@@ -642,21 +623,21 @@ int make_clue_bitmaps( Game *game, Board *board )
             case TOGETHER_3:
             case TOGETHER_NOT_MIDDLE:
             case TOGETHER_FIRST_WITH_ONLY_ONE:
-                al_draw_bitmap( board->clue_unit_bmp[game->clue[i].j[2]][game->clue[i].k[2]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[2]][game_data->clue[i].k[2]],
                                 0,
                                 2 * ( board->clue_unit_size + board->clue_unit_space ),
                                 0 );
             case TOGETHER_2:
             case NOT_TOGETHER:
-                al_draw_bitmap( board->clue_unit_bmp[game->clue[i].j[0]][game->clue[i].k[0]], 0, 0, 0 );
-                al_draw_bitmap( board->clue_unit_bmp[game->clue[i].j[1]][game->clue[i].k[1]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[0]][game_data->clue[i].k[0]], 0, 0, 0 );
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[1]][game_data->clue[i].k[1]],
                                 0,
                                 board->clue_unit_size + board->clue_unit_space,
                                 0 );
-                if( ( game->clue[i].rel == NOT_TOGETHER ) || ( game->clue[i].rel == TOGETHER_NOT_MIDDLE ) )
+                if( ( game_data->clue[i].rel == NOT_TOGETHER ) || ( game_data->clue[i].rel == TOGETHER_NOT_MIDDLE ) )
                     al_draw_bitmap(
                         board->symbol_bmp[SYM_FORBIDDEN], 0, board->clue_unit_size + board->clue_unit_space, 0 );
-                else if( game->clue[i].rel == TOGETHER_FIRST_WITH_ONLY_ONE )
+                else if( game_data->clue[i].rel == TOGETHER_FIRST_WITH_ONLY_ONE )
                     al_draw_bitmap(
                         board->symbol_bmp[SYM_ONLY_ONE], 0, 0, 0 ); //xxx todo: temporary  -- add ONLY_ONE symbol
                 break;
@@ -692,29 +673,7 @@ void show_info_text( Board *board, ALLEGRO_USTR *msg )
     al_ustr_free( msg );
 }
 
-void clear_info_panel( Board *board )
-{
-    board->info_panel.bmp = NULL;
-}
-
-// unused
-//void show_info_text_b(Board *board, const char* msg, ...){
-//    ALLEGRO_FONT *font;
-//    ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
-//    va_list ap;
-//    font = board->text_font ? board->text_font : default_font;
-//    ndestroy_bitmap(board->info_text_bmp);
-//    board->info_text_bmp = al_create_bitmap(board->info_panel.width, board->info_panel.height);
-//    al_set_target_bitmap(board->info_text_bmp);
-//    al_clear_to_color(board->info_panel.bg_color);
-//    va_start(ap, msg);
-//    draw_multiline_text_vbf(font, INFO_TEXT_COLOR, 10, 3, board->info_panel.width-30, al_get_font_line_height(font), ALLEGRO_ALIGN_LEFT, msg, ap);
-//    va_end(ap);
-//    board->info_panel.bmp = &board->info_text_bmp; // make it show in the info_panel
-//    al_set_target_bitmap(dispbuf);
-//}
-
-int update_bitmaps( Game *game, Board *board )
+int update_bitmaps( GameData *game_data, Board *board )
 {
     int i, j, size;
 
@@ -725,8 +684,8 @@ int update_bitmaps( Game *game, Board *board )
     if( !( board->text_font =
                load_font_mem( text_font_mem,
                               TEXT_FONT_FILE,
-                              -min( board->info_panel.height / 2.2,
-                                    sqrt( board->info_panel.width * board->info_panel.height ) / 10 ) ) ) )
+                              -std::min( board->info_panel.height / 2.2,
+                                         sqrt( board->info_panel.width * board->info_panel.height ) / 10 ) ) ) )
     {
         fprintf( stderr, "Error loading font %s.\n", TEXT_FONT_FILE );
     }
@@ -735,9 +694,6 @@ int update_bitmaps( Game *game, Board *board )
     board->time_bmp = al_create_bitmap( board->time_panel.sub[0]->width, board->time_panel.sub[0]->height );
     al_set_target_bitmap( board->time_bmp );
     al_clear_to_color( board->time_panel.sub[0]->bg_color );
-
-    // this should go here, but by android problems we have to recreate the bitmap on every new text drawing:
-    // board->info_text_bmp = al_create_bitmap(board->info_panel.width, board->info_panel.height);
 
     for( i = 0; i < 4; i++ )
     {
@@ -749,12 +705,12 @@ int update_bitmaps( Game *game, Board *board )
 
     if( board->type_of_tiles == 0 )
     { // use font bitmaps
-        return update_font_bitmaps( game, board );
+        return update_font_bitmaps( game_data, board );
     }
 
     // else update normal bitmaps:
     al_set_target_bitmap( NULL );
-    size = min( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height );
+    size = std::min( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height );
     for( i = 0; i < board->column_height; i++ )
     {
         for( j = 0; j < board->number_of_columns; j++ )
@@ -841,22 +797,22 @@ int update_bitmaps( Game *game, Board *board )
 
     if( board->type_of_tiles != 2 )
     {
-        if( draw_symbols( game, board ) )
+        if( draw_symbols( game_data, board ) )
             return -1;
     }
     else
     {
-        if( draw_classic_symbols( game, board ) )
+        if( draw_classic_symbols( game_data, board ) )
             return -1;
     }
 
     al_set_target_bitmap( dispbuf );
 
     // create clue tile bmps
-    return make_clue_bitmaps( game, board );
+    return make_clue_bitmaps( game_data, board );
 }
 
-int init_bitmaps_classic( Board *board )
+int init_bitmaps_classic()
 {
     ALLEGRO_BITMAP *test_bmp;
     int i, j;

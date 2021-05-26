@@ -16,13 +16,8 @@ A struct that defines a bunch of rendering functions to render various types of 
 struct WZ_THEME
 {
     int pad;
-    void ( *draw_button )( WZ_THEME *theme,
-                           float x,
-                           float y,
-                           float width,
-                           float height,
-                           ALLEGRO_USTR *text,
-                           int style );
+    void (
+        *draw_button )( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_USTR *text, int style );
     void ( *draw_box )( WZ_THEME *theme, float x, float y, float width, float height, int style );
     void ( *draw_textbox )( WZ_THEME *theme,
                             float x,
@@ -83,7 +78,6 @@ struct WZ_DEF_THEME
 	*/
     ALLEGRO_FONT *font;
     int pad[3];
-
 };
 
 /*
@@ -144,7 +138,6 @@ struct WZ_SKIN_THEME
 	Bitmap to use to draw scrollbar sliders
 	*/
     ALLEGRO_BITMAP *slider_bitmap;
-
 };
 
 struct WZ_SHORTCUT
@@ -363,36 +356,6 @@ struct WZ_EDITBOX
     int cursor_pos;
     int scroll_pos;
 };
-
-/*
-Section: Constants
-
-Various constants defined by WidgetZ
-
-Constants: Widget States
-
-WZ_STATE_HIDDEN           - Widget is hidden
-WZ_STATE_DISABLED         - Widget is disabled
-WZ_STATE_HAS_FOCUS        - Widget has focus
-WZ_STATE_NOTWANT_FOCUS    - Widget does not want focus
-WZ_STATE_LAYOUT           - Widget is a layout widget
-*/
-#define WZ_STATE_HIDDEN 02
-#define WZ_STATE_DISABLED 04
-#define WZ_STATE_HAS_FOCUS 010
-#define WZ_STATE_NOTWANT_FOCUS 020
-#define WZ_STATE_LAYOUT 040
-
-/*
-Constants: Widget Styles
-
-WZ_STYLE_DISABLED          - Widget is disabled
-WZ_STYLE_FOCUSED           - Widget has focus
-WZ_STYLE_DOWN              - Widget is down
-*/
-#define WZ_STYLE_DISABLED 02
-#define WZ_STYLE_FOCUSED 04
-#define WZ_STYLE_DOWN 020
 
 /*
 Enum: Events

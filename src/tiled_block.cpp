@@ -104,10 +104,9 @@ void get_TiledBlock_offset( TiledBlock *tiled_block, int *x, int *y )
 
 void highlight_TiledBlock( TiledBlock *tiled_block )
 {
-    int x, y, i;
+    int x, y;
     get_TiledBlock_offset( tiled_block, &x, &y );
-    //    al_draw_rectangle(x-2,y-2, x+tiled_block->width+2, y+tiled_block->height+2, (ALLEGRO_COLOR){1,0,0,0.5}, 4);
-    for( i = 0; i < 8; i++ )
+    for( int i = 0; i < 8; i++ )
     {
         al_draw_rectangle( x, y, x + tiled_block->width, y + tiled_block->height, al_premul_rgba_f( 1, 0, 0, 0.2 ), i );
     }

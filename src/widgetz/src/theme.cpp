@@ -21,11 +21,14 @@ misrepresented as being the original software.
 distribution.
 */
 
-#include "../widgetz_internal.hpp"
-#include <math.h>
+#include <cmath>
 
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
+
+#include "../widgetz_internal.hpp"
+
+#include "../../macros.hpp"
 
 /*
 Title: Theme Stuff
@@ -88,34 +91,6 @@ static void wz_draw_3d_rectangle( float x1, float y1, float x2, float y2, float 
     al_draw_prim( vtx, 0, 0, 0, 6, ALLEGRO_PRIM_TRIANGLE_FAN );
     al_draw_filled_rectangle( x1 + border, y1 + border, x2 - border, y2 - border, col );
 }
-
-//My version of it
-//returns the token length, and skips the first occurence if it is the first character
-//char *wz_ustrpbrk(AL_CONST char *s, AL_CONST char *set, int* index)
-//{
-//	AL_CONST char *setp;
-//	int c, d;
-//	int first = 1;
-//	ALLEGRO_ASSERT(s);
-//	ALLEGRO_ASSERT(set);
-//
-//	*index = 0;
-//	while ((c = ugetc(s)) != 0)
-//	{
-//		setp = set;
-//
-//		while ((d = ugetxc(&setp)) != 0)
-//		{
-//			if (c == d && !first)
-//				return (char *)s;
-//		}
-//		(*index)++;
-//		s += uwidth(s);
-//		first = 0;
-//	}
-//
-//	return NULL;
-//}
 
 //return the new start
 int wz_find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end )
@@ -279,7 +254,6 @@ void wz_draw_multi_text( float x,
             {
                 ALLEGRO_USTR_INFO info;
                 const ALLEGRO_USTR *token = al_ref_ustr( &info, text, start, end );
-                //printf("%f %f %s\n", x, cur_y, al_cstr(token));
                 wz_draw_single_text(
                     x, cur_y, width, height, halign, WZ_ALIGN_TOP, color, font, (ALLEGRO_USTR *)token );
             }
@@ -472,14 +446,14 @@ void wz_def_draw_editbox( struct WZ_THEME *theme,
     }
 }
 
-void wz_def_draw_image( struct WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_BITMAP *image )
+void wz_def_draw_image( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_BITMAP *image )
 {
     float ix = x + ( width - al_get_bitmap_width( image ) ) / 2;
     float iy = y + ( height - al_get_bitmap_height( image ) ) / 2;
     al_draw_bitmap( image, ix, iy, 0 );
 }
 
-ALLEGRO_FONT *wz_def_get_font( struct WZ_THEME *theme, int font_num )
+ALLEGRO_FONT *wz_def_get_font( WZ_THEME *theme, int font_num )
 {
     WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
     return thm->font;

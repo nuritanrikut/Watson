@@ -21,13 +21,16 @@ misrepresented as being the original software.
 distribution.
 */
 
-#include "../widgetz_internal.hpp"
-#include "../widgetz_nine_patch.hpp"
-#include <math.h>
+#include <cmath>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
+
+#include "../widgetz_internal.hpp"
+#include "../widgetz_nine_patch.hpp"
+
+#include "../../macros.hpp"
 
 /*
 Title: Skinnable Theme Stuff
@@ -39,7 +42,7 @@ Function: wz_init_skin_theme
 Initializes a skin theme. Do not pass wz_skin_theme to this function, but make a copy of it first. You should initialize the bitmap variables inside the <WZ_SKIN_THEME> struct before calling
 this function. Don't forget to call <wz_destroy_skin_theme> on the theme when you are done with it.
 */
-void wz_init_skin_theme( struct WZ_SKIN_THEME *theme )
+void wz_init_skin_theme( WZ_SKIN_THEME *theme )
 {
     if( theme->button_up_bitmap != 0 )
         theme->button_up_patch = wz_create_nine_patch_bitmap( theme->button_up_bitmap, false );
@@ -77,7 +80,7 @@ Function: wz_destroy_skin_theme
 
 Destroys a skin theme that has been initialized by <wz_init_skin_theme>. Note that it does not free the passed pointer.
 */
-void wz_destroy_skin_theme( struct WZ_SKIN_THEME *theme )
+void wz_destroy_skin_theme( WZ_SKIN_THEME *theme )
 {
     if( theme == 0 )
         return;
@@ -122,7 +125,7 @@ draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float 
     return pad;
 }
 
-void wz_skin_draw_box( struct WZ_THEME *theme, float x, float y, float width, float height, int style )
+void wz_skin_draw_box( WZ_THEME *theme, float x, float y, float width, float height, int style )
 {
     WZ_SKIN_THEME *skin = (WZ_SKIN_THEME *)theme;
     WZ_DEF_THEME *def = (WZ_DEF_THEME *)theme;
@@ -193,7 +196,7 @@ void wz_skin_draw_button( WZ_THEME *theme, float x, float y, float width, float 
                         text );
 }
 
-void wz_skin_draw_textbox( struct WZ_THEME *theme,
+void wz_skin_draw_textbox( WZ_THEME *theme,
                            float x,
                            float y,
                            float width,
@@ -214,7 +217,7 @@ void wz_skin_draw_textbox( struct WZ_THEME *theme,
     wz_draw_multi_text( x, y, width, height, halign, valign, text_col, thm->font, text );
 }
 
-void wz_skin_draw_scroll( struct WZ_THEME *theme,
+void wz_skin_draw_scroll( WZ_THEME *theme,
                           float x,
                           float y,
                           float width,
@@ -269,7 +272,7 @@ void wz_skin_draw_scroll( struct WZ_THEME *theme,
         draw_tinted_patch( skin->slider_patch, col, xpos, ypos, slider_w, slider_h );
 }
 
-void wz_skin_draw_editbox( struct WZ_THEME *theme,
+void wz_skin_draw_editbox( WZ_THEME *theme,
                            float x,
                            float y,
                            float width,
@@ -347,14 +350,14 @@ void wz_skin_draw_editbox( struct WZ_THEME *theme,
     }
 }
 
-void wz_skin_draw_image( struct WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_BITMAP *image )
+void wz_skin_draw_image( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_BITMAP *image )
 {
     float ix = x + ( width - al_get_bitmap_width( image ) ) / 2;
     float iy = y + ( height - al_get_bitmap_height( image ) ) / 2;
     al_draw_bitmap( image, ix, iy, 0 );
 }
 
-ALLEGRO_FONT *wz_skin_get_font( struct WZ_THEME *theme, int font_num )
+ALLEGRO_FONT *wz_skin_get_font( WZ_THEME *theme, int font_num )
 {
     WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
     return thm->font;

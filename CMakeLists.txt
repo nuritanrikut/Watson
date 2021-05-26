@@ -9,6 +9,16 @@ endif()
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(Alleg REQUIRED)
 
+include(FetchContent)
+
+FetchContent_Declare(
+   spdlog
+   GIT_REPOSITORY https://github.com/gabime/spdlog.git
+   GIT_TAG        v1.8.5
+)
+
+FetchContent_MakeAvailable(spdlog)
+
 set(LINK_LIBRARIES ${LINK_LIBRARIES}
  	  Alleg::Allegro
 	  Alleg::Audio
@@ -20,6 +30,7 @@ set(LINK_LIBRARIES ${LINK_LIBRARIES}
 	  Alleg::Color
 	  Alleg::Memfile
 	  Alleg::Main
+         spdlog
    )
 
 if (UNIX)

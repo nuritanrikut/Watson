@@ -23,6 +23,8 @@ distribution.
 
 #include "../../widgetz_internal.hpp"
 
+#include "../../../macros.hpp"
+
 void wz_snap_editbox( WZ_EDITBOX *box )
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)box;

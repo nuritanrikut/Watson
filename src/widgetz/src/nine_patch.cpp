@@ -7,6 +7,8 @@ Taken from Allegro Nine Patch library. See LICENSE for copying information.
 
 #include "../widgetz_nine_patch.hpp"
 
+#include "../../macros.hpp"
+
 typedef struct nine_patch_mark_tag
 {
     int offset;

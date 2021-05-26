@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdio.h>
+#include <cstdio>
+
 #include <allegro5/allegro5.h>
 
 #include "macros.hpp"
-
 struct TiledBlock
 {
     int x, y, width, height;
@@ -12,7 +12,7 @@ struct TiledBlock
     ALLEGRO_COLOR bd_color;
     ALLEGRO_COLOR bg_color; // set to something if no background bitmap
     int bd;
-    int number_of_subblocks; // number of subblocks
+    int number_of_subblocks;
     struct TiledBlock **sub;
     struct TiledBlock *parent;
     int type;             // a descriptor
