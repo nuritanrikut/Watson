@@ -40,40 +40,40 @@ Returns:
 
 0 if the widget cannot be focused
 */
-int wz_ask_parent_for_focus(WZ_WIDGET* wgt)
+int wz_ask_parent_for_focus( WZ_WIDGET *wgt )
 {
-	if(wgt->flags & WZ_STATE_HAS_FOCUS)
-		return 1;
+    if( wgt->flags & WZ_STATE_HAS_FOCUS )
+        return 1;
 
-	if(wgt->flags & WZ_STATE_NOTWANT_FOCUS)
-		return 0;
+    if( wgt->flags & WZ_STATE_NOTWANT_FOCUS )
+        return 0;
 
-	if(wgt->flags & WZ_STATE_DISABLED)
-		return 0;
+    if( wgt->flags & WZ_STATE_DISABLED )
+        return 0;
 
-	if(wgt->flags & WZ_STATE_HIDDEN)
-		return 0;
+    if( wgt->flags & WZ_STATE_HIDDEN )
+        return 0;
 
-	if(wgt->parent == 0)
-	{
-		ALLEGRO_EVENT event;
-		wz_craft_event(&event, WZ_TAKE_FOCUS, wgt, 0);
-		wz_send_event(wgt, &event);
-	}
-	else
-	{
-		ALLEGRO_EVENT event;
+    if( wgt->parent == 0 )
+    {
+        ALLEGRO_EVENT event;
+        wz_craft_event( &event, WZ_TAKE_FOCUS, wgt, 0 );
+        wz_send_event( wgt, &event );
+    }
+    else
+    {
+        ALLEGRO_EVENT event;
 
-		if(!(wgt->parent->flags & WZ_STATE_HAS_FOCUS))
-		{
-			wz_ask_parent_for_focus(wgt->parent);
-		}
+        if( !( wgt->parent->flags & WZ_STATE_HAS_FOCUS ) )
+        {
+            wz_ask_parent_for_focus( wgt->parent );
+        }
 
-		wz_craft_event(&event, WZ_WANT_FOCUS, wgt, 0);
-		wz_send_event(wgt->parent, &event);
-	}
+        wz_craft_event( &event, WZ_WANT_FOCUS, wgt, 0 );
+        wz_send_event( wgt->parent, &event );
+    }
 
-	return 1;
+    return 1;
 }
 
 /*
@@ -81,32 +81,32 @@ Function: wz_ask_parent_to_focus_next
 
 Asks the parent to focus the next child if possible
 */
-void wz_ask_parent_to_focus_next(WZ_WIDGET* wgt)
+void wz_ask_parent_to_focus_next( WZ_WIDGET *wgt )
 {
-	WZ_WIDGET* child;
+    WZ_WIDGET *child;
 
-	if(wgt->parent == 0)
-		return;
+    if( wgt->parent == 0 )
+        return;
 
-	child = wgt->next_sib;
+    child = wgt->next_sib;
 
-	while(child)
-	{
-		if(wz_ask_parent_for_focus(child))
-			return;
+    while( child )
+    {
+        if( wz_ask_parent_for_focus( child ) )
+            return;
 
-		child = child->next_sib;
-	}
+        child = child->next_sib;
+    }
 
-	child = wgt->parent->first_child;
+    child = wgt->parent->first_child;
 
-	while(child != wgt)
-	{
-		if(wz_ask_parent_for_focus(child))
-			return;
+    while( child != wgt )
+    {
+        if( wz_ask_parent_for_focus( child ) )
+            return;
 
-		child = child->next_sib;
-	}
+        child = child->next_sib;
+    }
 }
 
 /*
@@ -114,32 +114,32 @@ Function: wz_ask_parent_to_focus_prev
 
 Asks the parent to focus the previous child if possible
 */
-void wz_ask_parent_to_focus_prev(WZ_WIDGET* wgt)
+void wz_ask_parent_to_focus_prev( WZ_WIDGET *wgt )
 {
-	WZ_WIDGET* child;
+    WZ_WIDGET *child;
 
-	if(wgt->parent == 0)
-		return;
+    if( wgt->parent == 0 )
+        return;
 
-	child = wgt->prev_sib;
+    child = wgt->prev_sib;
 
-	while(child)
-	{
-		if(wz_ask_parent_for_focus(child))
-			return;
+    while( child )
+    {
+        if( wz_ask_parent_for_focus( child ) )
+            return;
 
-		child = child->prev_sib;
-	}
+        child = child->prev_sib;
+    }
 
-	child = wgt->parent->last_child;
+    child = wgt->parent->last_child;
 
-	while(child != wgt)
-	{
-		if(wz_ask_parent_for_focus(child))
-			return;
+    while( child != wgt )
+    {
+        if( wz_ask_parent_for_focus( child ) )
+            return;
 
-		child = child->prev_sib;
-	}
+        child = child->prev_sib;
+    }
 }
 
 /*
@@ -154,74 +154,72 @@ Returns:
 
 The widget it found, or the passed widget if it found nothing
 */
-WZ_WIDGET* wz_get_widget_dir(WZ_WIDGET* wgt, int dir)
+WZ_WIDGET *wz_get_widget_dir( WZ_WIDGET *wgt, int dir )
 {
-	float least_dev = 100000;
-	WZ_WIDGET* ret = wgt;
-	WZ_WIDGET* child;
+    float least_dev = 100000;
+    WZ_WIDGET *ret = wgt;
+    WZ_WIDGET *child;
 
-	if(wgt->parent == 0)
-		return wgt;
+    if( wgt->parent == 0 )
+        return wgt;
 
-	child = wgt->parent->first_child;
+    child = wgt->parent->first_child;
 
-	while(child)
-	{
-		float dev = 1000000;
+    while( child )
+    {
+        float dev = 1000000;
 
-		switch(dir)
-		{
-			case 0:
-			{
-				if(child->y + child->h < wgt->y)
-				{
-					dev = wgt->y - (child->y + child->h) + fabs(wgt->x - child->x);
-				}
+        switch( dir )
+        {
+            case 0:
+            {
+                if( child->y + child->h < wgt->y )
+                {
+                    dev = wgt->y - ( child->y + child->h ) + fabs( wgt->x - child->x );
+                }
 
-				break;
-			}
-			case 1:
-			{
-				if(child->x > wgt->x + wgt->w)
-				{
-					dev = child->x - (wgt->x + wgt->w) + fabs(wgt->y - child->y);
-				}
+                break;
+            }
+            case 1:
+            {
+                if( child->x > wgt->x + wgt->w )
+                {
+                    dev = child->x - ( wgt->x + wgt->w ) + fabs( wgt->y - child->y );
+                }
 
-				break;
-			}
-			case 2:
-			{
-				if(child->y > wgt->y + wgt->h)
-				{
-					dev = child->y - (wgt->y + wgt->h) + fabs(wgt->x - child->x);
-				}
+                break;
+            }
+            case 2:
+            {
+                if( child->y > wgt->y + wgt->h )
+                {
+                    dev = child->y - ( wgt->y + wgt->h ) + fabs( wgt->x - child->x );
+                }
 
-				break;
-			}
-			default:
-			{
-				if(child->x + child->w < wgt->x)
-				{
-					dev = wgt->x - (child->x + child->w) + fabs(wgt->y - child->y);
-				}
+                break;
+            }
+            default:
+            {
+                if( child->x + child->w < wgt->x )
+                {
+                    dev = wgt->x - ( child->x + child->w ) + fabs( wgt->y - child->y );
+                }
 
-				break;
-			}
-		}
+                break;
+            }
+        }
 
-		if(child != wgt && dev < least_dev
-		        && !(child->flags & WZ_STATE_NOTWANT_FOCUS)
-		        && !(child->flags & WZ_STATE_DISABLED)
-		        && !(child->flags & WZ_STATE_HIDDEN))
-		{
-			least_dev = dev;
-			ret = child;
-		}
+        if( child != wgt && dev < least_dev && !( child->flags & WZ_STATE_NOTWANT_FOCUS )
+            && !( child->flags & WZ_STATE_DISABLED ) && !( child->flags & WZ_STATE_HIDDEN ) )
+        {
+            least_dev = dev;
+            ret = child;
+        }
 
-		child = child->next_sib;
-	}
+        child = child->next_sib;
+    }
 
-	return ret;
+    return ret;
 }
 
 /*
@@ -234,13 +232,13 @@ type - Type of the event
 source - The widget that launched the event, or 0 if it has no source
 data - data you wish to attach to the event
 */
-void wz_craft_event(ALLEGRO_EVENT* event, int type, WZ_WIDGET* source, intptr_t data)
+void wz_craft_event( ALLEGRO_EVENT *event, int type, WZ_WIDGET *source, intptr_t data )
 {
-	event->user.type = type;
-	event->user.timestamp = al_get_time();
-	event->user.data1 = source == 0 ? -1 : source->id;
-	event->user.data2 = (intptr_t)source;
-	event->user.data3 = data;
+    event->user.type = type;
+    event->user.timestamp = al_get_time();
+    event->user.data1 = source == 0 ? -1 : source->id;
+    event->user.data2 = (intptr_t)source;
+    event->user.data3 = data;
 }
 
 /*
@@ -256,43 +254,41 @@ Returns:
 The character position such that the text length of the string up to that character
 is as close as possible to the passed length.
 */
-int wz_get_text_pos(ALLEGRO_FONT* font, ALLEGRO_USTR* text, float x)
+int wz_get_text_pos( ALLEGRO_FONT *font, ALLEGRO_USTR *text, float x )
 {
-	int ii = 0;
-	int len = al_ustr_length(text);
-	float width = al_get_ustr_width(font, text);
+    int ii = 0;
+    int len = al_ustr_length( text );
+    float width = al_get_ustr_width( font, text );
 
-	if(x > width)
-	{
-		return len + 1;
-	}
+    if( x > width )
+    {
+        return len + 1;
+    }
 
-	if(x < 0)
-	{
-		return 0;
-	}
-	else
-	{
-		float old_diff = x;
-		float diff;
-		ALLEGRO_USTR_INFO info;
+    if( x < 0 )
+    {
+        return 0;
+    }
+    else
+    {
+        float old_diff = x;
+        float diff;
+        ALLEGRO_USTR_INFO info;
 
-		for(ii = 0; ii <= len; ii++)
-		{
-			int offset = al_ustr_offset(text, ii);
-			const ALLEGRO_USTR* str = al_ref_ustr(&info, text, 0, offset);
-			diff = fabs(x - al_get_ustr_width(font, str));
+        for( ii = 0; ii <= len; ii++ )
+        {
+            int offset = al_ustr_offset( text, ii );
+            const ALLEGRO_USTR *str = al_ref_ustr( &info, text, 0, offset );
+            diff = fabs( x - al_get_ustr_width( font, str ) );
 
-			if(diff > old_diff)
-			{
-				return ii - 1;
-			}
+            if( diff > old_diff )
+            {
+                return ii - 1;
+            }
 
-			old_diff = diff;
-		}
-	}
+            old_diff = diff;
+        }
+    }
 
-	return ii - 1;
+    return ii - 1;
 }
-
-

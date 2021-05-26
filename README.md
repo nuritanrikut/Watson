@@ -3,7 +3,7 @@
 Watson is a clone of “Sherlock”, an old game by Everett Kaser which is itself based on the a classic puzzle known as ["Zebra puzzle"](https://en.wikipedia.org/wiki/Zebra_Puzzle) or “Einstein's riddle”.
 
 <p align="center">
-<img src="https://github.com/koro-xx/Watson/blob/master/screenshots/watson-screenshot-1.png" width="400" />  <img src="https://github.com/koro-xx/Watson/blob/master/screenshots/watson-screenshot-2.png" width="400"/>
+<img src="screenshots/watson-screenshot-1.png" width="400" />  <img src="screenshots/watson-screenshot-2.png" width="400"/>
 </p>
 
 ## Download 

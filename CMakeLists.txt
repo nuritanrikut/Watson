@@ -79,9 +79,13 @@ set(RESOURCES
 
 if(WIN32)
 	add_executable(watson ${EXECUTABLE_TYPE} ${SOURCES} ${HEADERS})
-else(WIN32)
-	add_executable(watson MACOSX_BUNDLE ${APP_ICON} ${SOURCES} ${HEADERS} ${RESOURCES})
-endif(WIN32)
+elseif(UNIX)
+	if(APPLE)
+		add_executable(watson MACOSX_BUNDLE ${APP_ICON} ${SOURCES} ${HEADERS} ${RESOURCES})
+	else()
+		add_executable(watson ${APP_ICON} ${SOURCES} ${HEADERS} ${RESOURCES})
+	endif()
+endif()
 
 target_link_libraries(watson ${LINK_LIBRARIES})
 

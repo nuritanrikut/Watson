@@ -30,13 +30,13 @@ Title: Layout Stop
 /*
 Function: wz_init_layout_stop
 */
-void wz_init_layout_stop(WZ_WIDGET* box, WZ_WIDGET* parent, int id)
+void wz_init_layout_stop( WZ_WIDGET *box, WZ_WIDGET *parent, int id )
 {
-	WZ_WIDGET* wgt = (WZ_WIDGET*)box;
-	wz_init_widget(wgt, parent, 0, 0, 0, 0, id);
-	wgt->proc = wz_widget_proc;
-	wgt->flags |= WZ_STATE_LAYOUT;
-	wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
+    WZ_WIDGET *wgt = (WZ_WIDGET *)box;
+    wz_init_widget( wgt, parent, 0, 0, 0, 0, id );
+    wgt->proc = wz_widget_proc;
+    wgt->flags |= WZ_STATE_LAYOUT;
+    wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
 }
 
 /*
@@ -55,11 +55,10 @@ See Also:
 
 <wz_create_widget>
 */
-WZ_WIDGET* wz_create_layout_stop(WZ_WIDGET* parent, int id)
+WZ_WIDGET *wz_create_layout_stop( WZ_WIDGET *parent, int id )
 {
-	WZ_WIDGET* box = malloc(sizeof(WZ_WIDGET));
-	wz_init_layout_stop(box, parent, id);
-	wz_ask_parent_to_focus_next(box);
-	return box;
+    WZ_WIDGET *box = malloc( sizeof( WZ_WIDGET ) );
+    wz_init_layout_stop( box, parent, id );
+    wz_ask_parent_to_focus_next( box );
+    return box;
 }
-

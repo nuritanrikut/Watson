@@ -33,72 +33,90 @@ Function: wz_textbox_proc
 See also:
 <wz_widget_proc>
 */
-int wz_textbox_proc(WZ_WIDGET* wgt, const ALLEGRO_EVENT* event)
+int wz_textbox_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
 {
-	int ret = 1;
-	WZ_TEXTBOX* box = (WZ_TEXTBOX*)wgt;
+    int ret = 1;
+    WZ_TEXTBOX *box = (WZ_TEXTBOX *)wgt;
 
-	switch(event->type)
-	{
-		case WZ_DRAW:
-		{
-			if(wgt->flags & WZ_STATE_HIDDEN)
-			{
-				ret = 0;
-			}
-			else
-			{
-				int flags = (wgt->flags & WZ_STATE_DISABLED) ? WZ_STYLE_DISABLED : 0;
-				wgt->theme->draw_textbox(wgt->theme, wgt->local_x, wgt->local_y, wgt->w, wgt->h, box->h_align, box->v_align, box->text, flags);
-			}
+    switch( event->type )
+    {
+        case WZ_DRAW:
+        {
+            if( wgt->flags & WZ_STATE_HIDDEN )
+            {
+                ret = 0;
+            }
+            else
+            {
+                int flags = ( wgt->flags & WZ_STATE_DISABLED ) ? WZ_STYLE_DISABLED : 0;
+                wgt->theme->draw_textbox( wgt->theme,
+                                          wgt->local_x,
+                                          wgt->local_y,
+                                          wgt->w,
+                                          wgt->h,
+                                          box->h_align,
+                                          box->v_align,
+                                          box->text,
+                                          flags );
+            }
 
-			break;
-		}
-		case WZ_DESTROY:
-		{
-			if(box->own)
-				al_ustr_free(box->text);
+            break;
+        }
+        case WZ_DESTROY:
+        {
+            if( box->own )
+                al_ustr_free( box->text );
 
-			ret = 0;
-			break;
-		}
-		case WZ_SET_TEXT:
-		{
-			if(box->own)
-			{
-				al_ustr_free(box->text);
-				box->text = al_ustr_dup((ALLEGRO_USTR*)event->user.data3);
-			}
-			else
-			{
-				box->text = (ALLEGRO_USTR*)event->user.data3;
-			}
+            ret = 0;
+            break;
+        }
+        case WZ_SET_TEXT:
+        {
+            if( box->own )
+            {
+                al_ustr_free( box->text );
+                box->text = al_ustr_dup( (ALLEGRO_USTR *)event->user.data3 );
+            }
+            else
+            {
+                box->text = (ALLEGRO_USTR *)event->user.data3;
+            }
 
-			break;
-		}
-		default:
-			ret = 0;
-	}
+            break;
+        }
+        default:
+            ret = 0;
+    }
 
-	if(ret == 0)
-		ret = wz_widget_proc(wgt, event);
+    if( ret == 0 )
+        ret = wz_widget_proc( wgt, event );
 
-	return ret;
+    return ret;
 }
 
 /*
 Function: wz_init_textbox
 */
-void wz_init_textbox(WZ_TEXTBOX* box, WZ_WIDGET* parent, float x, float y, float w, float h, int halign, int valign, ALLEGRO_USTR* text, int own, int id)
+void wz_init_textbox( WZ_TEXTBOX *box,
+                      WZ_WIDGET *parent,
+                      float x,
+                      float y,
+                      float w,
+                      float h,
+                      int halign,
+                      int valign,
+                      ALLEGRO_USTR *text,
+                      int own,
+                      int id )
 {
-	WZ_WIDGET* wgt = (WZ_WIDGET*)box;
-	wz_init_widget(wgt, parent, x, y, w, h, id);
-	wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
-	wgt->proc = wz_textbox_proc;
-	box->own = own;
-	box->h_align = halign;
-	box->v_align = valign;
-	box->text = text;
+    WZ_WIDGET *wgt = (WZ_WIDGET *)box;
+    wz_init_widget( wgt, parent, x, y, w, h, id );
+    wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
+    wgt->proc = wz_textbox_proc;
+    box->own = own;
+    box->h_align = halign;
+    box->v_align = valign;
+    box->text = text;
 }
 
 /*
@@ -122,9 +140,18 @@ See Also:
 
 <wz_create_widget>
 */
-WZ_TEXTBOX* wz_create_textbox(WZ_WIDGET* parent, float x, float y, float w, float h, int halign, int valign, ALLEGRO_USTR* text, int own, int id)
+WZ_TEXTBOX *wz_create_textbox( WZ_WIDGET *parent,
+                               float x,
+                               float y,
+                               float w,
+                               float h,
+                               int halign,
+                               int valign,
+                               ALLEGRO_USTR *text,
+                               int own,
+                               int id )
 {
-	WZ_TEXTBOX* box = malloc(sizeof(WZ_TEXTBOX));
-	wz_init_textbox(box, parent, x, y, w, h, halign, valign, text, own, id);
-	return box;
+    WZ_TEXTBOX *box = malloc( sizeof( WZ_TEXTBOX ) );
+    wz_init_textbox( box, parent, x, y, w, h, halign, valign, text, own, id );
+    return box;
 }
