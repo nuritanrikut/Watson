@@ -55,8 +55,8 @@ typedef struct Game
     int tile[8][8][8]; // [col][block][tile]
     Clue clue[MAX_CLUES];
     int clue_n;
-    int n; // number of columns
-    int h; // column height
+    int number_of_columns; // number of columns
+    int column_height;     // column height
     double time;
     int guessed;
     int tile_col[8][8]; // column where puzzle tile [row][tile] is located (in solution);
@@ -73,24 +73,24 @@ typedef struct Pair
 // Prototypes
 
 int rand_int( int n );
-void init_game( Game *g ); // clean board and guesses xxx todo: add clues?
-void create_game_with_clues( Game *g );
-void create_puzzle( Game *g );
-int get_hint( Game *g );
-int check_solution( Game *g );
-int check_panel_consistency( Game *g );
-int check_panel_correctness( Game *g );
+void init_game( Game *game ); // clean board and guesses xxx todo: add clues?
+void create_game_with_clues( Game *game );
+void create_puzzle( Game *game );
+int get_hint( Game *game );
+int check_solution( Game *game );
+int check_panel_consistency( Game *game );
+int check_panel_correctness( Game *game );
 void shuffle( int p[], int n );
-void guess_tile( Game *g, int i, int j, int k );
-void hide_tile_and_check( Game *g, int i, int j, int k );
-void unguess_tile( Game *g, int i, int j );
-int is_guessed( Game *g, int j, int k ); // is the value k on row j guessed?
-void get_clue( Game *g, int i, int j, int rel, Clue *clue );
+void guess_tile( Game *game, int i, int j, int k );
+void hide_tile_and_check( Game *game, int i, int j, int k );
+void unguess_tile( Game *game, int i, int j );
+int is_guessed( Game *game, int j, int k ); // is the value k on row j guessed?
+void get_clue( Game *game, int i, int j, int rel, Clue *clue );
 int is_vclue( RELATION rel ); // is this relation a vertical clue?
 void reset_rel_params( void );
 
 // debug
-int is_clue_valid( Game *g, Clue *clue );
+int is_clue_valid( Game *game, Clue *clue );
 
 // globals
 extern int REL_PERCENT[NUMBER_OF_RELATIONS];

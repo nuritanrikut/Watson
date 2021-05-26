@@ -18,7 +18,7 @@ WZ_NINE_PATCH_BITMAP *wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool own
 WZ_NINE_PATCH_BITMAP *wz_load_nine_patch_bitmap( const char *filename );
 void wz_draw_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9, int dx, int dy, int dw, int dh );
 void wz_draw_tinted_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, int dx, int dy, int dw, int dh );
-ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int w, int h );
+ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int width, int height );
 
 int wz_get_nine_patch_bitmap_width( const WZ_NINE_PATCH_BITMAP *p9 );
 int wz_get_nine_patch_bitmap_height( const WZ_NINE_PATCH_BITMAP *p9 );

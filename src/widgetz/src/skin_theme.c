@@ -92,26 +92,26 @@ void wz_destroy_skin_theme( struct WZ_SKIN_THEME *theme )
 
 /* Returns the padding corrected in case the passed rectangle was too small */
 static WZ_NINE_PATCH_PADDING
-draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float y, float w, float h )
+draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float y, float width, float height )
 {
     WZ_NINE_PATCH_PADDING pad = wz_get_nine_patch_padding( p9 );
     float min_w = wz_get_nine_patch_bitmap_min_width( p9 );
     float min_h = wz_get_nine_patch_bitmap_min_height( p9 );
     float nx = x;
     float ny = y;
-    float nw = w;
-    float nh = h;
+    float nw = width;
+    float nh = height;
 
-    if( w < min_w )
+    if( width < min_w )
     {
         nw = min_w;
-        nx = x + w / 2 - nw / 2;
+        nx = x + width / 2 - nw / 2;
     }
 
-    if( h < min_h )
+    if( height < min_h )
     {
         nh = min_h;
-        ny = y + h / 2 - nh / 2;
+        ny = y + height / 2 - nh / 2;
     }
 
     wz_draw_tinted_nine_patch_bitmap( p9, tint, nx, ny, nw, nh );
@@ -122,7 +122,7 @@ draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float 
     return pad;
 }
 
-void wz_skin_draw_box( struct WZ_THEME *theme, float x, float y, float w, float h, int style )
+void wz_skin_draw_box( struct WZ_THEME *theme, float x, float y, float width, float height, int style )
 {
     WZ_SKIN_THEME *skin = (WZ_SKIN_THEME *)theme;
     WZ_DEF_THEME *def = (WZ_DEF_THEME *)theme;
@@ -137,11 +137,11 @@ void wz_skin_draw_box( struct WZ_THEME *theme, float x, float y, float w, float 
         else
             col = def->color1;
 
-        draw_tinted_patch( skin->box_patch, col, x, y, w, h );
+        draw_tinted_patch( skin->box_patch, col, x, y, width, height );
     }
 }
 
-void wz_skin_draw_button( WZ_THEME *theme, float x, float y, float w, float h, ALLEGRO_USTR *text, int style )
+void wz_skin_draw_button( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_USTR *text, int style )
 {
     WZ_SKIN_THEME *skin = (WZ_SKIN_THEME *)theme;
     WZ_DEF_THEME *def = (WZ_DEF_THEME *)theme;
@@ -174,18 +174,18 @@ void wz_skin_draw_button( WZ_THEME *theme, float x, float y, float w, float h, A
     {
         if( style & WZ_STYLE_DOWN )
         {
-            pad = draw_tinted_patch( skin->button_down_patch, button_col, x, y, w, h );
+            pad = draw_tinted_patch( skin->button_down_patch, button_col, x, y, width, height );
         }
         else
         {
-            pad = draw_tinted_patch( skin->button_up_patch, button_col, x, y, w, h );
+            pad = draw_tinted_patch( skin->button_up_patch, button_col, x, y, width, height );
         }
     }
 
     wz_draw_multi_text( x + pad.left,
                         y + pad.top,
-                        w - ( pad.left + pad.right ),
-                        h - ( pad.top + pad.bottom ),
+                        width - ( pad.left + pad.right ),
+                        height - ( pad.top + pad.bottom ),
                         WZ_ALIGN_CENTRE,
                         WZ_ALIGN_CENTRE,
                         text_col,
@@ -196,8 +196,8 @@ void wz_skin_draw_button( WZ_THEME *theme, float x, float y, float w, float h, A
 void wz_skin_draw_textbox( struct WZ_THEME *theme,
                            float x,
                            float y,
-                           float w,
-                           float h,
+                           float width,
+                           float height,
                            int halign,
                            int valign,
                            ALLEGRO_USTR *text,
@@ -211,14 +211,14 @@ void wz_skin_draw_textbox( struct WZ_THEME *theme,
     else
         text_col = thm->color2;
 
-    wz_draw_multi_text( x, y, w, h, halign, valign, text_col, thm->font, text );
+    wz_draw_multi_text( x, y, width, height, halign, valign, text_col, thm->font, text );
 }
 
 void wz_skin_draw_scroll( struct WZ_THEME *theme,
                           float x,
                           float y,
-                          float w,
-                          float h,
+                          float width,
+                          float height,
                           float fraction,
                           float slider_size,
                           int style )
@@ -226,7 +226,7 @@ void wz_skin_draw_scroll( struct WZ_THEME *theme,
     WZ_SKIN_THEME *skin = (WZ_SKIN_THEME *)theme;
     WZ_DEF_THEME *def = (WZ_DEF_THEME *)theme;
     ALLEGRO_COLOR col;
-    int vertical = h > w;
+    int vertical = height > width;
     float xpos;
     float ypos;
     float slider_w;
@@ -247,23 +247,23 @@ void wz_skin_draw_scroll( struct WZ_THEME *theme,
 
     if( vertical )
     {
-        float max_size = 0.9f * h;
+        float max_size = 0.9f * height;
         slider_h = slider_size > max_size ? max_size : slider_size;
-        slider_w = w;
+        slider_w = width;
         xpos = x;
-        ypos = y + fraction * ( h - slider_h );
+        ypos = y + fraction * ( height - slider_h );
     }
     else
     {
-        float max_size = 0.9f * w;
-        slider_h = h;
+        float max_size = 0.9f * width;
+        slider_h = height;
         slider_w = slider_size > max_size ? max_size : slider_size;
-        xpos = x + fraction * ( w - slider_w );
+        xpos = x + fraction * ( width - slider_w );
         ypos = y;
     }
 
     if( skin->scroll_track_patch )
-        draw_tinted_patch( skin->scroll_track_patch, def->color1, x, y, w, h );
+        draw_tinted_patch( skin->scroll_track_patch, def->color1, x, y, width, height );
 
     if( skin->slider_patch )
         draw_tinted_patch( skin->slider_patch, col, xpos, ypos, slider_w, slider_h );
@@ -272,15 +272,15 @@ void wz_skin_draw_scroll( struct WZ_THEME *theme,
 void wz_skin_draw_editbox( struct WZ_THEME *theme,
                            float x,
                            float y,
-                           float w,
-                           float h,
+                           float width,
+                           float height,
                            int cursor_pos,
                            ALLEGRO_USTR *text,
                            int style )
 {
     WZ_SKIN_THEME *skin = (WZ_SKIN_THEME *)theme;
     WZ_DEF_THEME *def = (WZ_DEF_THEME *)theme;
-    int len = wz_get_text_pos( def->font, text, w - 4 );
+    int len = wz_get_text_pos( def->font, text, width - 4 );
     int cx, cy, cw, ch;
     int len2 = al_ustr_length( text );
     int offset;
@@ -312,16 +312,16 @@ void wz_skin_draw_editbox( struct WZ_THEME *theme,
 
     if( skin->editbox_patch )
     {
-        pad = draw_tinted_patch( skin->editbox_patch, border_col, x, y, w, h );
+        pad = draw_tinted_patch( skin->editbox_patch, border_col, x, y, width, height );
     }
 
     al_get_clipping_rectangle( &cx, &cy, &cw, &ch );
     al_set_clipping_rectangle(
-        x + pad.left, y + pad.right, w - ( pad.left + pad.right ), h - ( pad.top + pad.bottom ) );
+        x + pad.left, y + pad.right, width - ( pad.left + pad.right ), height - ( pad.top + pad.bottom ) );
     wz_draw_single_text( x + pad.left,
                          y + pad.right,
-                         w - ( pad.left + pad.right ),
-                         h - ( pad.top + pad.bottom ),
+                         width - ( pad.left + pad.right ),
+                         height - ( pad.top + pad.bottom ),
                          WZ_ALIGN_LEFT,
                          WZ_ALIGN_CENTRE,
                          text_col,
@@ -331,7 +331,7 @@ void wz_skin_draw_editbox( struct WZ_THEME *theme,
 
     if( style & WZ_STYLE_FOCUSED )
     {
-        float mh = ( pad.top + h - pad.bottom ) / 2;
+        float mh = ( pad.top + height - pad.bottom ) / 2;
 
         if( ( (int)( al_get_time() / 0.5f ) ) % 2 == 0 )
         {
@@ -347,10 +347,10 @@ void wz_skin_draw_editbox( struct WZ_THEME *theme,
     }
 }
 
-void wz_skin_draw_image( struct WZ_THEME *theme, float x, float y, float w, float h, ALLEGRO_BITMAP *image )
+void wz_skin_draw_image( struct WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_BITMAP *image )
 {
-    float ix = x + ( w - al_get_bitmap_width( image ) ) / 2;
-    float iy = y + ( h - al_get_bitmap_height( image ) ) / 2;
+    float ix = x + ( width - al_get_bitmap_width( image ) ) / 2;
+    float iy = y + ( height - al_get_bitmap_height( image ) ) / 2;
     al_draw_bitmap( image, ix, iy, 0 );
 }
 

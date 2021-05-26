@@ -131,8 +131,8 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
             float factor = *(float *)&event->user.data3;
             wgt->x *= factor;
             wgt->y *= factor;
-            wgt->w *= factor;
-            wgt->h *= factor;
+            wgt->width *= factor;
+            wgt->height *= factor;
             wgt->local_x *= factor;
             wgt->local_y *= factor;
             break;
@@ -265,12 +265,12 @@ Function: wz_
 
 Initializes a generic widget to some sane values
 */
-void wz_init_widget( WZ_WIDGET *wgt, WZ_WIDGET *parent, float x, float y, float w, float h, int id )
+void wz_init_widget( WZ_WIDGET *wgt, WZ_WIDGET *parent, float x, float y, float width, float height, int id )
 {
     wgt->x = x;
     wgt->y = y;
-    wgt->h = h;
-    wgt->w = w;
+    wgt->height = height;
+    wgt->width = width;
     wgt->flags = 1;
     wgt->theme = (WZ_THEME *)&wz_def_theme;
     wgt->proc = wz_widget_proc;

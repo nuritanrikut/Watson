@@ -154,7 +154,7 @@ void init_theme( void )
     wz_init_skin_theme( &skin_theme );
 }
 
-void scale_gui( Board *b, float factor )
+void scale_gui( Board *board, float factor )
 {
     gui_font_h *= factor;
     al_destroy_font( gui_font );
@@ -179,15 +179,16 @@ void destroy_theme()
 WZ_WIDGET *create_fill_layout( WZ_WIDGET *parent,
                                float x,
                                float y,
-                               float w,
-                               float h,
+                               float width,
+                               float height,
                                float hspace,
                                float vspace,
                                int halign,
                                int valign,
                                int id )
 {
-    WZ_WIDGET *wgt = (WZ_WIDGET *)wz_create_fill_layout( parent, x, y, w, h, hspace, vspace, halign, valign, id );
+    WZ_WIDGET *wgt =
+        (WZ_WIDGET *)wz_create_fill_layout( parent, x, y, width, height, hspace, vspace, halign, valign, id );
     wgt->flags |= WZ_STATE_HIDDEN;
 
     return wgt;
@@ -201,29 +202,29 @@ WZ_WIDGET *new_widget( int id, int x, int y )
     return wgt;
 }
 
-void update_guis( int x, int y, int w, int h )
+void update_guis( int x, int y, int width, int height )
 {
-    gui_font_h = h / 30;
+    gui_font_h = height / 30;
     al_destroy_font( gui_font );
     gui_font = load_font_mem( text_font_mem, TEXT_FONT_FILE, -gui_font_h );
-    wz_resize( base_gui, (float)h / base_gui->h );
+    wz_resize( base_gui, (float)height / base_gui->height );
     base_gui->x = x;
     base_gui->y = y;
-    base_gui->w = w;
-    base_gui->h = h;
+    base_gui->width = width;
+    base_gui->height = height;
 
     skin_theme.theme.font = gui_font;
     wz_update( base_gui, 0 );
     emit_event( EVENT_REDRAW );
 }
 
-void init_guis( int x, int y, int w, int h )
+void init_guis( int x, int y, int width, int height )
 {
-    gui_font_h = h / 35;
+    gui_font_h = height / 35;
     init_theme();
     base_gui = new_widget( -1, x, y );
-    base_gui->w = w;
-    base_gui->h = h;
+    base_gui->width = width;
+    base_gui->height = height;
 }
 
 void remove_all_guis( void )
@@ -241,8 +242,8 @@ void destroy_base_gui()
 
 WZ_WIDGET *create_msg_gui( int id, ALLEGRO_USTR *msg )
 {
-    int w = base_gui->w / 2;
-    int h = gui_font_h * get_multiline_text_lines( gui_font, w, al_cstr( msg ) );
+    int width = base_gui->width / 2;
+    int height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( msg ) );
     int i;
     int but_w = 6 * gui_font_h;
     int but_h = gui_font_h * 1.5;
@@ -250,10 +251,10 @@ WZ_WIDGET *create_msg_gui( int id, ALLEGRO_USTR *msg )
 
     for( i = 0; i < 3; i++ )
     {
-        if( h + gui_font_h * 3 + but_h > base_gui->h )
+        if( height + gui_font_h * 3 + but_h > base_gui->height )
         {
-            w += base_gui->w / 4.1;
-            h = gui_font_h * get_multiline_text_lines( gui_font, w, al_cstr( msg ) );
+            width += base_gui->width / 4.1;
+            height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( msg ) );
         }
         else
         {
@@ -261,14 +262,21 @@ WZ_WIDGET *create_msg_gui( int id, ALLEGRO_USTR *msg )
         }
     }
 
-    gui = new_widget( id, ( base_gui->w - w - 2 * gui_font_h ) / 2, ( base_gui->h - ( 4 * gui_font_h + h ) ) / 2 );
+    gui = new_widget(
+        id, ( base_gui->width - width - 2 * gui_font_h ) / 2, ( base_gui->height - ( 4 * gui_font_h + height ) ) / 2 );
 
-    wgt = (WZ_WIDGET *)wz_create_box( gui, 0, 0, w + 2 * gui_font_h, h + 4 * gui_font_h, -1 );
+    wgt = (WZ_WIDGET *)wz_create_box( gui, 0, 0, width + 2 * gui_font_h, height + 4 * gui_font_h, -1 );
     wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
 
-    wz_create_textbox( gui, gui_font_h, gui_font_h, w, h, WZ_ALIGN_LEFT, WZ_ALIGN_TOP, msg, 1, -1 );
-    wgt = (WZ_WIDGET *)wz_create_button(
-        gui, gui_font_h + ( w - but_w * 1.5 ), h + gui_font_h * 2, but_w, but_h, al_ustr_new( "OK" ), 1, BUTTON_CLOSE );
+    wz_create_textbox( gui, gui_font_h, gui_font_h, width, height, WZ_ALIGN_LEFT, WZ_ALIGN_TOP, msg, 1, -1 );
+    wgt = (WZ_WIDGET *)wz_create_button( gui,
+                                         gui_font_h + ( width - but_w * 1.5 ),
+                                         height + gui_font_h * 2,
+                                         but_w,
+                                         but_h,
+                                         al_ustr_new( "OK" ),
+                                         1,
+                                         BUTTON_CLOSE );
     wz_set_shortcut( wgt, ALLEGRO_KEY_ESCAPE, 0 );
 
     return gui;
@@ -278,29 +286,28 @@ WZ_WIDGET *create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALL
 {
     int but_w = 6 * gui_font_h;
     int but_h = gui_font_h * 1.5;
-    int w = max( base_gui->w / 3, 2 * but_w + 3 * gui_font_h );
-    int h = gui_font_h * get_multiline_text_lines( gui_font, w, al_cstr( msg ) );
+    int width = max( base_gui->width / 3, 2 * but_w + 3 * gui_font_h );
+    int height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( msg ) );
 
     WZ_WIDGET *wgt, *gui = new_widget( id,
-                                       ( base_gui->w - w - 2 * gui_font_h ) / 2,
-                                       ( base_gui->h - ( 3 * gui_font_h + but_h + h ) ) / 2 );
+                                       ( base_gui->width - width - 2 * gui_font_h ) / 2,
+                                       ( base_gui->height - ( 3 * gui_font_h + but_h + height ) ) / 2 );
 
-    wgt = (WZ_WIDGET *)wz_create_box( gui, 0, 0, w + 2 * gui_font_h, h + 3 * gui_font_h + but_h, -1 );
+    wgt = (WZ_WIDGET *)wz_create_box( gui, 0, 0, width + 2 * gui_font_h, height + 3 * gui_font_h + but_h, -1 );
     wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
 
-    //    wz_create_fill_layout(gui, 0, 0, w+2*b->tsize, h+2*b->tsize, b->tsize, b->tsize, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, -1);
-    wz_create_textbox( gui, gui_font_h, gui_font_h, w, h, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, msg, 1, -1 );
+    wz_create_textbox( gui, gui_font_h, gui_font_h, width, height, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, msg, 1, -1 );
     wz_create_button( gui,
-                      gui_font_h + ( w - 2 * but_w ) / 3,
-                      2 * gui_font_h + h,
+                      gui_font_h + ( width - 2 * but_w ) / 3,
+                      2 * gui_font_h + height,
                       but_w,
                       but_h,
                       al_ustr_new( "OK" ),
                       1,
                       button_ok_id );
     wgt = (WZ_WIDGET *)wz_create_button( gui,
-                                         gui_font_h + but_w + 2 * ( w - 2 * but_w ) / 3,
-                                         2 * gui_font_h + h,
+                                         gui_font_h + but_w + 2 * ( width - 2 * but_w ) / 3,
+                                         2 * gui_font_h + height,
                                          but_w,
                                          but_h,
                                          al_ustr_new( "Cancel" ),
@@ -341,7 +348,7 @@ WZ_WIDGET *create_settings_gui( void )
     gui_w = max( gui_w, 3 * ( but_w + sep ) + sep * 3 );
 
     // main gui
-    gui = new_widget( GUI_SETTINGS, ( base_gui->w - gui_w ) / 2, ( base_gui->h - rows * rh ) / 2 );
+    gui = new_widget( GUI_SETTINGS, ( base_gui->width - gui_w ) / 2, ( base_gui->height - rows * rh ) / 2 );
 
     wgt = wz_create_box( gui, 0, 0, gui_w, gui_h + sep, -1 );
     wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
@@ -375,7 +382,7 @@ WZ_WIDGET *create_settings_gui( void )
     {
         wgt = (WZ_WIDGET *)wz_create_toggle_button(
             gui, 0, 0, but_h, but_h, al_ustr_newf( "%c", '4' + i ), 1, GROUP_ROWS, BUTTON_ROWS );
-        if( 4 + i == set.h )
+        if( 4 + i == set.column_height )
             ( (WZ_BUTTON *)wgt )->down = 1;
     }
 
@@ -395,7 +402,7 @@ WZ_WIDGET *create_settings_gui( void )
     {
         wgt = (WZ_WIDGET *)wz_create_toggle_button(
             gui, 0, 0, but_h, but_h, al_ustr_newf( "%c", '4' + i ), 1, GROUP_COLS, BUTTON_COLS );
-        if( 4 + i == set.n )
+        if( 4 + i == set.number_of_columns )
             ( (WZ_BUTTON *)wgt )->down = 1;
     }
 
@@ -459,11 +466,11 @@ WZ_WIDGET *create_win_gui( double time )
     // 13 lines of text + 1.5 for button + 2 for margin = lh*16 (+17 * vspace?)
     gui_h = 16.5 * lh + 2;
 
-    gui = new_widget( -1, ( base_gui->w - gui_w ) / 2, ( base_gui->h - gui_h ) / 2 );
+    gui = new_widget( -1, ( base_gui->width - gui_w ) / 2, ( base_gui->height - gui_h ) / 2 );
     wz_create_fill_layout( gui, 0, 0, gui_w, gui_h, lh, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, -1 );
     wz_create_textbox( gui, 0, 0, gui_w - 2 * lh - 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
 
-    get_highscores( set.n, set.h, set.advanced, hi_name, (double *)hi_score );
+    get_highscores( set.number_of_columns, set.column_height, set.advanced, hi_name, (double *)hi_score );
     if( time > 0 )
     {
         for( i = 0; i < 10; i++ )
@@ -497,7 +504,7 @@ WZ_WIDGET *create_win_gui( double time )
                        lh,
                        WZ_ALIGN_CENTRE,
                        WZ_ALIGN_CENTRE,
-                       al_ustr_newf( "Best times for %d x %d board:", set.n, set.h ),
+                       al_ustr_newf( "Best times for %d x %d board:", set.number_of_columns, set.column_height ),
                        1,
                        -1 );
 
@@ -601,7 +608,7 @@ WZ_WIDGET *create_win_gui( double time )
 
 #ifdef ALLEGRO_ANDROID // since we're just using "you" as username, save high score already
         strcpy( hi_name[i], "You" );
-        save_highscores( set.n, set.h, set.advanced, hi_name, hi_score );
+        save_highscores( set.number_of_columns, set.h, set.advanced, hi_name, hi_score );
 #else // otherwise it will be filled in later
         hi_name[i][0] = '\0';
 #endif
@@ -646,13 +653,14 @@ WZ_WIDGET *create_params_gui()
         rel_w = max( rel_w, al_get_text_width( gui_font, al_cstr( rel[i] ) ) );
     }
 
-    gui_w = max( base_gui->w / 2.5,
+    gui_w = max( base_gui->width / 2.5,
                  2 * gui_font_h + al_get_text_width( gui_font, "Clue type distribution for puzzle creation" ) );
     but_h = lh;
     gui_h = ( NUMBER_OF_RELATIONS + 2 ) * lh;
 
-    gui = new_widget(
-        GUI_PARAMS, ( base_gui->w - gui_w ) / 2, ( base_gui->h - gui_h - ( 2 * but_h + 1.5 * gui_font_h ) ) / 2 );
+    gui = new_widget( GUI_PARAMS,
+                      ( base_gui->width - gui_w ) / 2,
+                      ( base_gui->height - gui_h - ( 2 * but_h + 1.5 * gui_font_h ) ) / 2 );
 
     wz_create_fill_layout( gui, 0, 0, gui_w, gui_h, gui_font_h, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, -1 );
 
@@ -704,17 +712,17 @@ WZ_WIDGET *create_params_gui()
 
 WZ_WIDGET *create_text_gui( ALLEGRO_USTR *text )
 {
-    int w = base_gui->w / 3;
-    int h = gui_font_h * get_multiline_text_lines( gui_font, w, al_cstr( text ) );
+    int width = base_gui->width / 3;
+    int height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( text ) );
     int i;
     WZ_WIDGET *wgt, *gui;
 
     for( i = 0; i < 3; i++ )
     {
-        if( h + gui_font_h * 2 > base_gui->h )
+        if( height + gui_font_h * 2 > base_gui->height )
         {
-            w += base_gui->w / 6;
-            h = gui_font_h * get_multiline_text_lines( gui_font, w, al_cstr( text ) );
+            width += base_gui->width / 6;
+            height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( text ) );
         }
         else
         {
@@ -722,12 +730,13 @@ WZ_WIDGET *create_text_gui( ALLEGRO_USTR *text )
         }
     }
 
-    gui = new_widget( -1, ( base_gui->w - w - 2 * gui_font_h ) / 2, ( base_gui->h - h - 2 * gui_font_h ) / 2 );
+    gui = new_widget(
+        -1, ( base_gui->width - width - 2 * gui_font_h ) / 2, ( base_gui->height - height - 2 * gui_font_h ) / 2 );
 
-    wgt = (WZ_WIDGET *)wz_create_box( gui, 0, 0, w + 2 * gui_font_h, h + 2 * gui_font_h, -1 );
+    wgt = (WZ_WIDGET *)wz_create_box( gui, 0, 0, width + 2 * gui_font_h, height + 2 * gui_font_h, -1 );
     wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
 
-    wz_create_textbox( gui, gui_font_h, gui_font_h, w, h, WZ_ALIGN_LEFT, WZ_ALIGN_TOP, text, 1, -1 );
+    wz_create_textbox( gui, gui_font_h, gui_font_h, width, height, WZ_ALIGN_LEFT, WZ_ALIGN_TOP, text, 1, -1 );
 
     wz_update( gui, 0 );
     return gui;
@@ -737,11 +746,13 @@ void confirm_restart( Settings *new_set )
 {
     nset = *new_set;
     add_gui( base_gui,
-             create_yesno_gui(
-                 -1,
-                 BUTTON_RESTART_NOW,
-                 BUTTON_CLOSE,
-                 al_ustr_newf( "Start new %dx%d%s game?", nset.n, nset.h, nset.advanced ? " advanced" : "" ) ) );
+             create_yesno_gui( -1,
+                               BUTTON_RESTART_NOW,
+                               BUTTON_CLOSE,
+                               al_ustr_newf( "Start new %dx%d%s game?",
+                                             nset.number_of_columns,
+                                             nset.column_height,
+                                             nset.advanced ? " advanced" : "" ) ) );
 }
 
 void confirm_exit( void )
@@ -807,7 +818,7 @@ int handle_gui_event( ALLEGRO_EVENT *event )
             strncpy( hi_name[hi_pos], al_cstr( ( (WZ_TEXTBOX *)wgt )->text ), 63 );
             wgt->flags &= ~WZ_STATE_HAS_FOCUS;
             wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
-            save_highscores( set.n, set.h, set.advanced, hi_name, hi_score );
+            save_highscores( set.number_of_columns, set.column_height, set.advanced, hi_name, hi_score );
             remove_gui( gui );
             add_gui( base_gui, create_win_gui( -1 ) );
         }
@@ -861,7 +872,8 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     break;
 
                 case BUTTON_OK:
-                    if( ( nset.n != set.n ) || ( nset.h != set.h ) || ( nset.advanced != set.advanced ) )
+                    if( ( nset.number_of_columns != set.number_of_columns )
+                        || ( nset.column_height != set.column_height ) || ( nset.advanced != set.advanced ) )
                     {
                         confirm_restart( &nset );
                     }
@@ -925,11 +937,11 @@ int handle_gui_event( ALLEGRO_EVENT *event )
                     break;
 
                 case BUTTON_ROWS:
-                    nset.h = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
+                    nset.column_height = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
                     break;
 
                 case BUTTON_COLS:
-                    nset.n = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
+                    nset.number_of_columns = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
                     break;
             }
         }

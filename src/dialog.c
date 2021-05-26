@@ -75,25 +75,26 @@ void draw_center_text_box( ALLEGRO_FONT *font,
     int dw = al_get_bitmap_width( al_get_target_bitmap() );
     int dh = al_get_bitmap_height( al_get_target_bitmap() );
     float factor = width_factor;
-    int w, h;
+    int width, height;
 
     if( !font )
         return;
 
     do
     {
-        w = dw * factor;
-        h = get_multiline_text_lines( font, w - 40, text ) * al_get_font_line_height( font ) + 30;
+        width = dw * factor;
+        height = get_multiline_text_lines( font, width - 40, text ) * al_get_font_line_height( font ) + 30;
         factor += 0.05;
-    } while( ( h > dh * 0.9 ) && ( factor < 1 ) );
+    } while( ( height > dh * 0.9 ) && ( factor < 1 ) );
 
-    al_draw_filled_rectangle( ( dw - w ) / 2, ( dh - h ) / 2, ( dw + w ) / 2, ( dh + h ) / 2, bg_color );
-    al_draw_rectangle( ( dw - w ) / 2, ( dh - h ) / 2, ( dw + w ) / 2, ( dh + h ) / 2, bd_color, 3 );
+    al_draw_filled_rectangle(
+        ( dw - width ) / 2, ( dh - height ) / 2, ( dw + width ) / 2, ( dh + height ) / 2, bg_color );
+    al_draw_rectangle( ( dw - width ) / 2, ( dh - height ) / 2, ( dw + width ) / 2, ( dh + height ) / 2, bd_color, 3 );
     al_draw_multiline_text( font,
                             text_color,
-                            ( dw - w + 40 ) / 2,
-                            ( dh - h + 30 ) / 2,
-                            w - 30,
+                            ( dw - width + 40 ) / 2,
+                            ( dh - height + 30 ) / 2,
+                            width - 30,
                             al_get_font_line_height( font ),
                             ALLEGRO_ALIGN_LEFT,
                             text );

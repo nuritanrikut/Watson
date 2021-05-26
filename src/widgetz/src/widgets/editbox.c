@@ -33,7 +33,7 @@ void wz_snap_editbox( WZ_EDITBOX *box )
     int cursor_offset;
     ALLEGRO_USTR_INFO info;
     const ALLEGRO_USTR *text = al_ref_ustr( &info, box->text, scroll_offset, size );
-    int max_rel_cursor_pos = wz_get_text_pos( font, (ALLEGRO_USTR *)text, wgt->w );
+    int max_rel_cursor_pos = wz_get_text_pos( font, (ALLEGRO_USTR *)text, wgt->width );
 
     if( box->cursor_pos < box->scroll_pos )
     {
@@ -64,7 +64,7 @@ void wz_snap_editbox( WZ_EDITBOX *box )
     cursor_offset = al_ustr_offset( box->text, box->cursor_pos );
     text = al_ref_ustr( &info, box->text, scroll_offset, cursor_offset );
 
-    if( al_get_ustr_width( font, text ) > wgt->w )
+    if( al_get_ustr_width( font, text ) > wgt->width )
     {
         box->scroll_pos++;
     }
@@ -108,7 +108,7 @@ int wz_editbox_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                     flags = WZ_STYLE_FOCUSED;
 
                 wgt->theme->draw_editbox(
-                    wgt->theme, wgt->local_x, wgt->local_y, wgt->w, wgt->h, pos, (ALLEGRO_USTR *)text, flags );
+                    wgt->theme, wgt->local_x, wgt->local_y, wgt->width, wgt->height, pos, (ALLEGRO_USTR *)text, flags );
             }
 
             break;
@@ -316,14 +316,14 @@ void wz_init_editbox( WZ_EDITBOX *box,
                       WZ_WIDGET *parent,
                       float x,
                       float y,
-                      float w,
-                      float h,
+                      float width,
+                      float height,
                       ALLEGRO_USTR *text,
                       int own,
                       int id )
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)box;
-    wz_init_widget( wgt, parent, x, y, w, h, id );
+    wz_init_widget( wgt, parent, x, y, width, height, id );
     box->own = own;
 
     if( !text )
@@ -362,9 +362,9 @@ See Also:
 <wz_create_widget>
 */
 WZ_EDITBOX *
-wz_create_editbox( WZ_WIDGET *parent, float x, float y, float w, float h, ALLEGRO_USTR *text, int own, int id )
+wz_create_editbox( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id )
 {
     WZ_EDITBOX *box = malloc( sizeof( WZ_EDITBOX ) );
-    wz_init_editbox( box, parent, x, y, w, h, text, own, id );
+    wz_init_editbox( box, parent, x, y, width, height, text, own, id );
     return box;
 }

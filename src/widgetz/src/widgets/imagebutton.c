@@ -60,7 +60,7 @@ int wz_image_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                     image = but->normal;
             }
 
-            wgt->theme->draw_image( wgt->theme, wgt->local_x, wgt->local_y, wgt->w, wgt->h, image );
+            wgt->theme->draw_image( wgt->theme, wgt->local_x, wgt->local_y, wgt->width, wgt->height, image );
             break;
         }
         default:
@@ -80,8 +80,8 @@ void wz_init_image_button( WZ_IMAGE_BUTTON *but,
                            WZ_WIDGET *parent,
                            float x,
                            float y,
-                           float w,
-                           float h,
+                           float width,
+                           float height,
                            ALLEGRO_BITMAP *normal,
                            ALLEGRO_BITMAP *down,
                            ALLEGRO_BITMAP *focused,
@@ -89,7 +89,7 @@ void wz_init_image_button( WZ_IMAGE_BUTTON *but,
                            int id )
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)but;
-    wz_init_button( (WZ_BUTTON *)wgt, parent, x, y, w, h, 0, 0, id );
+    wz_init_button( (WZ_BUTTON *)wgt, parent, x, y, width, height, 0, 0, id );
     but->normal = normal;
     but->down = down;
     but->focused = focused;
@@ -122,8 +122,8 @@ See Also:
 WZ_IMAGE_BUTTON *wz_create_image_button( WZ_WIDGET *parent,
                                          float x,
                                          float y,
-                                         float w,
-                                         float h,
+                                         float width,
+                                         float height,
                                          ALLEGRO_BITMAP *normal,
                                          ALLEGRO_BITMAP *down,
                                          ALLEGRO_BITMAP *focused,
@@ -131,6 +131,6 @@ WZ_IMAGE_BUTTON *wz_create_image_button( WZ_WIDGET *parent,
                                          int id )
 {
     WZ_IMAGE_BUTTON *but = malloc( sizeof( WZ_IMAGE_BUTTON ) );
-    wz_init_image_button( but, parent, x, y, w, h, normal, down, focused, disabled, id );
+    wz_init_image_button( but, parent, x, y, width, height, normal, down, focused, disabled, id );
     return but;
 }

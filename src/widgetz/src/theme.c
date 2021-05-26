@@ -185,8 +185,8 @@ Draws a single line of text
 */
 void wz_draw_single_text( float x,
                           float y,
-                          float w,
-                          float h,
+                          float width,
+                          float height,
                           int halign,
                           int valign,
                           ALLEGRO_COLOR color,
@@ -195,7 +195,7 @@ void wz_draw_single_text( float x,
 {
     float xpos;
     float ypos;
-    float height = al_get_font_line_height( font );
+    float font_height = al_get_font_line_height( font );
 
     if( valign == WZ_ALIGN_TOP )
     {
@@ -203,11 +203,11 @@ void wz_draw_single_text( float x,
     }
     else if( valign == WZ_ALIGN_BOTTOM )
     {
-        ypos = y + h - height;
+        ypos = y + height - font_height;
     }
     else
     {
-        ypos = y + h / 2 - height / 2;
+        ypos = y + height / 2 - font_height / 2;
     }
 
     if( halign == WZ_ALIGN_LEFT )
@@ -217,12 +217,12 @@ void wz_draw_single_text( float x,
     }
     else if( halign == WZ_ALIGN_RIGHT )
     {
-        xpos = x + w;
+        xpos = x + width;
         al_draw_ustr( font, color, floorf( xpos ), floorf( ypos ), ALLEGRO_ALIGN_RIGHT, text );
     }
     else
     {
-        xpos = x + w / 2;
+        xpos = x + width / 2;
         al_draw_ustr( font, color, floorf( xpos ), floorf( ypos ), ALLEGRO_ALIGN_CENTRE, text );
     }
 }
@@ -234,8 +234,8 @@ Draws multiple lines of text, wrapping it as necessary
 */
 void wz_draw_multi_text( float x,
                          float y,
-                         float w,
-                         float h,
+                         float width,
+                         float height,
                          int halign,
                          int valign,
                          ALLEGRO_COLOR color,
@@ -254,18 +254,18 @@ void wz_draw_multi_text( float x,
         {
             int start = ret;
             int end;
-            ret = wz_find_eol( text, font, w, start, &end );
+            ret = wz_find_eol( text, font, width, start, &end );
             total_height += text_height;
         } while( ret > 0 );
     }
 
     if( valign == WZ_ALIGN_BOTTOM )
     {
-        cur_y = y + h - total_height;
+        cur_y = y + height - total_height;
     }
     else if( valign == WZ_ALIGN_CENTRE )
     {
-        cur_y = y + ( h - total_height ) / 2;
+        cur_y = y + ( height - total_height ) / 2;
     }
 
     {
@@ -275,30 +275,31 @@ void wz_draw_multi_text( float x,
         {
             int start = ret;
             int end;
-            ret = wz_find_eol( text, font, w, start, &end );
+            ret = wz_find_eol( text, font, width, start, &end );
             {
                 ALLEGRO_USTR_INFO info;
                 const ALLEGRO_USTR *token = al_ref_ustr( &info, text, start, end );
                 //printf("%f %f %s\n", x, cur_y, al_cstr(token));
-                wz_draw_single_text( x, cur_y, w, h, halign, WZ_ALIGN_TOP, color, font, (ALLEGRO_USTR *)token );
+                wz_draw_single_text(
+                    x, cur_y, width, height, halign, WZ_ALIGN_TOP, color, font, (ALLEGRO_USTR *)token );
             }
             cur_y += text_height;
         } while( ret > 0 );
     }
 }
 
-void wz_def_draw_box( struct WZ_THEME *theme, float x, float y, float w, float h, int style )
+void wz_def_draw_box( struct WZ_THEME *theme, float x, float y, float width, float height, int style )
 {
     WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
-    al_draw_filled_rectangle( x, y, x + w, y + h, wz_scale_color( thm->color1, 0.5 ) );
+    al_draw_filled_rectangle( x, y, x + width, y + height, wz_scale_color( thm->color1, 0.5 ) );
 
     if( style & WZ_STYLE_FOCUSED )
-        al_draw_rectangle( x, y, x + w, y + h, wz_scale_color( thm->color1, 1.5 ), 1 );
+        al_draw_rectangle( x, y, x + width, y + height, wz_scale_color( thm->color1, 1.5 ), 1 );
     else
-        al_draw_rectangle( x, y, x + w, y + h, thm->color1, 1 );
+        al_draw_rectangle( x, y, x + width, y + height, thm->color1, 1 );
 }
 
-void wz_def_draw_button( WZ_THEME *theme, float x, float y, float w, float h, ALLEGRO_USTR *text, int style )
+void wz_def_draw_button( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_USTR *text, int style )
 {
     WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
     ALLEGRO_COLOR button_col;
@@ -323,15 +324,15 @@ void wz_def_draw_button( WZ_THEME *theme, float x, float y, float w, float h, AL
         invert = true;
     }
 
-    wz_draw_3d_rectangle( x, y, x + w, y + h, 2, button_col, invert );
-    wz_draw_multi_text( x, y, w, h, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, text_col, thm->font, text );
+    wz_draw_3d_rectangle( x, y, x + width, y + height, 2, button_col, invert );
+    wz_draw_multi_text( x, y, width, height, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, text_col, thm->font, text );
 }
 
 void wz_def_draw_textbox( struct WZ_THEME *theme,
                           float x,
                           float y,
-                          float w,
-                          float h,
+                          float width,
+                          float height,
                           int halign,
                           int valign,
                           ALLEGRO_USTR *text,
@@ -345,20 +346,20 @@ void wz_def_draw_textbox( struct WZ_THEME *theme,
     else
         text_col = thm->color2;
 
-    wz_draw_multi_text( x, y, w, h, halign, valign, text_col, thm->font, text );
+    wz_draw_multi_text( x, y, width, height, halign, valign, text_col, thm->font, text );
 }
 
 void wz_def_draw_scroll( struct WZ_THEME *theme,
                          float x,
                          float y,
-                         float w,
-                         float h,
+                         float width,
+                         float height,
                          float fraction,
                          float slider_size,
                          int style )
 {
     WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
-    int vertical = h > w;
+    int vertical = height > width;
     ALLEGRO_COLOR col;
     float xpos;
     float ypos;
@@ -380,23 +381,23 @@ void wz_def_draw_scroll( struct WZ_THEME *theme,
 
     if( vertical )
     {
-        float max_size = 0.9f * h;
+        float max_size = 0.9f * height;
         slider_h = slider_size > max_size ? max_size : slider_size;
-        slider_w = w;
+        slider_w = width;
         xpos = x;
-        ypos = y + fraction * ( h - slider_h );
+        ypos = y + fraction * ( height - slider_h );
         wz_draw_3d_rectangle(
-            xpos - 4 + w / 2, y, xpos + 4 + w / 2, y + h, 2, wz_scale_color( thm->color1, 0.75 ), true );
+            xpos - 4 + width / 2, y, xpos + 4 + width / 2, y + height, 2, wz_scale_color( thm->color1, 0.75 ), true );
     }
     else
     {
-        float max_size = 0.9f * w;
-        slider_h = h;
+        float max_size = 0.9f * width;
+        slider_h = height;
         slider_w = slider_size > max_size ? max_size : slider_size;
-        xpos = x + fraction * ( w - slider_w );
+        xpos = x + fraction * ( width - slider_w );
         ypos = y;
         wz_draw_3d_rectangle(
-            x, ypos - 4 + h / 2, x + w, ypos + 4 + h / 2, 2, wz_scale_color( thm->color1, 0.75 ), true );
+            x, ypos - 4 + height / 2, x + width, ypos + 4 + height / 2, 2, wz_scale_color( thm->color1, 0.75 ), true );
     }
 
     wz_draw_3d_rectangle( xpos, ypos, xpos + slider_w, ypos + slider_h, 1, col, false );
@@ -405,14 +406,14 @@ void wz_def_draw_scroll( struct WZ_THEME *theme,
 void wz_def_draw_editbox( struct WZ_THEME *theme,
                           float x,
                           float y,
-                          float w,
-                          float h,
+                          float width,
+                          float height,
                           int cursor_pos,
                           ALLEGRO_USTR *text,
                           int style )
 {
     WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
-    int len = wz_get_text_pos( thm->font, text, w - 4 );
+    int len = wz_get_text_pos( thm->font, text, width - 4 );
     int cx, cy, cw, ch;
     int len2 = al_ustr_length( text );
     int offset;
@@ -437,11 +438,18 @@ void wz_def_draw_editbox( struct WZ_THEME *theme,
         text_col = wz_scale_color( thm->color2, 0.5 );
     }
 
-    wz_draw_3d_rectangle( x, y, x + w, y + h, 1, border_col, true );
+    wz_draw_3d_rectangle( x, y, x + width, y + height, 1, border_col, true );
     al_get_clipping_rectangle( &cx, &cy, &cw, &ch );
-    al_set_clipping_rectangle( x + 2, y + 2, w - 4, h - 4 );
-    wz_draw_single_text(
-        x + 2, y + 2, w - 4, h - 4, WZ_ALIGN_LEFT, WZ_ALIGN_CENTRE, text_col, thm->font, (ALLEGRO_USTR *)token );
+    al_set_clipping_rectangle( x + 2, y + 2, width - 4, height - 4 );
+    wz_draw_single_text( x + 2,
+                         y + 2,
+                         width - 4,
+                         height - 4,
+                         WZ_ALIGN_LEFT,
+                         WZ_ALIGN_CENTRE,
+                         text_col,
+                         thm->font,
+                         (ALLEGRO_USTR *)token );
     al_set_clipping_rectangle( cx, cy, cw, ch );
 
     if( style & WZ_STYLE_FOCUSED )
@@ -454,16 +462,20 @@ void wz_def_draw_editbox( struct WZ_THEME *theme,
             token = al_ref_ustr( &info, text, 0, offset );
             len = al_get_ustr_width( thm->font, token );
             halfheight = al_get_font_line_height( thm->font ) / 2.0f;
-            al_draw_line(
-                x + 2 + len, y + 2 + h / 2 - halfheight, x + 2 + len, y + 2 + h / 2 + halfheight, text_col, 1 );
+            al_draw_line( x + 2 + len,
+                          y + 2 + height / 2 - halfheight,
+                          x + 2 + len,
+                          y + 2 + height / 2 + halfheight,
+                          text_col,
+                          1 );
         }
     }
 }
 
-void wz_def_draw_image( struct WZ_THEME *theme, float x, float y, float w, float h, ALLEGRO_BITMAP *image )
+void wz_def_draw_image( struct WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_BITMAP *image )
 {
-    float ix = x + ( w - al_get_bitmap_width( image ) ) / 2;
-    float iy = y + ( h - al_get_bitmap_height( image ) ) / 2;
+    float ix = x + ( width - al_get_bitmap_width( image ) ) / 2;
+    float iy = y + ( height - al_get_bitmap_height( image ) ) / 2;
     al_draw_bitmap( image, ix, iy, 0 );
 }
 

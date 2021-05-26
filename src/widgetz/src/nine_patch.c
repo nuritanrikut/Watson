@@ -297,9 +297,9 @@ void wz_draw_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9, int dx, int dy, int dw
     wz_draw_tinted_nine_patch_bitmap( p9, al_map_rgb_f( 1, 1, 1 ), dx, dy, dw, dh );
 }
 
-ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int w, int h )
+ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int width, int h )
 {
-    ALLEGRO_BITMAP *bmp = al_create_bitmap( w, h );
+    ALLEGRO_BITMAP *bmp = al_create_bitmap( width, h );
     ALLEGRO_STATE s;
 
     if( !bmp )
@@ -308,7 +308,7 @@ ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int 
     al_store_state( &s, ALLEGRO_STATE_TARGET_BITMAP );
     al_set_target_bitmap( bmp );
     al_clear_to_color( al_map_rgba( 0, 0, 0, 0 ) );
-    wz_draw_nine_patch_bitmap( p9, 0, 0, w, h );
+    wz_draw_nine_patch_bitmap( p9, 0, 0, width, h );
     al_restore_state( &s );
     return bmp;
 }

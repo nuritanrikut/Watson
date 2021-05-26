@@ -1,109 +1,121 @@
 #include "TiledBlock.h"
 #include <allegro5/allegro_primitives.h>
 
-// find the tile at x,y. Returns in p[] an array of integers starting at p[0] representing the
-// nested sequence of subblocks that leads to it, and d = depth + 1 (d=0 means the main tile doesn't match)
+// find the tile at x,y. Returns in path[] an array of integers starting at path[0] representing the
+// nested sequence of subblocks that leads to it (depth=0 means the main tile doesn't match)
 
-int get_TiledBlock_tile( TiledBlock *t, int x, int y, int *p )
+int get_TiledBlock_tile( TiledBlock *tiled_block, int x, int y, int *path )
 {
     int m;
-    int d = 0;
+    int depth = 0;
 
-    if( ( x >= t->x ) && ( x < t->x + t->w ) && ( y >= t->y ) && ( y < t->y + t->h ) )
+    if( ( x >= tiled_block->x ) && ( x < tiled_block->x + tiled_block->width ) && ( y >= tiled_block->y )
+        && ( y < tiled_block->y + tiled_block->height ) )
     {
-        for( m = 0; m < t->sb; m++ )
+        for( m = 0; m < tiled_block->number_of_subblocks; m++ )
         {
-            d = get_TiledBlock_tile( t->b[m], x - t->x, y - t->y, p + 1 );
-            if( d )
+            depth = get_TiledBlock_tile( tiled_block->sub[m], x - tiled_block->x, y - tiled_block->y, path + 1 );
+            if( depth )
             {
-                *p = m;
+                *path = m;
                 break;
             }
         }
-        return d + 1;
+        return depth + 1;
     }
     return 0;
 };
 
 // get pointer to tiledblock at position x,y
-TiledBlock *get_TiledBlock( TiledBlock *t, int x, int y )
+TiledBlock *get_TiledBlock( TiledBlock *tiled_block, int x, int y )
 {
     int m;
     TiledBlock *rt = NULL;
 
-    if( ( x >= t->x ) && ( x < t->x + t->w ) && ( y >= t->y ) && ( y < t->y + t->h ) )
+    if( ( x >= tiled_block->x ) && ( x < tiled_block->x + tiled_block->width ) && ( y >= tiled_block->y )
+        && ( y < tiled_block->y + tiled_block->height ) )
     {
-        for( m = 0; m < t->sb; m++ )
+        for( m = 0; m < tiled_block->number_of_subblocks; m++ )
         {
-            rt = get_TiledBlock( t->b[m], x - t->x, y - t->y );
+            rt = get_TiledBlock( tiled_block->sub[m], x - tiled_block->x, y - tiled_block->y );
             if( rt && ( rt->hidden != -1 ) )
                 return rt;
         }
-        return t;
+        return tiled_block;
     }
     else
         return NULL;
 };
 
 // Draw the tiled block in the target allegro display
-void draw_TiledBlock( TiledBlock *t, int x, int y )
+void draw_TiledBlock( TiledBlock *tiled_block, int x, int y )
 {
     int i;
 
-    if( t->bmp && ( t->hidden != -1 ) )
+    if( tiled_block->bmp && ( tiled_block->hidden != -1 ) )
     {
-        if( t->hidden )
+        if( tiled_block->hidden )
         {
-            al_draw_tinted_bitmap( *( t->bmp ), al_map_rgba_f( 0.1, 0.1, 0.1, 0.1 ), t->x + x, t->y + y, 0 );
+            al_draw_tinted_bitmap(
+                *( tiled_block->bmp ), al_map_rgba_f( 0.1, 0.1, 0.1, 0.1 ), tiled_block->x + x, tiled_block->y + y, 0 );
         }
         else
         {
-            al_draw_bitmap( *( t->bmp ), t->x + x, t->y + y, 0 );
+            al_draw_bitmap( *( tiled_block->bmp ), tiled_block->x + x, tiled_block->y + y, 0 );
         }
     }
     else
     {
-        al_draw_filled_rectangle( t->x + x, t->y + y, t->x + x + t->w, t->y + y + t->h, t->bg_color );
+        al_draw_filled_rectangle( tiled_block->x + x,
+                                  tiled_block->y + y,
+                                  tiled_block->x + x + tiled_block->width,
+                                  tiled_block->y + y + tiled_block->height,
+                                  tiled_block->bg_color );
     }
 
-    if( t->bd )
-        al_draw_rectangle( t->x + x, t->y + y, t->x + x + t->w, t->y + y + t->h, t->bd_color, t->bd );
+    if( tiled_block->bd )
+        al_draw_rectangle( tiled_block->x + x,
+                           tiled_block->y + y,
+                           tiled_block->x + x + tiled_block->width,
+                           tiled_block->y + y + tiled_block->height,
+                           tiled_block->bd_color,
+                           tiled_block->bd );
 
-    for( i = 0; i < t->sb; i++ )
+    for( i = 0; i < tiled_block->number_of_subblocks; i++ )
     {
-        if( t->b[i] )
-            draw_TiledBlock( t->b[i], t->x + x, t->y + y );
+        if( tiled_block->sub[i] )
+            draw_TiledBlock( tiled_block->sub[i], tiled_block->x + x, tiled_block->y + y );
     }
 };
 
-void get_TiledBlock_offset( TiledBlock *t, int *x, int *y )
+void get_TiledBlock_offset( TiledBlock *tiled_block, int *x, int *y )
 {
-    *x = t->x;
-    *y = t->y;
+    *x = tiled_block->x;
+    *y = tiled_block->y;
 
-    while( t->parent )
+    while( tiled_block->parent )
     {
-        t = t->parent;
-        *x += t->x;
-        *y += t->y;
+        tiled_block = tiled_block->parent;
+        *x += tiled_block->x;
+        *y += tiled_block->y;
     }
 }
 
-void highlight_TiledBlock( TiledBlock *t )
+void highlight_TiledBlock( TiledBlock *tiled_block )
 {
     int x, y, i;
-    get_TiledBlock_offset( t, &x, &y );
-    //    al_draw_rectangle(x-2,y-2, x+t->w+2, y+t->h+2, (ALLEGRO_COLOR){1,0,0,0.5}, 4);
+    get_TiledBlock_offset( tiled_block, &x, &y );
+    //    al_draw_rectangle(x-2,y-2, x+tiled_block->width+2, y+tiled_block->height+2, (ALLEGRO_COLOR){1,0,0,0.5}, 4);
     for( i = 0; i < 8; i++ )
     {
-        al_draw_rectangle( x, y, x + t->w, y + t->h, al_premul_rgba_f( 1, 0, 0, 0.2 ), i );
+        al_draw_rectangle( x, y, x + tiled_block->width, y + tiled_block->height, al_premul_rgba_f( 1, 0, 0, 0.2 ), i );
     }
-    al_draw_filled_rectangle( x, y, x + t->w, y + t->h, al_premul_rgba_f( 1, 1, 1, 0.3 ) );
+    al_draw_filled_rectangle( x, y, x + tiled_block->width, y + tiled_block->height, al_premul_rgba_f( 1, 1, 1, 0.3 ) );
 }
 
 TiledBlock *new_TiledBlock( void )
 {
-    TiledBlock *t = malloc( sizeof( *t ) );
-    *t = ( TiledBlock ){ 0 };
-    return t;
+    TiledBlock *tiled_block = malloc( sizeof( *tiled_block ) );
+    *tiled_block = ( TiledBlock ){ 0 };
+    return tiled_block;
 }

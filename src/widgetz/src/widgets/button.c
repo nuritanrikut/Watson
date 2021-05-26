@@ -63,7 +63,8 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                 if( but->down )
                     flags |= WZ_STYLE_DOWN;
 
-                wgt->theme->draw_button( wgt->theme, wgt->local_x, wgt->local_y, wgt->w, wgt->h, but->text, flags );
+                wgt->theme->draw_button(
+                    wgt->theme, wgt->local_x, wgt->local_y, wgt->width, wgt->height, but->text, flags );
             }
 
             break;
@@ -272,14 +273,14 @@ void wz_init_button( WZ_BUTTON *but,
                      WZ_WIDGET *parent,
                      float x,
                      float y,
-                     float w,
-                     float h,
+                     float width,
+                     float height,
                      ALLEGRO_USTR *text,
                      int own,
                      int id )
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)but;
-    wz_init_widget( wgt, parent, x, y, w, h, id );
+    wz_init_widget( wgt, parent, x, y, width, height, id );
     but->down = 0;
     but->own = own;
     but->text = text;
@@ -306,9 +307,9 @@ See Also:
 <wz_create_widget>
 */
 WZ_BUTTON *
-wz_create_button( WZ_WIDGET *parent, float x, float y, float w, float h, ALLEGRO_USTR *text, int own, int id )
+wz_create_button( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id )
 {
     WZ_BUTTON *but = malloc( sizeof( WZ_BUTTON ) );
-    wz_init_button( but, parent, x, y, w, h, text, own, id );
+    wz_init_button( but, parent, x, y, width, height, text, own, id );
     return but;
 }

@@ -52,8 +52,8 @@ int wz_textbox_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                 wgt->theme->draw_textbox( wgt->theme,
                                           wgt->local_x,
                                           wgt->local_y,
-                                          wgt->w,
-                                          wgt->h,
+                                          wgt->width,
+                                          wgt->height,
                                           box->h_align,
                                           box->v_align,
                                           box->text,
@@ -101,8 +101,8 @@ void wz_init_textbox( WZ_TEXTBOX *box,
                       WZ_WIDGET *parent,
                       float x,
                       float y,
-                      float w,
-                      float h,
+                      float width,
+                      float height,
                       int halign,
                       int valign,
                       ALLEGRO_USTR *text,
@@ -110,7 +110,7 @@ void wz_init_textbox( WZ_TEXTBOX *box,
                       int id )
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)box;
-    wz_init_widget( wgt, parent, x, y, w, h, id );
+    wz_init_widget( wgt, parent, x, y, width, height, id );
     wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
     wgt->proc = wz_textbox_proc;
     box->own = own;
@@ -143,8 +143,8 @@ See Also:
 WZ_TEXTBOX *wz_create_textbox( WZ_WIDGET *parent,
                                float x,
                                float y,
-                               float w,
-                               float h,
+                               float width,
+                               float height,
                                int halign,
                                int valign,
                                ALLEGRO_USTR *text,
@@ -152,6 +152,6 @@ WZ_TEXTBOX *wz_create_textbox( WZ_WIDGET *parent,
                                int id )
 {
     WZ_TEXTBOX *box = malloc( sizeof( WZ_TEXTBOX ) );
-    wz_init_textbox( box, parent, x, y, w, h, halign, valign, text, own, id );
+    wz_init_textbox( box, parent, x, y, width, height, halign, valign, text, own, id );
     return box;
 }

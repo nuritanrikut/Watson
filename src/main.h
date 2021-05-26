@@ -34,8 +34,8 @@
 
 typedef struct Settings
 {
-    int n;
-    int h;
+    int number_of_columns;
+    int column_height;
     int advanced;
     int sound_mute;
     int type_of_tiles;
@@ -48,9 +48,9 @@ extern Settings set;
 extern Settings nset; // settings for new game
 
 void emit_event( int event_type );
-void draw_stuff( Board *b );
-void get_highscores( int n, int h, int advanced, char ( *name )[64], double *score );
-void save_highscores( int n, int h, int advanced, char ( *name )[64], double *score );
+void draw_stuff( Board *board );
+void get_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score );
+void save_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score );
 void add_gui( WZ_WIDGET *base, WZ_WIDGET *gui );
 void remove_gui( WZ_WIDGET *base );
 

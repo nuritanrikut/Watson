@@ -12,8 +12,8 @@
 
 typedef struct Board
 {
-    int n;
-    int h;
+    int number_of_columns;
+    int column_height;
     int xsize, ysize;
     int max_xsize, max_ysize;
     TiledBlock panel;
@@ -34,11 +34,12 @@ typedef struct Board
     int panel_tile_size;
     int clue_unit_size;
     int clue_unit_space;
-    int hclue_n;                  // number of hclues
-    int vclue_n;                  // number of vclue
-    int dragging_ox, dragging_oy; // initial position of TiledBlock being dragged
-    int dragging_cx, dragging_cy; // relative poisition of grabbing point
-    int type_of_tiles;            // 0 = use ttf font, 1 = use file bitmaps, 2 = use classic tiles from grid
+    int number_of_hclues;                     // number of hclues
+    int number_of_vclues;                     // number of vclue
+    int dragging_origin_x, dragging_origin_y; // initial position of TiledBlock being dragged
+    int dragging_relative_position_of_grabbing_x,
+        dragging_relative_position_of_grabbing_y; // relative poisition of grabbing point
+    int type_of_tiles; // 0 = use ttf font, 1 = use file bitmaps, 2 = use classic tiles from grid
     float time_start;
     int restart;
     ALLEGRO_COLOR bg_color;
@@ -77,8 +78,8 @@ typedef enum BLOCK_TYPE
 } BLOCK_TYPE;
 
 //Prototypes
-int create_board( Game *g, Board *b, int mode ); // mode = 0: update, 1: create
-void destroy_board( Board *b );
-void destroy_board_clue_blocks( Board *b );
+int create_board( Game *game, Board *board, int mode ); // mode = 0: update, 1: create
+void destroy_board( Board *board );
+void destroy_board_clue_blocks( Board *board );
 
 #endif /* defined(__freesherlock__board__) */

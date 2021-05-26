@@ -158,15 +158,15 @@ void wz_init_toggle_button( WZ_TOGGLE *tog,
                             WZ_WIDGET *parent,
                             float x,
                             float y,
-                            float w,
-                            float h,
+                            float width,
+                            float height,
                             ALLEGRO_USTR *text,
                             int own,
                             int group,
                             int id )
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)tog;
-    wz_init_button( (WZ_BUTTON *)tog, parent, x, y, w, h, text, own, id );
+    wz_init_button( (WZ_BUTTON *)tog, parent, x, y, width, height, text, own, id );
     tog->group = group;
     wgt->proc = wz_toggle_button_proc;
 }
@@ -194,14 +194,14 @@ See Also:
 WZ_TOGGLE *wz_create_toggle_button( WZ_WIDGET *parent,
                                     float x,
                                     float y,
-                                    float w,
-                                    float h,
+                                    float width,
+                                    float height,
                                     ALLEGRO_USTR *text,
                                     int own,
                                     int group,
                                     int id )
 {
     WZ_TOGGLE *tog = malloc( sizeof( WZ_TOGGLE ) );
-    wz_init_toggle_button( tog, parent, x, y, w, h, text, own, group, id );
+    wz_init_toggle_button( tog, parent, x, y, width, height, text, own, group, id );
     return tog;
 }

@@ -164,33 +164,33 @@ MemFile create_memfile( const char *filename )
 }
 
 // adapter = 0 for first desktop
-void get_desktop_resolution( int adapter, int *w, int *h )
+void get_desktop_resolution( int adapter, int *width, int *height )
 {
     ALLEGRO_MONITOR_INFO info;
     al_get_monitor_info( adapter, &info );
 
-    *w = info.x2 - info.x1;
-    *h = info.y2 - info.y1;
+    *width = info.x2 - info.x1;
+    *height = info.y2 - info.y1;
 };
 
 // get best fullscreen resolution
-void get_highest_resolution( int *w, int *h )
+void get_highest_resolution( int *width, int *height )
 {
     ALLEGRO_DISPLAY_MODE disp_data;
     int i;
 
-    *w = 0;
-    *h = 0;
+    *width = 0;
+    *height = 0;
     for( i = 0; i < al_get_num_display_modes(); i++ )
     {
         al_get_display_mode( i, &disp_data );
-        if( *w < disp_data.width )
-            *w = disp_data.width;
+        if( *width < disp_data.width )
+            *width = disp_data.width;
     }
 
-    if( ( *w == disp_data.width ) && ( *h < disp_data.height ) )
+    if( ( *width == disp_data.width ) && ( *height < disp_data.height ) )
     {
-        *h = disp_data.height;
+        *height = disp_data.height;
     }
 }
 
@@ -276,28 +276,29 @@ ALLEGRO_BITMAP *screenshot()
     return ret;
 }
 
-ALLEGRO_BITMAP *screenshot_part( int x, int y, int w, int h )
+ALLEGRO_BITMAP *screenshot_part( int x, int y, int width, int height )
 {
     int store = al_get_new_bitmap_format();
     ALLEGRO_BITMAP *ret;
     ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
 
     al_set_new_bitmap_format( ALLEGRO_PIXEL_FORMAT_RGB_888 );
-    ret = al_create_bitmap( w, h );
+    ret = al_create_bitmap( width, height );
     al_set_target_bitmap( ret );
-    al_draw_bitmap_region( currbuf, x, y, w, h, 0, 0, 0 );
+    al_draw_bitmap_region( currbuf, x, y, width, height, 0, 0, 0 );
     al_set_target_bitmap( currbuf );
     al_set_new_bitmap_format( store );
     return ret;
 }
 
-ALLEGRO_BITMAP *scaled_clone_bitmap( ALLEGRO_BITMAP *source, int w, int h )
+ALLEGRO_BITMAP *scaled_clone_bitmap( ALLEGRO_BITMAP *source, int width, int height )
 {
     ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
-    ALLEGRO_BITMAP *ret = al_create_bitmap( w, h );
+    ALLEGRO_BITMAP *ret = al_create_bitmap( width, height );
     al_set_target_bitmap( ret );
     al_clear_to_color( NULL_COLOR );
-    al_draw_scaled_bitmap( source, 0, 0, al_get_bitmap_width( source ), al_get_bitmap_height( source ), 0, 0, w, h, 0 );
+    al_draw_scaled_bitmap(
+        source, 0, 0, al_get_bitmap_width( source ), al_get_bitmap_height( source ), 0, 0, width, height, 0 );
     al_set_target_bitmap( currbuf );
     return ret;
 }

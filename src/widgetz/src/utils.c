@@ -520,7 +520,7 @@ Returns:
 */
 int wz_widget_rect_test( WZ_WIDGET *wgt, float x, float y )
 {
-    return x > wgt->local_x && x < wgt->local_x + wgt->w && y > wgt->local_y && y < wgt->local_y + wgt->h;
+    return x > wgt->local_x && x < wgt->local_x + wgt->width && y > wgt->local_y && y < wgt->local_y + wgt->height;
 }
 
 /*

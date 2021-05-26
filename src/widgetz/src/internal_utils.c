@@ -173,36 +173,36 @@ WZ_WIDGET *wz_get_widget_dir( WZ_WIDGET *wgt, int dir )
         {
             case 0:
             {
-                if( child->y + child->h < wgt->y )
+                if( child->y + child->height < wgt->y )
                 {
-                    dev = wgt->y - ( child->y + child->h ) + fabs( wgt->x - child->x );
+                    dev = wgt->y - ( child->y + child->height ) + fabs( wgt->x - child->x );
                 }
 
                 break;
             }
             case 1:
             {
-                if( child->x > wgt->x + wgt->w )
+                if( child->x > wgt->x + wgt->width )
                 {
-                    dev = child->x - ( wgt->x + wgt->w ) + fabs( wgt->y - child->y );
+                    dev = child->x - ( wgt->x + wgt->width ) + fabs( wgt->y - child->y );
                 }
 
                 break;
             }
             case 2:
             {
-                if( child->y > wgt->y + wgt->h )
+                if( child->y > wgt->y + wgt->height )
                 {
-                    dev = child->y - ( wgt->y + wgt->h ) + fabs( wgt->x - child->x );
+                    dev = child->y - ( wgt->y + wgt->height ) + fabs( wgt->x - child->x );
                 }
 
                 break;
             }
             default:
             {
-                if( child->x + child->w < wgt->x )
+                if( child->x + child->width < wgt->x )
                 {
-                    dev = wgt->x - ( child->x + child->w ) + fabs( wgt->y - child->y );
+                    dev = wgt->x - ( child->x + child->width ) + fabs( wgt->y - child->y );
                 }
 
                 break;

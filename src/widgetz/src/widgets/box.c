@@ -71,7 +71,7 @@ int wz_box_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
             {
                 int flags = ( wgt->flags & WZ_STATE_HAS_FOCUS ) ? WZ_STYLE_FOCUSED : 0;
                 flags |= ( wgt->flags & WZ_STATE_DISABLED ) ? WZ_STYLE_DISABLED : 0;
-                wgt->theme->draw_box( wgt->theme, wgt->local_x, wgt->local_y, wgt->w, wgt->h, flags );
+                wgt->theme->draw_box( wgt->theme, wgt->local_x, wgt->local_y, wgt->width, wgt->height, flags );
             }
         }
 
@@ -88,9 +88,9 @@ int wz_box_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
 /*
 Function: wz_init_box
 */
-void wz_init_box( WZ_WIDGET *wgt, WZ_WIDGET *parent, float x, float y, float w, float h, int id )
+void wz_init_box( WZ_WIDGET *wgt, WZ_WIDGET *parent, float x, float y, float width, float height, int id )
 {
-    wz_init_widget( wgt, parent, x, y, w, h, id );
+    wz_init_widget( wgt, parent, x, y, width, height, id );
     wgt->proc = wz_box_proc;
 }
 
@@ -106,9 +106,9 @@ See Also:
 
 <wz_create_widget>
 */
-WZ_WIDGET *wz_create_box( WZ_WIDGET *parent, float x, float y, float w, float h, int id )
+WZ_WIDGET *wz_create_box( WZ_WIDGET *parent, float x, float y, float width, float height, int id )
 {
     WZ_WIDGET *wgt = malloc( sizeof( WZ_WIDGET ) );
-    wz_init_box( wgt, parent, x, y, w, h, id );
+    wz_init_box( wgt, parent, x, y, width, height, id );
     return wgt;
 }

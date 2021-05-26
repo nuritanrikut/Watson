@@ -32,10 +32,10 @@ typedef struct MemFile
 int init_allegro( void );
 
 // adapter = 0 for first desktop
-void get_desktop_resolution( int adapter, int *w, int *h );
+void get_desktop_resolution( int adapter, int *width, int *height );
 
 // get best fullscreen resolution
-void get_highest_resolution( int *w, int *h );
+void get_highest_resolution( int *width, int *height );
 
 void wait_for_keypress( void );
 
@@ -52,9 +52,9 @@ void free_ustr( void );
 
 // clones the target bitmap (usually the display backbuffer)
 ALLEGRO_BITMAP *screenshot();
-ALLEGRO_BITMAP *screenshot_part( int x, int y, int w, int h );
+ALLEGRO_BITMAP *screenshot_part( int x, int y, int width, int height );
 
-ALLEGRO_BITMAP *scaled_clone_bitmap( ALLEGRO_BITMAP *source, int w, int h );
+ALLEGRO_BITMAP *scaled_clone_bitmap( ALLEGRO_BITMAP *source, int width, int height );
 
 // variables
 extern ALLEGRO_FONT *default_font;

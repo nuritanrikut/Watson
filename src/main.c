@@ -47,8 +47,8 @@
 
 // defaults:
 Settings set = {
-    6, // n
-    6, // h
+    6, // number_of_columns
+    6, // column_height
     0, // advanced
     0, // sound_mute
     0, // type_of_tiles
@@ -86,7 +86,7 @@ struct Panel_State *undo = NULL;
 
 // Prototypes
 void draw_stuff( Board *board );
-void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int x, int y, int mclick );
+void handle_mouse_click( Game *game, Board *board, TiledBlock *tiled_block, int x, int y, int mclick );
 void update_board( Game *game, Board *board );
 void mouse_grab( Board *board, int mx, int my );
 void mouse_drop( Board *board, int mx, int my );
@@ -102,19 +102,19 @@ int save_game_f( Game *game, Board *board );
 int load_game_f( Game *game, Board *board );
 void explain_clue( Board *board, Clue *clue );
 
-//void blink_TB(TiledBlock *t){
+//void blink_TB(TiledBlock *tiled_block){
 //    ALLEGRO_BITMAP *screen = screenshot();
 //    int x,y;
 //
-//    get_TiledBlock_offset(t, &x, &y);
-//    al_draw_filled_rectangle(x,y, x+t->w, y+t->h, al_premul_rgba(255,255,255,150));
+//    get_TiledBlock_offset(tiled_block, &x, &y);
+//    al_draw_filled_rectangle(x,y, x+tiled_block->width, y+tiled_block->height, al_premul_rgba(255,255,255,150));
 //    al_flip_display();
 //    al_rest(0.1);
 //    al_draw_bitmap(screen,0,0,0);
 //    al_flip_display();
 //    al_rest(0.2);
 //    al_draw_bitmap(screen,0,0,0);
-//    al_draw_filled_rectangle(x,y,x+ t->w, y+t->h, al_premul_rgba(255,255,255,150));
+//    al_draw_filled_rectangle(x,y,x+ tiled_block->width, y+tiled_block->height, al_premul_rgba(255,255,255,150));
 //    al_flip_display();
 //    al_rest(0.1);
 //    al_draw_bitmap(screen,0,0,0);
@@ -128,7 +128,7 @@ void explain_clue( Board *board, Clue *clue );
 //al_scale_transform(&T, 5, 5);
 //al_use_transform(&T);
 //al_draw_filled_rectangle(0,0,80, 20, BLACK_COLOR);
-//al_draw_textf(default_font, WHITE_COLOR, 0,0, ALLEGRO_ALIGN_LEFT, "%d, %d | %d, %d", nset.n, nset.h, set->n, set->h);
+//al_draw_textf(default_font, WHITE_COLOR, 0,0, ALLEGRO_ALIGN_LEFT, "%d, %d | %d, %d", nset.number_of_columns, nset.column_height, set->number_of_columns, set->column_height);
 //al_identity_transform(&T);
 //al_use_transform(&T);
 
@@ -237,8 +237,8 @@ void draw_stuff( Board *board )
             // draw dark background in case of transparent elements
             al_draw_filled_rectangle( board->zoom->x,
                                       board->zoom->y,
-                                      board->zoom->x + board->zoom->w,
-                                      board->zoom->y + board->zoom->h,
+                                      board->zoom->x + board->zoom->width,
+                                      board->zoom->y + board->zoom->height,
                                       board->zoom->parent->bg_color );
             draw_TiledBlock( board->zoom, 0, 0 );
             al_use_transform( &board->identity_transform );
@@ -255,33 +255,33 @@ void animate_win( Board *board )
     ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
     ALLEGRO_BITMAP *bmp = al_clone_bitmap( currbuf );
     ALLEGRO_EVENT ev;
-    int a[64];
+    int arr[64];
 
     al_set_target_bitmap( bmp );
     al_clear_to_color( BLACK_COLOR );
     draw_stuff( board );
     al_set_target_bitmap( currbuf );
 
-    for( k = 0; k < board->n * board->h; k++ )
+    for( k = 0; k < board->number_of_columns * board->column_height; k++ )
     {
-        a[k] = k;
+        arr[k] = k;
     }
 
-    shuffle( a, board->n * board->h );
+    shuffle( arr, board->number_of_columns * board->column_height );
 
-    for( k = 0; k < board->n * board->h; k++ )
+    for( k = 0; k < board->number_of_columns * board->column_height; k++ )
     {
         al_clear_to_color( BLACK_COLOR );
         al_draw_bitmap( bmp, 0, 0, 0 );
         for( kk = 0; kk <= k; kk++ )
         {
-            ii = a[kk] / board->h;
-            jj = a[kk] % board->h;
-            get_TiledBlock_offset( board->panel.b[ii]->b[jj], &x, &y );
+            ii = arr[kk] / board->column_height;
+            jj = arr[kk] % board->column_height;
+            get_TiledBlock_offset( board->panel.sub[ii]->sub[jj], &x, &y );
             al_draw_filled_rectangle( x,
                                       y,
-                                      x + board->panel.b[ii]->b[jj]->w,
-                                      y + board->panel.b[ii]->b[jj]->h,
+                                      x + board->panel.sub[ii]->sub[jj]->width,
+                                      y + board->panel.sub[ii]->sub[jj]->height,
                                       al_premul_rgba( 0, 0, 0, 200 ) );
         }
         al_flip_display();
@@ -299,21 +299,23 @@ void animate_win( Board *board )
                 // should do something else here
             }
         }
-        al_rest( max( 0.15, 0.6 * ( 1 - sqrt( (float)k / ( board->h * board->n ) ) ) ) );
+        al_rest( max( 0.15, 0.6 * ( 1 - sqrt( (float)k / ( board->column_height * board->number_of_columns ) ) ) ) );
     }
 }
 
-void draw_generating_puzzle( Settings *s, Board *board )
+void draw_generating_puzzle( Settings *settings, Board *board )
 {
     ALLEGRO_USTR *msg;
     if( game_state == GAME_INTRO )
         return;
 
-    if( !s->advanced )
-        msg = al_ustr_newf( "Generating %d x %d puzzle, please wait...", s->n, s->h );
+    if( !settings->advanced )
+        msg = al_ustr_newf(
+            "Generating %d x %d puzzle, please wait...", settings->number_of_columns, settings->column_height );
     else
-        msg =
-            al_ustr_newf( "Generating %d x %d advanced puzzle, please wait (this could take a while)...", s->n, s->h );
+        msg = al_ustr_newf( "Generating %d x %d advanced puzzle, please wait (this could take a while)...",
+                            settings->number_of_columns,
+                            settings->column_height );
 
     draw_text_gui( msg );
 }
@@ -535,8 +537,8 @@ RESTART:
     if( restart != 2 )
     {                                 // 2 is for loaded game
         game.advanced = set.advanced; // use "what if" depth 1?
-        game.n = set.n;
-        game.h = set.h;
+        game.number_of_columns = set.number_of_columns;
+        game.column_height = set.column_height;
         game.time = 0;
         draw_stuff( &board );
         draw_generating_puzzle( &set, &board );
@@ -547,8 +549,8 @@ RESTART:
     { // board should be updated only after destroying the board
         deblog( "Resuming loaded game." );
         set.advanced = game.advanced;
-        set.n = game.n;
-        set.h = game.h;
+        set.number_of_columns = game.number_of_columns;
+        set.column_height = game.column_height;
     }
 
     if( restart == 1 )
@@ -576,8 +578,8 @@ RESTART:
     board.max_xsize = desktop_xsize * max_display_factor;
     board.max_ysize = desktop_ysize * max_display_factor; // change this later to something adequate
     board.type_of_tiles = set.type_of_tiles;
-    board.n = game.n;
-    board.h = game.h;
+    board.number_of_columns = game.number_of_columns;
+    board.column_height = game.column_height;
 
     if( create_board( &game, &board, 1 ) )
     {
@@ -650,9 +652,9 @@ RESTART:
     show_info_text(
         &board,
         al_ustr_newf( "Click on clue for info. Click %s for help, %s for settings, or %s for a hint at any time.",
-                      symbol_char[board.h][1],
-                      symbol_char[board.h][2],
-                      symbol_char[board.h][0] ) );
+                      symbol_char[board.column_height][1],
+                      symbol_char[board.column_height][2],
+                      symbol_char[board.column_height][0] ) );
 
     al_set_target_backbuffer( display );
     al_clear_to_color( BLACK_COLOR );
@@ -844,8 +846,8 @@ RESTART:
                         break;
                     if( board.dragging )
                     {
-                        board.dragging->x = ev.mouse.x + board.dragging_cx;
-                        board.dragging->y = ev.mouse.y + board.dragging_cy;
+                        board.dragging->x = ev.mouse.x + board.dragging_relative_position_of_grabbing_x;
+                        board.dragging->y = ev.mouse.y + board.dragging_relative_position_of_grabbing_y;
                     }
                     mouse_move = 1;
                     // don't grab if movement was small
@@ -1018,7 +1020,7 @@ RESTART:
                 play_time = al_get_time();
                 update_timer( (int)game.time, &board ); // this draws on a timer bitmap
 
-                if( game.guessed == game.h * game.n )
+                if( game.guessed == game.column_height * game.number_of_columns )
                 {
                     win_or_lose( &game, &board ); // check if player has won
                     al_flush_event_queue( event_queue );
@@ -1062,13 +1064,13 @@ void update_guessed( Game *game )
 
     game->guessed = 0;
 
-    for( i = 0; i < game->n; i++ )
+    for( i = 0; i < game->number_of_columns; i++ )
     {
-        for( j = 0; j < game->h; j++ )
+        for( j = 0; j < game->column_height; j++ )
         {
             count = 0;
             val = -1;
-            for( k = 0; k < game->n; k++ )
+            for( k = 0; k < game->number_of_columns; k++ )
             {
                 if( game->tile[i][j][k] )
                 {
@@ -1093,28 +1095,28 @@ void update_board( Game *game, Board *board )
 {
     int i, j, k;
 
-    for( i = 0; i < game->n; i++ )
+    for( i = 0; i < game->number_of_columns; i++ )
     {
-        for( j = 0; j < game->h; j++ )
+        for( j = 0; j < game->column_height; j++ )
         {
             if( game->guess[i][j] >= 0 )
             {
-                board->panel.b[i]->b[j]->sb = 0;
-                board->panel.b[i]->b[j]->bmp = &( board->guess_bmp[j][game->guess[i][j]] );
+                board->panel.sub[i]->sub[j]->number_of_subblocks = 0;
+                board->panel.sub[i]->sub[j]->bmp = &( board->guess_bmp[j][game->guess[i][j]] );
             }
             else
             {
-                board->panel.b[i]->b[j]->sb = board->n;
-                board->panel.b[i]->b[j]->bmp = NULL;
-                for( k = 0; k < game->n; k++ )
+                board->panel.sub[i]->sub[j]->number_of_subblocks = board->number_of_columns;
+                board->panel.sub[i]->sub[j]->bmp = NULL;
+                for( k = 0; k < game->number_of_columns; k++ )
                 {
                     if( game->tile[i][j][k] )
                     {
-                        board->panel.b[i]->b[j]->b[k]->hidden = 0;
+                        board->panel.sub[i]->sub[j]->sub[k]->hidden = 0;
                     }
                     else
                     {
-                        board->panel.b[i]->b[j]->b[k]->hidden = 1;
+                        board->panel.sub[i]->sub[j]->sub[k]->hidden = 1;
                     }
                 }
             }
@@ -1137,14 +1139,14 @@ void swap_clues( Board *board, TiledBlock *c1, TiledBlock *c2 )
 TiledBlock *get_TiledBlock_at( Board *board, int x, int y )
 {
     float xx = x, yy = y;
-    TiledBlock *t;
+    TiledBlock *tiled_block;
 
     if( board->zoom )
     {
         al_transform_coordinates( &board->zoom_transform_inv, &xx, &yy );
-        t = get_TiledBlock( board->zoom, xx, yy );
-        if( t && ( t->parent == board->zoom ) )
-            return t;
+        tiled_block = get_TiledBlock( board->zoom, xx, yy );
+        if( tiled_block && ( tiled_block->parent == board->zoom ) )
+            return tiled_block;
         else
             return NULL; // else return get_TiledBlock(&board->all, x, y);
     }
@@ -1160,12 +1162,12 @@ void mouse_grab( Board *board, int mx, int my )
     {
         if( ( board->dragging->type == TB_HCLUE_TILE ) || ( board->dragging->type == TB_VCLUE_TILE ) )
         {
-            board->dragging_ox = board->dragging->x;
-            board->dragging_oy = board->dragging->y;
-            board->dragging_cx = board->dragging->x - mx + 5;
-            board->dragging_cy = board->dragging->y - my + 5;
-            board->dragging->x = mx + board->dragging_cx;
-            board->dragging->y = my + board->dragging_cy;
+            board->dragging_origin_x = board->dragging->x;
+            board->dragging_origin_y = board->dragging->y;
+            board->dragging_relative_position_of_grabbing_x = board->dragging->x - mx + 5;
+            board->dragging_relative_position_of_grabbing_y = board->dragging->y - my + 5;
+            board->dragging->x = mx + board->dragging_relative_position_of_grabbing_x;
+            board->dragging->y = my + board->dragging_relative_position_of_grabbing_y;
             // if(!set.sound_mute) play_sound(SOUND_UNHIDE_TILE);
             return;
         }
@@ -1177,21 +1179,21 @@ void mouse_grab( Board *board, int mx, int my )
 
 void mouse_drop( Board *board, int mx, int my )
 {
-    TiledBlock *t;
+    TiledBlock *tiled_block;
 
     emit_event( EVENT_REDRAW );
     if( !board->dragging )
         return;
-    board->dragging->x = board->dragging_ox;
-    board->dragging->y = board->dragging_oy;
+    board->dragging->x = board->dragging_origin_x;
+    board->dragging->y = board->dragging_origin_y;
 
-    t = get_TiledBlock_at( board, mx, my );
-    if( t && ( t->type == board->dragging->type ) )
+    tiled_block = get_TiledBlock_at( board, mx, my );
+    if( tiled_block && ( tiled_block->type == board->dragging->type ) )
     {
-        swap_clues( board, board->dragging, t );
+        swap_clues( board, board->dragging, tiled_block );
         if( board->highlight == board->dragging )
-            board->highlight = t;
-        else if( board->highlight == t )
+            board->highlight = tiled_block;
+        else if( board->highlight == tiled_block )
             board->highlight = board->dragging;
         if( !set.sound_mute )
             play_sound( SOUND_HIDE_TILE );
@@ -1314,7 +1316,7 @@ void show_hint( Game *game, Board *board )
     }
 
     board->highlight = board->clue_tiledblock[i & 255];
-    board->rule_out = board->panel.b[( i >> 15 ) & 7]->b[( i >> 12 ) & 7]->b[( i >> 9 ) & 7];
+    board->rule_out = board->panel.sub[( i >> 15 ) & 7]->sub[( i >> 12 ) & 7]->sub[( i >> 9 ) & 7];
 
     b0 = symbol_char[game->clue[i & 255].j[0]][game->clue[i & 255].k[0]];
     b1 = symbol_char[game->clue[i & 255].j[1]][game->clue[i & 255].k[1]];
@@ -1400,43 +1402,43 @@ void show_hint( Game *game, Board *board )
     }
 }
 
-void zoom_TB( Board *board, TiledBlock *t )
+void zoom_TB( Board *board, TiledBlock *tiled_block )
 {
     float c = 2.5;
     int x, y, dw = al_get_display_width( al_get_current_display() ),
               dh = al_get_display_height( al_get_current_display() );
     int tr_x, tr_y;
 
-    if( !t )
+    if( !tiled_block )
         return;
-    get_TiledBlock_offset( t, &x, &y );
+    get_TiledBlock_offset( tiled_block, &x, &y );
 
-    tr_x = -( c - 1 ) * ( x + t->w / 2 );
+    tr_x = -( c - 1 ) * ( x + tiled_block->width / 2 );
     if( c * x + tr_x < 0 )
         tr_x = -c * x;
-    else if( c * ( x + t->w ) + tr_x > dw )
-        tr_x = dw - c * ( x + t->w );
+    else if( c * ( x + tiled_block->width ) + tr_x > dw )
+        tr_x = dw - c * ( x + tiled_block->width );
 
-    tr_y = -( c - 1 ) * ( y + t->h / 2 );
+    tr_y = -( c - 1 ) * ( y + tiled_block->height / 2 );
     if( c * y + tr_y < 0 )
         tr_y = -c * y;
-    else if( c * ( y + t->h ) + tr_y > dh )
-        tr_y = dh - c * ( y + t->h );
+    else if( c * ( y + tiled_block->height ) + tr_y > dh )
+        tr_y = dh - c * ( y + tiled_block->height );
 
     al_identity_transform( &board->identity_transform );
     al_identity_transform( &board->zoom_transform );
     al_build_transform( &board->zoom_transform, tr_x, tr_y, c, c, 0 );
-    if( t->parent )
-        get_TiledBlock_offset( t->parent, &x, &y );
+    if( tiled_block->parent )
+        get_TiledBlock_offset( tiled_block->parent, &x, &y );
     al_translate_transform( &board->zoom_transform, c * x, c * y );
     board->zoom_transform_inv = board->zoom_transform;
     al_invert_transform( &board->zoom_transform_inv );
-    board->zoom = t;
+    board->zoom = tiled_block;
     if( !set.sound_mute )
         play_sound( SOUND_CLICK );
 }
 
-void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int mx, int my, int mclick )
+void handle_mouse_click( Game *game, Board *board, TiledBlock *tiled_block, int mx, int my, int mclick )
 {
     int i, j, k;
 
@@ -1468,7 +1470,7 @@ void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int mx, int my
 
     emit_event( EVENT_REDRAW );
 
-    if( !t )
+    if( !tiled_block )
         return;
 
     if( game_state == GAME_OVER )
@@ -1478,16 +1480,17 @@ void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int mx, int my
 
     if( set.fat_fingers )
     {
-        if( !board->zoom || ( t->parent != board->zoom ) )
+        if( !board->zoom || ( tiled_block->parent != board->zoom ) )
         {
-            if( ( ( t->parent ) && ( t->parent->type == TB_TIME_PANEL ) ) || ( t->type == TB_TIME_PANEL ) )
+            if( ( ( tiled_block->parent ) && ( tiled_block->parent->type == TB_TIME_PANEL ) )
+                || ( tiled_block->type == TB_TIME_PANEL ) )
             {
                 zoom_TB( board, &board->time_panel );
                 return;
             }
-            else if( t->type == TB_PANEL_TILE )
+            else if( tiled_block->type == TB_PANEL_TILE )
             {
-                zoom_TB( board, board->zoom = t->parent );
+                zoom_TB( board, board->zoom = tiled_block->parent );
                 return;
             }
         }
@@ -1496,14 +1499,14 @@ void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int mx, int my
     if( board->zoom )
         board->zoom = NULL;
 
-    switch( t->type )
+    switch( tiled_block->type )
     { // which board component was clicked
         case TB_PANEL_TILE:
             if( game_state != GAME_PLAYING )
                 break;
-            k = t->index;
-            j = t->parent->index;
-            i = t->parent->parent->index;
+            k = tiled_block->index;
+            j = tiled_block->parent->index;
+            i = tiled_block->parent->parent->index;
             if( mclick == 1 )
             {
                 save_state( game );
@@ -1539,11 +1542,12 @@ void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int mx, int my
         case TB_PANEL_BLOCK:
             if( game_state != GAME_PLAYING )
                 break;
-            if( ( ( mclick == 2 ) || ( mclick == 4 ) ) && ( game->guess[t->parent->index][t->index] >= 0 ) )
+            if( ( ( mclick == 2 ) || ( mclick == 4 ) )
+                && ( game->guess[tiled_block->parent->index][tiled_block->index] >= 0 ) )
             {
                 // we found guessed block - unguess it
                 save_state( game );
-                unguess_tile( game, t->parent->index, t->index );
+                unguess_tile( game, tiled_block->parent->index, tiled_block->index );
                 if( !set.sound_mute )
                     play_sound( SOUND_UNHIDE_TILE );
             }
@@ -1555,12 +1559,12 @@ void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int mx, int my
             if( game_state != GAME_PLAYING )
                 break;
             // check that this is a real clue
-            if( t->bmp && ( t->index >= 0 ) )
+            if( tiled_block->bmp && ( tiled_block->index >= 0 ) )
             {
                 if( ( mclick == 2 ) || ( mclick == 3 ) )
                 { // toggle hide-show clue on double or right click
-                    SWITCH( t->hidden );
-                    SWITCH( game->clue[t->index].hidden );
+                    SWITCH( tiled_block->hidden );
+                    SWITCH( game->clue[tiled_block->index].hidden );
                     if( !set.sound_mute )
                         play_sound( SOUND_HIDE_TILE );
                 }
@@ -1569,22 +1573,22 @@ void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int mx, int my
                     //                    {
                     //                    //xxx DEBUG text
                     //                    char str[1000];
-                    //                        snprintf(str, 999, "Clue number %d", t->index);
+                    //                        snprintf(str, 999, "Clue number %d", tiled_block->index);
                     //                    show_info_text_b(board,str);
                     //                    }
-                    if( !t->hidden )
+                    if( !tiled_block->hidden )
                     {
                         if( !set.sound_mute )
                             play_sound( SOUND_CLICK );
-                        explain_clue( board, &game->clue[t->index] );
-                        board->highlight = t; // highlight clue
+                        explain_clue( board, &game->clue[tiled_block->index] );
+                        board->highlight = tiled_block; // highlight clue
                     }
                 }
                 else if( mclick == 4 )
                 { // hold-click
                     mouse_grab( board, mx, my );
                     //                    if(MOBILE){
-                    //                        board->highlight = t;
+                    //                        board->highlight = tiled_block;
                     //                        show_info_text(board, "Tap somewhere in the clue box to move this clue");
                     //
                     //                    }
@@ -1627,7 +1631,7 @@ void handle_mouse_click( Game *game, Board *board, TiledBlock *t, int mx, int my
 
 // work in progress
 // actually highscores must include string + int. Maybe do one file for each mode.
-void get_highscores( int n, int h, int advanced, char ( *name )[64], double *score )
+void get_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score )
 {
     ALLEGRO_PATH *path;
     ALLEGRO_FILE *fp;
@@ -1639,7 +1643,7 @@ void get_highscores( int n, int h, int advanced, char ( *name )[64], double *sco
 #endif
 
     path = al_get_standard_path( ALLEGRO_USER_DATA_PATH );
-    snprintf( filename, 99, "Watson%dx%d-%d.hi", n, h, advanced );
+    snprintf( filename, 99, "Watson%dx%d-%d.hi", number_of_columns, h, advanced );
     al_set_path_filename( path, filename );
 
     fp = al_fopen( al_path_cstr( path, '/' ), "rb" );
@@ -1658,7 +1662,7 @@ void get_highscores( int n, int h, int advanced, char ( *name )[64], double *sco
     al_destroy_path( path );
 }
 
-void save_highscores( int n, int h, int advanced, char ( *name )[64], double *score )
+void save_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score )
 {
     ALLEGRO_PATH *path;
     ALLEGRO_FILE *fp;
@@ -1678,7 +1682,7 @@ void save_highscores( int n, int h, int advanced, char ( *name )[64], double *sc
         return;
     }
 
-    snprintf( filename, 99, "Watson%dx%d-%d.hi", n, h, advanced );
+    snprintf( filename, 99, "Watson%dx%d-%d.hi", number_of_columns, h, advanced );
     al_set_path_filename( path, filename );
     fp = al_fopen( al_path_cstr( path, '/' ), "wb" );
     if( !fp )
@@ -1724,8 +1728,8 @@ int save_game_f( Game *game, Board *board )
         al_destroy_path( path );
         return -1;
     }
-    al_fwrite( fp, &game->n, sizeof( game->n ) );
-    al_fwrite( fp, &game->h, sizeof( game->h ) );
+    al_fwrite( fp, &game->number_of_columns, sizeof( game->number_of_columns ) );
+    al_fwrite( fp, &game->column_height, sizeof( game->column_height ) );
     al_fwrite( fp, &game->puzzle, sizeof( game->puzzle ) );
     al_fwrite( fp, &game->clue_n, sizeof( game->clue_n ) );
     al_fwrite( fp, &game->clue, sizeof( game->clue ) );
@@ -1757,14 +1761,15 @@ int load_game_f( Game *game, Board *board )
         return -1;
     }
 
-    if( al_fread( fp, &game->n, sizeof( game->n ) ) != sizeof( game->n ) )
+    if( al_fread( fp, &game->number_of_columns, sizeof( game->number_of_columns ) )
+        != sizeof( game->number_of_columns ) )
     {
         al_destroy_path( path );
         errlog( "Error reading %s.", (char *)al_path_cstr( path, '/' ) );
         return -1;
     }
 
-    al_fread( fp, &game->h, sizeof( game->h ) );
+    al_fread( fp, &game->column_height, sizeof( game->column_height ) );
     al_fread( fp, &game->puzzle, sizeof( game->puzzle ) );
     al_fread( fp, &game->clue_n, sizeof( game->clue_n ) );
     al_fread( fp, &game->clue, sizeof( game->clue ) );
