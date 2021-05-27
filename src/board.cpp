@@ -35,10 +35,10 @@ int PANEL_TILE_ROWS[9] = { 0, 1, 1, 2, 2, 2, 2, 2, 2 };
 Board::Board()
     : number_of_columns( 0 ),
       column_height( 0 ),
-      xsize( 0 ),
-      ysize( 0 ),
-      max_xsize( 0 ),
-      max_ysize( 0 ),
+      width( 0 ),
+      height( 0 ),
+      max_width( 0 ),
+      max_height( 0 ),
       panel(),
       vclue(),
       hclue(),
@@ -53,7 +53,7 @@ Board::Board()
       zoom_transform(),
       zoom_transform_inv(),
       identity_transform(),
-      blink( 0 ),
+      blink( false ),
       panel_tile_size( 0 ),
       clue_unit_size( 0 ),
       clue_unit_space( 0 ),
@@ -64,8 +64,7 @@ Board::Board()
       dragging_relative_position_of_grabbing_x( 0 ),
       dragging_relative_position_of_grabbing_y( 0 ),
       type_of_tiles( 0 ),
-      time_start( 0.0f ),
-      restart( 0 ),
+      time_start( 0.0 ),
       bg_color(),
       time_bmp( nullptr ),
       info_text_bmp( nullptr ),
@@ -143,11 +142,11 @@ int Board::create_board( GameData *game_data, int mode )
         clue_tiledblock = static_cast<TiledBlock **>( malloc( game_data->clue_n * sizeof( *clue_tiledblock ) ) );
     }
 
-    if( max_ysize * INFO_PANEL_PORTION - 2 * INFO_PANEL_MARGIN < 32 ) // guarantee height of 32 pixels in info panel
-        max_ysize = ( 32 + 2 * INFO_PANEL_MARGIN ) / INFO_PANEL_PORTION;
+    if( max_height * INFO_PANEL_PORTION - 2 * INFO_PANEL_MARGIN < 32 ) // guarantee height of 32 pixels in info panel
+        max_height = ( 32 + 2 * INFO_PANEL_MARGIN ) / INFO_PANEL_PORTION;
 
-    xsize = max_xsize;
-    ysize = max_ysize * ( 1.0 - INFO_PANEL_PORTION );
+    width = max_width;
+    height = max_height * ( 1.0 - INFO_PANEL_PORTION );
 
     bg_color = BG_COLOR;
     dragging = NULL;
@@ -157,8 +156,8 @@ int Board::create_board( GameData *game_data, int mode )
     // panel dimensions
     panel.x = PANEL_MARGIN;
     panel.y = PANEL_MARGIN;
-    panel.width = ( xsize - 2 * PANEL_MARGIN - xsize * HCLUEBOX_PORTION - 2 * HCLUEBOX_MARGIN );
-    panel.height = ( ysize - 2 * PANEL_MARGIN - ysize * VCLUEBOX_PORTION - 2 * VCLUEBOX_MARGIN );
+    panel.width = ( width - 2 * PANEL_MARGIN - width * HCLUEBOX_PORTION - 2 * HCLUEBOX_MARGIN );
+    panel.height = ( height - 2 * PANEL_MARGIN - height * VCLUEBOX_PORTION - 2 * VCLUEBOX_MARGIN );
     panel.margin = PANEL_MARGIN;
     panel.bd_color = PANEL_BD_COLOR;
     panel.bg_color = PANEL_BG_COLOR;
@@ -283,7 +282,7 @@ int Board::create_board( GameData *game_data, int mode )
     vclue.bd = 1;
     vclue.bmp = NULL;
     vclue.width = panel.width;
-    vclue.height = ysize - panel.height - 2 * panel.margin - 2 * vclue.margin;
+    vclue.height = height - panel.height - 2 * panel.margin - 2 * vclue.margin;
     vclue.parent = &all;
     vclue.sub = NULL;              // later change
     vclue.number_of_subblocks = 0; // later change
@@ -293,8 +292,8 @@ int Board::create_board( GameData *game_data, int mode )
     hclue.margin = HCLUEBOX_MARGIN;
     hclue.x = panel.x + panel.width + panel.margin + hclue.margin;
     hclue.y = panel.y;
-    hclue.width = xsize - panel.width - 2 * panel.margin - 2 * hclue.margin;
-    hclue.height = ysize - 2 * HCLUEBOX_MARGIN;
+    hclue.width = width - panel.width - 2 * panel.margin - 2 * hclue.margin;
+    hclue.height = height - 2 * HCLUEBOX_MARGIN;
     hclue.bg_color = CLUE_PANEL_BG_COLOR;
     hclue.bd_color = CLUE_PANEL_BD_COLOR;
     hclue.bd = 1;
@@ -413,18 +412,18 @@ int Board::create_board( GameData *game_data, int mode )
     }
 
     //resize board to fit tight
-    xsize = hclue.x + hclue.width + hclue.margin;
-    ysize = std::max( hclue.height + 2 * hclue.margin, vclue.y + vclue.height + vclue.margin );
+    width = hclue.x + hclue.width + hclue.margin;
+    height = std::max( hclue.height + 2 * hclue.margin, vclue.y + vclue.height + vclue.margin );
 
     for( i = 1; i < number_of_columns; i++ )
-        panel.sub[i]->x += i * std::min( int( max_xsize * H_FLEX_FACTOR ), ( max_xsize - xsize ) / number_of_columns );
+        panel.sub[i]->x += i * std::min( int( max_width * H_FLEX_FACTOR ), ( max_width - width ) / number_of_columns );
     hclue.x +=
-        number_of_columns * std::min( int( max_xsize * H_FLEX_FACTOR ), ( max_xsize - xsize ) / number_of_columns );
+        number_of_columns * std::min( int( max_width * H_FLEX_FACTOR ), ( max_width - width ) / number_of_columns );
 
-    info_panel.height = (float)max_ysize * INFO_PANEL_PORTION - 2 * INFO_PANEL_MARGIN;
-    vclue.y += std::min( ( max_ysize - ysize - info_panel.height - 2 * info_panel.margin ) / 2, 30 );
+    info_panel.height = (float)max_height * INFO_PANEL_PORTION - 2 * INFO_PANEL_MARGIN;
+    vclue.y += std::min( ( max_height - height - info_panel.height - 2 * info_panel.margin ) / 2, 30 );
     info_panel.y = vclue.y + vclue.height + vclue.margin + INFO_PANEL_MARGIN
-                   + std::min( ( max_ysize - ysize - info_panel.height - 2 * INFO_PANEL_MARGIN ) / 2, 30 );
+                   + std::min( ( max_height - height - info_panel.height - 2 * INFO_PANEL_MARGIN ) / 2, 30 );
     hclue.y = ( info_panel.y - hclue.height ) / 2;
 
     // center vclues
@@ -540,15 +539,15 @@ int Board::create_board( GameData *game_data, int mode )
     }
 
     // final size adjustment
-    xsize = hclue.x + hclue.margin + hclue.width;
-    ysize = info_panel.y + info_panel.height + info_panel.margin;
-    all.width = xsize;
-    all.height = ysize;
+    width = hclue.x + hclue.margin + hclue.width;
+    height = info_panel.y + info_panel.height + info_panel.margin;
+    all.width = width;
+    all.height = height;
 
     if( ( mode != 1 ) )
     { // only for update or fullscreen or mobile
-        all.x = ( max_xsize - xsize ) / 2;
-        all.y = ( max_ysize - ysize ) / 2;
+        all.x = ( max_width - width ) / 2;
+        all.y = ( max_height - height ) / 2;
     }
 
     if( mode )

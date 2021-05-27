@@ -20,10 +20,10 @@ const char *TEXT_FONT_FILE = "fonts/text_font.ttf";
 struct Buffer_USTR
 {
     ALLEGRO_USTR *ustr;
-    struct Buffer_USTR *next;
+    Buffer_USTR *next;
 };
 
-struct Buffer_USTR *buffer_ustr = NULL;
+Buffer_USTR *buffer_ustr = NULL;
 
 int init_fonts( void )
 {
@@ -140,27 +140,23 @@ MemFile create_memfile( const char *filename )
         SPDLOG_ERROR( "Error opening %s", filename );
         return ret;
     }
-#ifndef ALLEGRO_ANDROID
+
     ret.size = al_fsize( fp );
-#else // improvised fsize, allegro's fails in android
-    ret.size = 0;
-    char c[2048];
-    size_t re;
-    do
-    {
-        re = al_fread( fp, c, 2048 );
-        ret.size += re;
-    } while( ( re != 0 ) );
-    al_fseek( fp, 0, SEEK_SET );
-#endif
     ret.mem = malloc( ret.size );
+
     if( !ret.mem )
+    {
         SPDLOG_ERROR( "Error allocating %zd bytes for memfile %s", ret.size, filename );
+        al_fclose( fp );
+        return ret;
+    }
+
     if( al_fread( fp, ret.mem, ret.size ) != ret.size )
     {
         ret.mem = NULL;
         SPDLOG_ERROR( "Error reading %s", filename );
     }
+
     al_fclose( fp );
     return ret;
 }
@@ -179,11 +175,11 @@ void get_desktop_resolution( int adapter, int *width, int *height )
 void get_highest_resolution( int *width, int *height )
 {
     ALLEGRO_DISPLAY_MODE disp_data;
-    int i;
 
     *width = 0;
     *height = 0;
-    for( i = 0; i < al_get_num_display_modes(); i++ )
+
+    for( int i = 0; i < al_get_num_display_modes(); i++ )
     {
         al_get_display_mode( i, &disp_data );
         if( *width < disp_data.width )
@@ -199,8 +195,8 @@ void get_highest_resolution( int *width, int *height )
 // quick helpful thingy
 void wait_for_keypress()
 {
-    ALLEGRO_EVENT_QUEUE *queue = NULL;
-    queue = al_create_event_queue();
+    ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
+
     al_register_event_source( queue, al_get_keyboard_event_source() );
     al_wait_for_event( queue, NULL );
     al_destroy_event_queue( queue );
@@ -209,9 +205,7 @@ void wait_for_keypress()
 //wait for keypress or mouse click
 void wait_for_input( ALLEGRO_EVENT_QUEUE *queue )
 {
-    ALLEGRO_EVENT ev;
-    int done = 0;
-    int own_queue = queue ? 0 : 1;
+    bool own_queue = queue == nullptr;
 
     if( own_queue )
     {
@@ -225,8 +219,10 @@ void wait_for_input( ALLEGRO_EVENT_QUEUE *queue )
             al_register_event_source( queue, al_get_touch_input_event_source() );
     }
 
+    bool done = false;
     while( !done )
     {
+        ALLEGRO_EVENT ev;
         while( !al_peek_next_event( queue, &ev ) )
             al_rest( 0.001 );
 
@@ -235,12 +231,12 @@ void wait_for_input( ALLEGRO_EVENT_QUEUE *queue )
             case ALLEGRO_EVENT_DISPLAY_RESIZE:
             case ALLEGRO_EVENT_DISPLAY_HALT_DRAWING:
                 if( !own_queue )
-                    done = 1;
+                    done = true;
                 break;
             case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
             case ALLEGRO_EVENT_KEY_CHAR:
             case ALLEGRO_EVENT_TOUCH_BEGIN:
-                done = 1;
+                done = true;
             default:
                 al_drop_next_event( queue );
         }
@@ -252,7 +248,7 @@ void wait_for_input( ALLEGRO_EVENT_QUEUE *queue )
 
 ALLEGRO_USTR *new_ustr( const char *str )
 {
-    Buffer_USTR *buf = static_cast<Buffer_USTR *>( malloc( sizeof( *buf ) ) );
+    Buffer_USTR *buf = new Buffer_USTR();
     buf->ustr = al_ustr_new( str );
     buf->next = buffer_ustr;
     buffer_ustr = buf;
@@ -277,15 +273,19 @@ ALLEGRO_BITMAP *screenshot()
 ALLEGRO_BITMAP *screenshot_part( int x, int y, int width, int height )
 {
     int store = al_get_new_bitmap_format();
-    ALLEGRO_BITMAP *ret;
+
     ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
 
     al_set_new_bitmap_format( ALLEGRO_PIXEL_FORMAT_RGB_888 );
-    ret = al_create_bitmap( width, height );
+
+    ALLEGRO_BITMAP *ret = al_create_bitmap( width, height );
+
     al_set_target_bitmap( ret );
     al_draw_bitmap_region( currbuf, x, y, width, height, 0, 0, 0 );
     al_set_target_bitmap( currbuf );
+
     al_set_new_bitmap_format( store );
+
     return ret;
 }
 
@@ -293,11 +293,13 @@ ALLEGRO_BITMAP *scaled_clone_bitmap( ALLEGRO_BITMAP *source, int width, int heig
 {
     ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
     ALLEGRO_BITMAP *ret = al_create_bitmap( width, height );
+
     al_set_target_bitmap( ret );
     al_clear_to_color( NULL_COLOR );
     al_draw_scaled_bitmap(
         source, 0, 0, al_get_bitmap_width( source ), al_get_bitmap_height( source ), 0, 0, width, height, 0 );
     al_set_target_bitmap( currbuf );
+    
     return ret;
 }
 

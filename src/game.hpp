@@ -58,6 +58,14 @@ private:
     void emit_event( int event_type );
 
     void handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mclick );
+    void handle_mouse_click_panel_tile(TiledBlock *tiled_block, int mclick);
+    void handle_mouse_click_panel_block(TiledBlock *tiled_block, int mclick);
+    void handle_mouse_click_clue_tile(TiledBlock *tiled_block, int mx, int my, int mclick);
+    void handle_mouse_click_button_clue();
+    void handle_mouse_click_button_settings();
+    void handle_mouse_click_button_help();
+    void handle_mouse_click_button_undo();
+
     void mouse_grab( int mx, int my );
     void mouse_drop( int mx, int my );
     TiledBlock *get_TiledBlock_at( int x, int y );
@@ -110,34 +118,44 @@ private:
     ALLEGRO_DISPLAY *display;
 
     bool noexit;
-    int restart;
-    int redraw;
-    int mouse_move;
-    int keypress;
-    int resizing;
-    int resize_update;
-    int mouse_button_down;
-    int win_gui;
+    int restart;  // 0, 1, or 2
+    bool redraw;
+    bool mouse_move;
+    bool keypress;
+    bool resizing;
+    bool resize_update;
+    int mouse_button_down; // 0=left mouse button, 1=right mouse button
+    bool win_gui;
+
+    // tiled_block where mouse was pressed
     TiledBlock *tb_down;
+
+    // tiled_block where mouse was released
     TiledBlock *tb_up;
+
     double mouse_up_time;
     double mouse_down_time;
-    int wait_for_double_click;
-    int hold_click_check;
+
+    bool wait_for_double_click;
+    int hold_click_check; // 0, 1, or 2
+
+    // pos where mouse was pressed
     int mbdown_x;
     int mbdown_y;
-    int touch_down;
+
+    bool touch_down;
 
     double resize_time;
     double old_time;
     double blink_time;
     double play_time;
-    int swap_mouse_buttons;
+    bool swap_mouse_buttons;
 
     GAME_STATE game_state;
-    int desktop_xsize;
-    int desktop_ysize;
-    int fullscreen;
+    int desktop_width;
+    int desktop_height;
+
+    bool fullscreen;
 
     GameData game_data;
     Board board;

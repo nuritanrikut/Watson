@@ -104,22 +104,23 @@ void destroy_all_bitmaps( Board *board )
 
 void draw_horizontal_arrow( float x0, float y0, float x1, float y1, ALLEGRO_COLOR color, float thickness )
 {
-    float aw = 4;
-    float ah = 2;
+    float aw = 4 * thickness;
 
     if( x1 < x0 )
         aw *= -1;
 
-    al_draw_line( x0, y0, x1 - aw * thickness, y1, color, thickness );
-    al_draw_filled_triangle(
-        x1, y1, x1 - aw * thickness, y0 + ah * thickness, x1 - aw * thickness, y0 - ah * thickness, color );
-    al_draw_filled_triangle(
-        x1, y1, x1 - aw * thickness, y0 + ah * thickness, x1 - aw * thickness, y0 - ah * thickness, color );
+    al_draw_line( x0, y0, x1 - aw, y1, color, thickness );
+
+    float ah = 2 * thickness;
+
+    al_draw_filled_triangle( x1, y1, x1 - aw, y0 + ah, x1 - aw, y0 - ah, color );
+    al_draw_filled_triangle( x1, y1, x1 - aw, y0 + ah, x1 - aw, y0 - ah, color );
 }
 
 void update_timer( int seconds, Board *board )
 {
     ALLEGRO_BITMAP *bmp = al_get_target_bitmap();
+
     al_set_target_bitmap( *board->time_panel.sub[0]->bmp );
     al_clear_to_color( board->time_panel.sub[0]->bg_color );
     al_draw_textf( default_font,
@@ -131,16 +132,15 @@ void update_timer( int seconds, Board *board )
                    (int)seconds / 3600,
                    ( (int)seconds / 60 ) % 60,
                    (int)seconds % 60 );
+
     al_set_target_bitmap( bmp );
 }
 
 void destroy_board_bitmaps( Board *board )
 {
-    int i, j;
-
-    for( i = 0; i < board->column_height; i++ )
+    for( int i = 0; i < board->column_height; i++ )
     {
-        for( j = 0; j < board->number_of_columns; j++ )
+        for( int j = 0; j < board->number_of_columns; j++ )
         {
             ndestroy_bitmap( board->panel_tile_bmp[i][j] );
             ndestroy_bitmap( board->clue_unit_bmp[i][j] );
@@ -148,12 +148,12 @@ void destroy_board_bitmaps( Board *board )
         }
     }
 
-    for( i = 0; i < board->number_of_hclues + board->number_of_vclues; i++ )
+    for( int i = 0; i < board->number_of_hclues + board->number_of_vclues; i++ )
     {
         ndestroy_bitmap( board->clue_bmp[i] );
     }
 
-    for( i = 0; i < NUMBER_OF_SYMBOLS; i++ )
+    for( int i = 0; i < NUMBER_OF_SYMBOLS; i++ )
     {
         ndestroy_bitmap( board->symbol_bmp[i] );
     }
@@ -169,11 +169,9 @@ void destroy_board_bitmaps( Board *board )
 
 void unload_basic_bmps( Board *board, int jj, int kk )
 {
-    int j, k;
-
-    for( j = 0; j <= jj; j++ )
+    for( int j = 0; j <= jj; j++ )
     {
-        for( k = 0; k < board->number_of_columns; k++ )
+        for( int k = 0; k < board->number_of_columns; k++ )
         {
             if( ( j == jj ) && ( k == kk ) )
                 return;
@@ -186,21 +184,12 @@ int init_bitmaps( Board *board )
 {
     // will load bitmaps from folders named 0, 1,..., 7
     // inside the folder "icons", each containing 8 square bitmaps
-    int i, j, k = 0;
-    char pathname[1000];
-    ALLEGRO_PATH *path;
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
-    al_set_target_bitmap( NULL ); // this is a workaround for android -- try removing later
-
-#ifdef ALLEGRO_ANDROID
-    al_android_set_apk_file_interface();
-#endif
-
     al_set_target_bitmap( dispbuf );
 
-    for( i = 0; i < board->column_height + 1; i++ )
+    for( int i = 0; i < board->column_height + 1; i++ )
     {
-        for( j = 0; j < board->number_of_columns; j++ )
+        for( int j = 0; j < board->number_of_columns; j++ )
         {
             al_utf8_encode( symbol_char[i][j], BF_CODEPOINT_START + j + i * board->number_of_columns );
             symbol_char[i][j][al_utf8_width( BF_CODEPOINT_START + j + i * board->number_of_columns )] = '\0';
@@ -226,20 +215,21 @@ int init_bitmaps( Board *board )
     if( board->type_of_tiles == 2 )
         return init_bitmaps_classic();
 
+    // use bitmaps
     if( board->type_of_tiles == 1 )
-    { // use bitmaps
-#ifndef ALLEGRO_ANDROID
-        path = al_get_standard_path( ALLEGRO_RESOURCES_PATH );
+    {
+        ALLEGRO_PATH *path = al_get_standard_path( ALLEGRO_RESOURCES_PATH );
         al_path_cstr( path, '/' );
-#else
-        path = al_create_path( "" );
-#endif
-        for( j = 0; j < board->column_height; j++ )
+
+        for( int j = 0; j < board->column_height; j++ )
         {
-            for( k = 0; k < board->number_of_columns; k++ )
+            for( int k = 0; k < board->number_of_columns; k++ )
             {
+                char pathname[1000];
                 snprintf( pathname, 999, "%sicons/%d/%d.png", al_path_cstr( path, '/' ), j, k );
+
                 basic_bmp[j][k] = al_load_bitmap( pathname );
+
                 if( !basic_bmp[j][k] )
                 {
                     SPDLOG_ERROR( "Error loading %s.", pathname );
@@ -249,6 +239,7 @@ int init_bitmaps( Board *board )
                 }
             }
         }
+
         al_destroy_path( path );
     }
 
@@ -264,6 +255,7 @@ int init_bitmaps( Board *board )
         fprintf( stderr, "Error creating bitmap.\n" );
         return -1;
     }
+
     al_set_target_bitmap( symbol_bmp[SYM_FORBIDDEN] );
     al_clear_to_color( NULL_COLOR );
     al_draw_line( 1, 1, 254, 254, al_map_rgba_f( 1, 0, 0, 0.5 ), 4 );
@@ -305,7 +297,120 @@ ALLEGRO_COLOR invert_color( ALLEGRO_COLOR c )
     return ( ALLEGRO_COLOR ){ 1 - c.r, 1 - c.g, 1 - c.b, c.a };
 }
 
-int draw_symbols( GameData *game_data, Board *board )
+void draw_symbol_forbidden( Board *board )
+{
+    al_set_target_bitmap( board->symbol_bmp[SYM_FORBIDDEN] );
+    al_clear_to_color( NULL_COLOR );
+
+    float cus = board->clue_unit_size;
+
+    al_draw_line( 0, 0, cus, cus, SYMBOL_COLOR, cus * 0.05 );
+    al_draw_line( 0, cus, cus, 0, SYMBOL_COLOR, cus * 0.05 );
+}
+
+void draw_symbol_swappable( Board *board )
+{
+    al_set_target_bitmap( board->symbol_bmp[SYM_SWAPPABLE] );
+    al_clear_to_color( NULL_COLOR );
+
+    float cus = board->clue_unit_size;
+    int space = board->clue_unit_space;
+    float thickness = cus * 0.05f;
+
+    float line_y = cus * 0.9;
+
+    float line_left = cus * 0.7;
+    float line_right = cus * ( 3 - 0.7 );
+
+    al_draw_line( line_left, line_y, line_right, line_y, SYMBOL_COLOR, 2 );
+
+    float arrow_left = ( 3 * cus + 2 * space ) / 2;
+    float arrow_right = cus / 2;
+
+    draw_horizontal_arrow( arrow_left, line_y, arrow_right, line_y, SYMBOL_COLOR, thickness );
+
+    arrow_left = ( 3 * cus + 2 * space ) / 2;
+    arrow_right = ( 3 * cus + 2 * space ) - cus / 2;
+
+    draw_horizontal_arrow( arrow_left, line_y, arrow_right, line_y, SYMBOL_COLOR, thickness );
+}
+
+void draw_symbol_one_side( Board *board )
+{
+    al_set_target_bitmap( board->symbol_bmp[SYM_ONE_SIDE] );
+    al_clear_to_color( NULL_COLOR );
+
+    float cus = board->clue_unit_size;
+    float thickness = cus * 0.05f;
+
+    float center_x;
+    float center_y;
+    float radius = 0.05 * cus;
+
+    center_x = cus / 2;
+    center_y = cus * 0.8;
+    al_draw_filled_circle( center_x, center_y, radius, SYMBOL_COLOR );
+    al_draw_filled_circle( center_x - 0.2 * cus, center_y, radius, SYMBOL_COLOR );
+    al_draw_filled_circle( center_x + 0.2 * cus, center_y, radius, SYMBOL_COLOR );
+
+    float line_left = cus * 0.2;
+    float line_right = cus * 0.8;
+    float line_y = cus * 0.5;
+    draw_horizontal_arrow( line_left, line_y, line_right, line_y, SYMBOL_COLOR, thickness );
+}
+
+void draw_symbol_only_one( Board *board )
+{
+    al_set_target_bitmap( board->symbol_bmp[SYM_ONLY_ONE] );
+    al_clear_to_color( NULL_COLOR );
+
+    float cus = board->clue_unit_size;
+    int space = board->clue_unit_space;
+    float thickness = cus * 0.05f;
+
+    float line_x = cus * 0.975;
+    float line_top = 2.5 * cus + 2 * space;
+    float line_bottom = 1.5 * cus + space;
+
+    al_draw_line( line_x, line_top, line_x, line_bottom, SYMBOL_COLOR, thickness );
+
+    float arrow_left = cus;
+    float arrow_right = cus * 0.7;
+    float arrow_y = 2.5 * cus + 2 * space;
+    draw_horizontal_arrow( arrow_left, arrow_y, arrow_right, arrow_y, SYMBOL_COLOR, thickness );
+
+    arrow_left = cus;
+    arrow_right = cus * 0.7;
+    arrow_y = 1.5 * cus + space;
+    draw_horizontal_arrow( arrow_left, arrow_y, arrow_right, arrow_y, SYMBOL_COLOR, thickness );
+
+    line_x = cus * 0.025;
+    line_top = 2.5 * cus + 2 * space;
+    line_bottom = 1.5 * cus + space;
+    al_draw_line( line_x, line_top, line_x, line_bottom, SYMBOL_COLOR, thickness );
+
+    arrow_left = 0;
+    arrow_right = cus * 0.3;
+    arrow_y = 2.5 * cus + 2 * space;
+    draw_horizontal_arrow( arrow_left, arrow_y, arrow_right, arrow_y, SYMBOL_COLOR, thickness );
+
+    arrow_left = 0;
+    arrow_right = cus * 0.3;
+    line_bottom = 1.5 * cus + space;
+    draw_horizontal_arrow( arrow_left, line_bottom, arrow_right, line_bottom, SYMBOL_COLOR, thickness );
+
+    float center_x = cus / 2;
+    float center_y = 2 * cus + 1.5 * space;
+    float radius = cus * 0.15;
+    al_draw_filled_circle( center_x, center_y, radius, SYMBOL_COLOR );
+
+    line_x = cus / 2;
+    line_top = ( 2 - 0.08 ) * cus + 1.5 * space;
+    line_bottom = ( 2 + 0.08 ) * cus + 1.5 * space;
+    al_draw_line( line_x, line_top, line_x, line_bottom, WHITE_COLOR, thickness );
+}
+
+int draw_symbols( Board *board )
 {
     float cus = board->clue_unit_size;
 
@@ -322,78 +427,10 @@ int draw_symbols( GameData *game_data, Board *board )
         return -1;
     }
 
-    al_set_target_bitmap( board->symbol_bmp[SYM_FORBIDDEN] );
-    al_clear_to_color( NULL_COLOR );
-    al_draw_line( 0, 0, cus, cus, SYMBOL_COLOR, cus * 0.05 );
-    al_draw_line( 0, cus, cus, 0, SYMBOL_COLOR, cus * 0.05 );
-
-    al_set_target_bitmap( board->symbol_bmp[SYM_SWAPPABLE] );
-    al_clear_to_color( NULL_COLOR );
-    al_draw_line( cus * 0.7, cus * 0.9, cus * ( 3 - 0.7 ), cus * 0.9, SYMBOL_COLOR, 2 );
-    draw_horizontal_arrow(
-        ( 3 * cus + 2 * board->clue_unit_space ) / 2, cus * 0.9, cus / 2, cus * 0.9, SYMBOL_COLOR, cus * 0.05 );
-    draw_horizontal_arrow( ( 3 * cus + 2 * board->clue_unit_space ) / 2,
-                           cus * 0.9,
-                           ( 3 * cus + 2 * board->clue_unit_space ) - cus / 2,
-                           cus * 0.9,
-                           SYMBOL_COLOR,
-                           cus * 0.05 );
-
-    al_set_target_bitmap( board->symbol_bmp[SYM_ONE_SIDE] );
-    al_clear_to_color( NULL_COLOR );
-    al_draw_filled_circle( cus / 2, cus * 0.8, 0.05 * cus, SYMBOL_COLOR );
-    al_draw_filled_circle( cus / 2 - 0.2 * cus, cus * 0.8, 0.05 * cus, SYMBOL_COLOR );
-    al_draw_filled_circle( cus / 2 + 0.2 * cus, cus * 0.8, 0.05 * cus, SYMBOL_COLOR );
-
-    draw_horizontal_arrow( cus * 0.2, cus * 0.5, cus * 0.8, cus * 0.5, SYMBOL_COLOR, cus * 0.05 );
-
-    al_set_target_bitmap( board->symbol_bmp[SYM_ONLY_ONE] );
-    al_clear_to_color( NULL_COLOR );
-    al_draw_line( cus * 0.975,
-                  2.5 * cus + 2 * board->clue_unit_space,
-                  cus * 0.975,
-                  1.5 * cus + board->clue_unit_space,
-                  SYMBOL_COLOR,
-                  cus * 0.05 );
-    draw_horizontal_arrow( cus,
-                           2.5 * cus + 2 * board->clue_unit_space,
-                           cus * 0.7,
-                           2.5 * cus + 2 * board->clue_unit_space,
-                           SYMBOL_COLOR,
-                           cus * 0.05 );
-    draw_horizontal_arrow( cus,
-                           1.5 * cus + board->clue_unit_space,
-                           cus * 0.7,
-                           1.5 * cus + board->clue_unit_space,
-                           SYMBOL_COLOR,
-                           cus * 0.05 );
-
-    al_draw_line( cus * 0.025,
-                  2.5 * cus + 2 * board->clue_unit_space,
-                  cus * 0.025,
-                  1.5 * cus + board->clue_unit_space,
-                  SYMBOL_COLOR,
-                  cus * 0.05 );
-    draw_horizontal_arrow( 0,
-                           2.5 * cus + 2 * board->clue_unit_space,
-                           cus * 0.3,
-                           2.5 * cus + 2 * board->clue_unit_space,
-                           SYMBOL_COLOR,
-                           cus * 0.05 );
-    draw_horizontal_arrow( 0,
-                           1.5 * cus + board->clue_unit_space,
-                           cus * 0.3,
-                           1.5 * cus + board->clue_unit_space,
-                           SYMBOL_COLOR,
-                           cus * 0.05 );
-
-    al_draw_filled_circle( cus / 2, 2 * cus + 1.5 * board->clue_unit_space, cus * 0.15, SYMBOL_COLOR );
-    al_draw_line( cus / 2,
-                  ( 2 - 0.08 ) * cus + 1.5 * board->clue_unit_space,
-                  cus / 2,
-                  ( 2 + 0.08 ) * cus + 1.5 * board->clue_unit_space,
-                  WHITE_COLOR,
-                  cus * 0.05 );
+    draw_symbol_forbidden( board );
+    draw_symbol_swappable( board );
+    draw_symbol_one_side( board );
+    draw_symbol_only_one( board );
 
     return 0;
 }
@@ -550,7 +587,7 @@ int update_font_bitmaps( GameData *game_data, Board *board )
         }
     }
 
-    if( draw_symbols( game_data, board ) )
+    if( draw_symbols( board ) )
         return -1;
 
     al_destroy_font( tile_font1 );
@@ -797,7 +834,7 @@ int update_bitmaps( GameData *game_data, Board *board )
 
     if( board->type_of_tiles != 2 )
     {
-        if( draw_symbols( game_data, board ) )
+        if( draw_symbols( board ) )
             return -1;
     }
     else

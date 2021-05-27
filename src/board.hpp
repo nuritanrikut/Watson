@@ -18,8 +18,12 @@ struct Board
 
     int number_of_columns;
     int column_height;
-    int xsize, ysize;
-    int max_xsize, max_ysize;
+
+    int width;
+    int height;
+    int max_width;
+    int max_height;
+
     TiledBlock panel;
     TiledBlock vclue;
     TiledBlock hclue;
@@ -31,21 +35,31 @@ struct Board
     TiledBlock *highlight;
     TiledBlock *rule_out;
     TiledBlock *zoom;
+
     ALLEGRO_TRANSFORM zoom_transform;
     ALLEGRO_TRANSFORM zoom_transform_inv;
     ALLEGRO_TRANSFORM identity_transform;
-    int blink;
+
+    bool blink;
     int panel_tile_size;
     int clue_unit_size;
     int clue_unit_space;
     int number_of_hclues;
     int number_of_vclues;
-    int dragging_origin_x, dragging_origin_y; // initial position of TiledBlock being dragged
-    int dragging_relative_position_of_grabbing_x, dragging_relative_position_of_grabbing_y;
+
+    // initial position of TiledBlock being dragged
+    int dragging_origin_x;
+    int dragging_origin_y;
+
+    int dragging_relative_position_of_grabbing_x;
+    int dragging_relative_position_of_grabbing_y;
+
     int type_of_tiles; // 0 = use ttf font, 1 = use file bitmaps, 2 = use classic tiles from grid
-    float time_start;
-    int restart;
+
+    double time_start;
+
     ALLEGRO_COLOR bg_color;
+
     ALLEGRO_BITMAP *panel_tile_bmp[8][8];
     ALLEGRO_BITMAP *guess_bmp[8][8];
     ALLEGRO_BITMAP *clue_unit_bmp[8][8];
@@ -55,6 +69,7 @@ struct Board
     ALLEGRO_BITMAP *button_bmp_scaled[4];
     ALLEGRO_BITMAP *time_bmp;
     ALLEGRO_BITMAP *info_text_bmp;
+
     ALLEGRO_FONT *text_font;
 };
 
