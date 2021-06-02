@@ -21,6 +21,9 @@ misrepresented as being the original software.
 distribution.
 
 */
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
+#include <spdlog/spdlog.h>
 
 #include "../widgetz_internal.hpp"
 
@@ -42,10 +45,10 @@ Parameters:
 keycode - Allegro keycode to use
 modifiers - bitfield of modifier flags to match. You can combine multiple flags via binary OR.
 */
-void wz_set_shortcut( WZ_WIDGET *wgt, int keycode, int modifiers )
+void WZ_WIDGET::set_shortcut( int keycode, int modifiers )
 {
-    wgt->shortcut.keycode = keycode;
-    wgt->shortcut.modifiers = modifiers;
+    shortcut.keycode = keycode;
+    shortcut.modifiers = modifiers;
 }
 
 /*
@@ -58,41 +61,14 @@ Parameters:
 
 queue - Allegro event queue to use
 */
-void wz_register_sources( WZ_WIDGET *wgt, ALLEGRO_EVENT_QUEUE *queue )
+void WZ_WIDGET::register_sources( ALLEGRO_EVENT_QUEUE *queue )
 {
-    WZ_WIDGET *child;
-    al_register_event_source( queue, wgt->source );
-    child = wgt->first_child;
+    al_register_event_source( queue, source );
+    WZ_WIDGET *child = first_child;
 
     while( child )
     {
-        wz_register_sources( child, queue );
-        child = child->next_sib;
-    }
-}
-
-/*
-Function: wz_set_theme
-
-Sets the theme to a widget, setting it for every widget in the widget tree
-
-Parameters:
-
-theme - Widget theme to use
-
-See also:
-
-<WZ_DEF_THEME>
-*/
-void wz_set_theme( WZ_WIDGET *wgt, WZ_THEME *theme )
-{
-    WZ_WIDGET *child;
-    wgt->theme = theme;
-    child = wgt->first_child;
-
-    while( child )
-    {
-        wz_set_theme( child, theme );
+        child->register_sources( queue );
         child = child->next_sib;
     }
 }
@@ -102,46 +78,46 @@ Function: wz_detach
 
 Detaches a widget tree from its parent
 */
-void wz_detach( WZ_WIDGET *wgt )
+void WZ_WIDGET::detach()
 {
-    if( wgt->parent == 0 )
+    if( parent == nullptr )
         return;
 
-    if( wgt->next_sib != 0 )
+    if( next_sib != nullptr )
     {
-        if( wgt->prev_sib != 0 )
+        if( prev_sib != nullptr )
         {
-            wgt->prev_sib->next_sib = wgt->next_sib;
-            wgt->next_sib->prev_sib = wgt->prev_sib;
+            prev_sib->next_sib = next_sib;
+            next_sib->prev_sib = prev_sib;
         }
         else
         {
-            wgt->next_sib->prev_sib = 0;
-            wgt->parent->first_child = wgt->next_sib;
+            next_sib->prev_sib = nullptr;
+            parent->first_child = next_sib;
         }
     }
-    else if( wgt->prev_sib != 0 )
+    else if( prev_sib != nullptr )
     {
-        if( wgt->next_sib != 0 )
+        if( next_sib != nullptr )
         {
-            wgt->next_sib->prev_sib = wgt->prev_sib;
-            wgt->prev_sib->next_sib = wgt->next_sib;
+            next_sib->prev_sib = prev_sib;
+            prev_sib->next_sib = next_sib;
         }
         else
         {
-            wgt->prev_sib->next_sib = 0;
-            wgt->parent->last_child = wgt->prev_sib;
+            prev_sib->next_sib = nullptr;
+            parent->last_child = prev_sib;
         }
     }
     else
     {
-        wgt->parent->first_child = 0;
-        wgt->parent->last_child = 0;
+        parent->first_child = nullptr;
+        parent->last_child = nullptr;
     }
 
-    wgt->parent = 0;
-    wgt->next_sib = 0;
-    wgt->prev_sib = 0;
+    parent = nullptr;
+    next_sib = nullptr;
+    prev_sib = nullptr;
 }
 
 /*
@@ -149,25 +125,25 @@ Function: wz_attach
 
 Attaches a widget tree to its parent
 */
-void wz_attach( WZ_WIDGET *wgt, WZ_WIDGET *parent )
+void WZ_WIDGET::attach( WZ_WIDGET *ptr )
 {
-    if( parent == 0 )
+    if( ptr == nullptr )
         return;
 
-    wz_detach( wgt );
-    wgt->parent = parent;
+    detach();
+    parent = ptr;
 
-    if( parent->last_child != 0 )
+    if( parent->last_child != nullptr )
     {
-        parent->last_child->next_sib = wgt;
-        wgt->prev_sib = parent->last_child;
+        parent->last_child->next_sib = this;
+        prev_sib = parent->last_child;
     }
 
-    if( parent->first_child == 0 )
-        parent->first_child = wgt;
+    if( parent->first_child == nullptr )
+        parent->first_child = this;
 
-    parent->last_child = wgt;
-    wz_set_theme( wgt, parent->theme );
+    parent->last_child = this;
+    set_theme( parent->theme );
 }
 
 /*
@@ -179,26 +155,26 @@ Parameters:
 
 sib - Widget after which this widget will be attached. It's parent is used as the parent of this widget
 */
-void wz_attach_after( WZ_WIDGET *wgt, WZ_WIDGET *sib )
+void WZ_WIDGET::attach_after( WZ_WIDGET *sib )
 {
-    if( sib->parent == 0 )
+    if( sib->parent == nullptr )
         return;
 
-    wz_detach( wgt );
+    detach();
 
     if( sib->next_sib )
     {
-        sib->next_sib->prev_sib = wgt;
+        sib->next_sib->prev_sib = this;
     }
     else
     {
-        sib->parent->last_child = wgt;
+        sib->parent->last_child = this;
     }
 
-    wgt->next_sib = sib->next_sib;
-    sib->next_sib = wgt;
-    wgt->prev_sib = sib;
-    wgt->parent = sib->parent;
+    next_sib = sib->next_sib;
+    sib->next_sib = this;
+    prev_sib = sib;
+    parent = sib->parent;
 }
 
 /*
@@ -210,26 +186,26 @@ Parameters:
 
 sib - Widget before which this widget will be attached. It's parent is used as the parent of this widget
 */
-void wz_attach_before( WZ_WIDGET *wgt, WZ_WIDGET *sib )
+void WZ_WIDGET::attach_before( WZ_WIDGET *sib )
 {
-    if( sib->parent == 0 )
+    if( sib->parent == nullptr )
         return;
 
-    wz_detach( wgt );
+    detach();
 
     if( sib->prev_sib )
     {
-        sib->prev_sib->next_sib = wgt;
+        sib->prev_sib->next_sib = this;
     }
     else
     {
-        sib->parent->first_child = wgt;
+        sib->parent->first_child = this;
     }
 
-    wgt->prev_sib = sib->prev_sib;
-    sib->prev_sib = wgt;
-    wgt->next_sib = sib;
-    wgt->parent = sib->parent;
+    prev_sib = sib->prev_sib;
+    sib->prev_sib = this;
+    next_sib = sib;
+    parent = sib->parent;
 }
 
 /*
@@ -242,17 +218,21 @@ Note that the first widget gets the event whether it is focused or not.
 Returns:
 1 if the event was handled by some widget, 0 if it was not
 */
-int wz_send_event( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
+int WZ_WIDGET::send_event( const ALLEGRO_EVENT *event )
 {
-    WZ_WIDGET *child = wgt->first_child;
+    WZ_WIDGET *child = first_child;
 
-    if( wgt->proc( wgt, event ) )
+    if( proc( event ) )
+    {
         return 1;
+    }
 
     while( child )
     {
-        if( ( child->flags & WZ_STATE_HAS_FOCUS ) && wz_send_event( child, event ) )
+        if( ( child->flags & WZ_STATE_HAS_FOCUS ) && child->send_event( event ) )
+        {
             return 1;
+        }
 
         child = child->next_sib;
     }
@@ -260,12 +240,14 @@ int wz_send_event( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
     /*
 	See if the unfocused ones would like some too
 	*/
-    child = wgt->first_child;
+    child = first_child;
 
     while( child )
     {
-        if( wz_send_event( child, event ) )
+        if( child->send_event( event ) )
+        {
             return 1;
+        }
 
         child = child->next_sib;
     }
@@ -281,16 +263,16 @@ Broadcasts an event to a widget, and to all of its children, propagating down th
 Returns:
 1 if the event was handled by some widget, 0 if it was not
 */
-int wz_broadcast_event( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
+int WZ_WIDGET::broadcast_event( const ALLEGRO_EVENT *event )
 {
     int ret = 0;
-    WZ_WIDGET *child = wgt->first_child;
-    ret |= wgt->proc( wgt, event );
+    WZ_WIDGET *child = first_child;
+    ret |= proc( event );
 
     while( child )
     {
         WZ_WIDGET *next = child->next_sib;
-        ret |= wz_broadcast_event( child, event );
+        ret |= child->broadcast_event( event );
         child = next;
     }
 
@@ -306,13 +288,13 @@ Doesn't update the disabled widgets
 Parameters:
 dt - Time that has passed since the last update
 */
-void wz_update( WZ_WIDGET *wgt, double dt )
+void WZ_WIDGET::update( double dt )
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, WZ_UPDATE, 0, 0 );
-    wz_broadcast_event( wgt, &event );
-    wz_craft_event( &event, WZ_UPDATE_POSITION, 0, 0 );
-    wz_broadcast_event( wgt, &event );
+    wz_craft_event( &event, WZ_UPDATE, nullptr, 0 );
+    broadcast_event( &event );
+    wz_craft_event( &event, WZ_UPDATE_POSITION, nullptr, 0 );
+    broadcast_event( &event );
 }
 
 /*
@@ -323,11 +305,11 @@ an event that is characteristic of the events that it usually sends. For example
 triggering a button will simulate an impression of the button, causing it to send <WZ_BUTTON_PRESSED>
 event.
 */
-void wz_trigger( WZ_WIDGET *wgt )
+void WZ_WIDGET::trigger()
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, WZ_TRIGGER, 0, 0 );
-    wz_send_event( wgt, &event );
+    wz_craft_event( &event, WZ_TRIGGER, nullptr, 0 );
+    send_event( &event );
 }
 
 /*
@@ -335,11 +317,11 @@ Function: wz_draw
 
 Draws the widget tree. Only affects the visible widgets
 */
-void wz_draw( WZ_WIDGET *wgt )
+void WZ_WIDGET::draw()
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, WZ_DRAW, 0, 0 );
-    wz_broadcast_event( wgt, &event );
+    wz_craft_event( &event, WZ_DRAW, nullptr, 0 );
+    broadcast_event( &event );
 }
 
 /*
@@ -347,11 +329,11 @@ Function: wz_set_text
 
 Sets the text of a widget. The widget makes a local copy of the text.
 */
-void wz_set_text( WZ_WIDGET *wgt, ALLEGRO_USTR *text )
+void WZ_WIDGET::set_text( ALLEGRO_USTR *text )
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, WZ_SET_TEXT, 0, (intptr_t)text );
-    wz_send_event( wgt, &event );
+    wz_craft_event( &event, WZ_SET_TEXT, nullptr, (intptr_t)text );
+    send_event( &event );
 }
 
 /*
@@ -362,11 +344,11 @@ Shows/hides the widget tree
 Parameters:
 show - pass 1 to show the widget tree, or 0 to hide it
 */
-void wz_show( WZ_WIDGET *wgt, int show )
+void WZ_WIDGET::show( int show )
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, show ? WZ_SHOW : WZ_HIDE, 0, 0 );
-    wz_broadcast_event( wgt, &event );
+    wz_craft_event( &event, show ? WZ_SHOW : WZ_HIDE, nullptr, 0 );
+    broadcast_event( &event );
 }
 
 /*
@@ -374,12 +356,12 @@ Function: wz_destroy
 
 Destroys the widget tree. Call it to free all of the memory used by the widget tree.
 */
-void wz_destroy( WZ_WIDGET *wgt )
+void WZ_WIDGET::destroy()
 {
     ALLEGRO_EVENT event;
-    wz_detach( wgt );
-    wz_craft_event( &event, WZ_DESTROY, 0, 0 );
-    wz_broadcast_event( wgt, &event );
+    detach();
+    wz_craft_event( &event, WZ_DESTROY, nullptr, 0 );
+    broadcast_event( &event );
 }
 
 /*
@@ -390,11 +372,11 @@ void wz_destroy( WZ_WIDGET *wgt )
  Parameters:
  factor: scaling factor
  */
-void wz_resize( WZ_WIDGET *wgt, float factor )
+void WZ_WIDGET::resize( float factor )
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, WZ_RESIZE, 0, *(intptr_t *)&factor );
-    wz_broadcast_event( wgt, &event );
+    wz_craft_event( &event, WZ_RESIZE, nullptr, *(intptr_t *)&factor );
+    broadcast_event( &event );
 }
 
 /*
@@ -405,11 +387,11 @@ Enables/disables the widget tree
 Parameters:
 enable - pass 1 to enable the widget tree, or 0 to disable it
 */
-void wz_enable( WZ_WIDGET *wgt, int enable )
+void WZ_WIDGET::enable( int enable )
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, enable ? WZ_ENABLE : WZ_DISABLE, 0, 0 );
-    wz_broadcast_event( wgt, &event );
+    wz_craft_event( &event, enable ? WZ_ENABLE : WZ_DISABLE, nullptr, 0 );
+    broadcast_event( &event );
 }
 
 /*
@@ -420,17 +402,17 @@ Focuses/defocuses the widget tree. This function propagates the focus down the t
 Parameters:
 focus - pass 1 to focus the widget tree, or 0 to defocus it
 */
-void wz_focus( WZ_WIDGET *wgt, int focus )
+void WZ_WIDGET::focus( int focus )
 {
     if( focus )
     {
-        wz_ask_parent_for_focus( wgt );
+        ask_parent_for_focus();
     }
     else
     {
         ALLEGRO_EVENT event;
-        wz_craft_event( &event, WZ_LOSE_FOCUS, 0, 0 );
-        wz_broadcast_event( wgt, &event );
+        wz_craft_event( &event, WZ_LOSE_FOCUS, nullptr, 0 );
+        broadcast_event( &event );
     }
 }
 
@@ -442,11 +424,11 @@ Sets the scroll position
 Parameters:
 max - Pass 1 to say that pos is actually the max position, 0 otherwise
 */
-void wz_set_scroll_pos( WZ_WIDGET *wgt, int pos, int max )
+void WZ_WIDGET::set_scroll_pos( int pos, int max )
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, max ? WZ_SET_SCROLL_MAX_POS : WZ_SET_SCROLL_POS, 0, pos );
-    wz_send_event( wgt, &event );
+    wz_craft_event( &event, max ? WZ_SET_SCROLL_MAX_POS : WZ_SET_SCROLL_POS, nullptr, pos );
+    send_event( &event );
 }
 
 /*
@@ -454,11 +436,11 @@ Function: wz_set_cursor_pos
 
 Sets the cursor position
 */
-void wz_set_cursor_pos( WZ_WIDGET *wgt, int pos )
+void WZ_WIDGET::set_cursor_pos( int pos )
 {
     ALLEGRO_EVENT event;
-    wz_craft_event( &event, WZ_SET_CURSOR_POS, 0, pos );
-    wz_send_event( wgt, &event );
+    wz_craft_event( &event, WZ_SET_CURSOR_POS, nullptr, pos );
+    send_event( &event );
 }
 
 /*
@@ -516,9 +498,9 @@ Tests if a point is inside the widget
 Returns:
 1 if the point is inside the widget, 0 otherwise
 */
-int wz_widget_rect_test( WZ_WIDGET *wgt, float x, float y )
+int WZ_WIDGET::widget_rect_test( float x, float y )
 {
-    return x > wgt->local_x && x < wgt->local_x + wgt->width && y > wgt->local_y && y < wgt->local_y + wgt->height;
+    return x > local_x && x < local_x + width && y > local_y && y < local_y + height;
 }
 
 /*
@@ -530,21 +512,21 @@ intersect with the passed coordinates. Hidden widgets are ignored.
 Returns:
 1 if the point is inside one of the widgets, 0 otherwise
 */
-int wz_widget_rect_test_all( WZ_WIDGET *wgt, float x, float y )
+int WZ_WIDGET::widget_rect_test_all( float x, float y )
 {
     WZ_WIDGET *child;
 
-    if( wgt->flags & WZ_STATE_HIDDEN )
+    if( flags & WZ_STATE_HIDDEN )
         return 0;
 
-    if( wz_widget_rect_test( wgt, x, y ) )
+    if( widget_rect_test( x, y ) )
         return 1;
 
-    child = wgt->first_child;
+    child = first_child;
 
     while( child )
     {
-        int ret = wz_widget_rect_test_all( child, x, y );
+        int ret = child->widget_rect_test_all( x, y );
 
         if( ret )
             return 1;

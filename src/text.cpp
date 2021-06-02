@@ -47,10 +47,11 @@ void draw_multiline_text_vbf( ALLEGRO_FONT *font,
                               const char *format,
                               va_list ap )
 {
-    ALLEGRO_BITMAP *tmp[MAX_BF_BITMAPS], *bmp = NULL, *currbuf = al_get_target_bitmap();
+    ALLEGRO_BITMAP *tmp[MAX_BF_BITMAPS], *bmp = nullptr, *currbuf = al_get_target_bitmap();
     ALLEGRO_USTR *ustr = al_ustr_new( "" );
-    ALLEGRO_FONT *newfont = NULL;
-    char *fmt_cpy = static_cast<char *>( malloc( strlen( format ) + 1 ) ), *pos;
+    ALLEGRO_FONT *newfont = nullptr;
+    char *fmt_cpy = new char[strlen( format ) + 1];
+    char *pos;
     const char *btag = format;
     int i, bn = 0;
     int texth = al_get_font_line_height( font );
@@ -110,11 +111,11 @@ void draw_multiline_text_vbf( ALLEGRO_FONT *font,
 
     if( bn > 0 )
     {
-        al_set_fallback_font( font, NULL );
+        al_set_fallback_font( font, nullptr );
         al_destroy_bitmap( bmp );
         al_destroy_font( newfont );
     }
 
     al_ustr_free( ustr );
-    free( fmt_cpy );
+    delete[] fmt_cpy;
 }

@@ -51,7 +51,7 @@ void play_sound( SOUND s )
 {
     if( sound_sample[s] )
     {
-        al_play_sample( sound_sample[s], 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL );
+        al_play_sample( sound_sample[s], 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, nullptr );
     }
 };
 

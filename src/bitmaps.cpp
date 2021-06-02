@@ -28,7 +28,7 @@ ALLEGRO_COLOR TILE_GENERAL_BD_COLOR = { 0, 0, 0, 1 };
 
 // temporary bmp to store icons
 ALLEGRO_BITMAP *basic_bmp[8][8];
-ALLEGRO_BITMAP *symbol_bmp[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+ALLEGRO_BITMAP *symbol_bmp[8] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
 int TILE_SHADOWS = 1;
 int GLYPH_SHADOWS = 0;
@@ -203,8 +203,8 @@ int init_bitmaps( Board *board )
     if( !default_font )
         SPDLOG_ERROR( "Error loading default font" );
 
-    board->info_text_bmp = NULL;
-    board->info_panel.bmp = NULL;
+    board->info_text_bmp = nullptr;
+    board->info_panel.bmp = nullptr;
 
     // if this fails, buttons will be created anyway at update_bitmaps
     board->button_bmp[0] = al_load_bitmap( "buttons/light-bulb.png" );
@@ -483,7 +483,7 @@ int update_font_bitmaps( GameData *game_data, Board *board )
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
     int bbx, bby, bbw, bbh;
 
-    al_set_target_bitmap( NULL );
+    al_set_target_bitmap( nullptr );
 
     size = std::min( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height );
     tile_font1 = load_font_mem( tile_font_mem, TILE_FONT_FILE, -size * FONT_FACTOR );
@@ -604,7 +604,7 @@ int make_clue_bitmaps( GameData *game_data, Board *board )
 {
     int i;
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
-    al_set_target_bitmap( NULL );
+    al_set_target_bitmap( nullptr );
 
     for( i = 0; i < game_data->clue_n; i++ )
     {
@@ -691,7 +691,7 @@ int make_clue_bitmaps( GameData *game_data, Board *board )
 void show_info_text( Board *board, ALLEGRO_USTR *msg )
 {
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
-    al_set_target_bitmap( NULL );
+    al_set_target_bitmap( nullptr );
     ndestroy_bitmap( board->info_text_bmp );
     board->info_text_bmp = al_create_bitmap( board->info_panel.width, board->info_panel.height );
     al_set_target_bitmap( board->info_text_bmp );
@@ -715,7 +715,7 @@ int update_bitmaps( GameData *game_data, Board *board )
     int i, j, size;
 
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
-    al_set_target_bitmap( NULL );
+    al_set_target_bitmap( nullptr );
     // reload text fonts
     // estimate font size for panel:
     if( !( board->text_font =
@@ -746,7 +746,7 @@ int update_bitmaps( GameData *game_data, Board *board )
     }
 
     // else update normal bitmaps:
-    al_set_target_bitmap( NULL );
+    al_set_target_bitmap( nullptr );
     size = std::min( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height );
     for( i = 0; i < board->column_height; i++ )
     {
@@ -854,7 +854,7 @@ int init_bitmaps_classic()
     ALLEGRO_BITMAP *test_bmp;
     int i, j;
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
-    al_set_target_bitmap( NULL );
+    al_set_target_bitmap( nullptr );
 
     // tile_file.bmp should be a bmp with 80x80 tiles, 10 rows of 8 tiles
     // the first row of tiles is ignored. Rows 2 to 9 are the game tiles
@@ -908,7 +908,7 @@ int init_bitmaps_classic()
 
 void draw_title( void )
 {
-    ALLEGRO_FONT *font = NULL;
+    ALLEGRO_FONT *font = nullptr;
     int width;
     int dw = ( al_get_display_width( al_get_current_display() ) ) / 4;
     int dh = ( al_get_display_height( al_get_current_display() ) ) / 4;
@@ -1033,8 +1033,8 @@ ALLEGRO_BITMAP *get_clue_bitmap( Board *board, Clue *clue )
 
 void create_font_symbols( Board *board )
 {
-    ALLEGRO_BITMAP *bmp = NULL, *currbuf = al_get_target_bitmap();
-    ALLEGRO_FONT *newfont = NULL;
+    ALLEGRO_BITMAP *bmp = nullptr, *currbuf = al_get_target_bitmap();
+    ALLEGRO_FONT *newfont = nullptr;
     int i, j;
     int texth = al_get_font_line_height( board->text_font );
     int bitmap_w, bitmap_h;
@@ -1042,7 +1042,7 @@ void create_font_symbols( Board *board )
     int bh = al_get_bitmap_height( board->clue_unit_bmp[0][0] );
     int nbw, nbh;
     int range[2];
-    al_set_target_bitmap( NULL );
+    al_set_target_bitmap( nullptr );
     nbw = bw * (float)texth / bh;
     nbh = texth;
 

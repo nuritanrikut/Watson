@@ -20,6 +20,9 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source
 distribution.
 */
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
+#include <spdlog/spdlog.h>
 
 #include "../../widgetz_internal.hpp"
 
@@ -35,7 +38,7 @@ Function: wz_box_proc
 See also:
 <wz_widget_proc>
 */
-int wz_box_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
+int WZ_BOX::proc( const ALLEGRO_EVENT *event )
 {
     int ret = 1;
 
@@ -43,9 +46,9 @@ int wz_box_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
     {
         case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
         {
-            if( event->mouse.button == 1 && wz_widget_rect_test( wgt, event->mouse.x, event->mouse.y ) )
+            if( event->mouse.button == 1 && this->widget_rect_test( event->mouse.x, event->mouse.y ) )
             {
-                wz_ask_parent_for_focus( wgt );
+                this->ask_parent_for_focus();
             }
 
             ret = 0;
@@ -54,9 +57,9 @@ int wz_box_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
 #if( ALLEGRO_SUB_VERSION > 0 )
         case ALLEGRO_EVENT_TOUCH_BEGIN:
         {
-            if( wz_widget_rect_test( wgt, event->touch.x, event->touch.y ) )
+            if( this->widget_rect_test( event->touch.x, event->touch.y ) )
             {
-                wz_ask_parent_for_focus( wgt );
+                this->ask_parent_for_focus();
             }
 
             ret = 0;
@@ -65,15 +68,15 @@ int wz_box_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
 #endif
         case WZ_DRAW:
         {
-            if( wgt->flags & WZ_STATE_HIDDEN )
+            if( this->flags & WZ_STATE_HIDDEN )
             {
                 ret = 0;
             }
             else
             {
-                int flags = ( wgt->flags & WZ_STATE_HAS_FOCUS ) ? WZ_STYLE_FOCUSED : 0;
-                flags |= ( wgt->flags & WZ_STATE_DISABLED ) ? WZ_STYLE_DISABLED : 0;
-                wgt->theme->draw_box( wgt->theme, wgt->local_x, wgt->local_y, wgt->width, wgt->height, flags );
+                int flags = ( this->flags & WZ_STATE_HAS_FOCUS ) ? WZ_STYLE_FOCUSED : 0;
+                flags |= ( this->flags & WZ_STATE_DISABLED ) ? WZ_STYLE_DISABLED : 0;
+                this->theme->draw_box( this->local_x, this->local_y, this->width, this->height, flags );
             }
         }
 
@@ -82,18 +85,9 @@ int wz_box_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
     }
 
     if( ret == 0 )
-        ret = wz_widget_proc( wgt, event );
+        ret = WZ_WIDGET::proc( event );
 
     return ret;
-}
-
-/*
-Function: wz_init_box
-*/
-void wz_init_box( WZ_WIDGET *wgt, WZ_WIDGET *parent, float x, float y, float width, float height, int id )
-{
-    wz_init_widget( wgt, parent, x, y, width, height, id );
-    wgt->proc = wz_box_proc;
 }
 
 /*
@@ -108,9 +102,8 @@ See Also:
 
 <wz_create_widget>
 */
-WZ_WIDGET *wz_create_box( WZ_WIDGET *parent, float x, float y, float width, float height, int id )
+
+WZ_BOX::WZ_BOX( WZ_WIDGET *parent, float x, float y, float width, float height, int id )
+    : WZ_WIDGET( parent, x, y, width, height, id )
 {
-    WZ_WIDGET *wgt = new WZ_WIDGET();
-    wz_init_box( wgt, parent, x, y, width, height, id );
-    return wgt;
 }

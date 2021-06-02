@@ -34,7 +34,13 @@ distribution.
 Title: Theme Stuff
 */
 
-static void wz_draw_3d_rectangle( float x1, float y1, float x2, float y2, float border, ALLEGRO_COLOR col, bool invert )
+void WZ_DEF_THEME::draw_3d_rectangle( float x1,
+                                      float y1,
+                                      float x2,
+                                      float y2,
+                                      float border,
+                                      ALLEGRO_COLOR col,
+                                      bool invert )
 {
     ALLEGRO_VERTEX vtx[6];
     ALLEGRO_COLOR hi, lo;
@@ -93,7 +99,7 @@ static void wz_draw_3d_rectangle( float x1, float y1, float x2, float y2, float 
 }
 
 //return the new start
-int wz_find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end )
+int WZ_DEF_THEME::find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end )
 {
     int a, b;
     int first = 1;
@@ -158,15 +164,15 @@ Function: wz_draw_single_text
 
 Draws a single line of text
 */
-void wz_draw_single_text( float x,
-                          float y,
-                          float width,
-                          float height,
-                          int halign,
-                          int valign,
-                          ALLEGRO_COLOR color,
-                          ALLEGRO_FONT *font,
-                          ALLEGRO_USTR *text )
+void WZ_DEF_THEME::draw_single_text( float x,
+                                     float y,
+                                     float width,
+                                     float height,
+                                     int halign,
+                                     int valign,
+                                     ALLEGRO_COLOR color,
+                                     ALLEGRO_FONT *font,
+                                     ALLEGRO_USTR *text )
 {
     float xpos;
     float ypos;
@@ -207,15 +213,15 @@ Function: wz_draw_multi_text
 
 Draws multiple lines of text, wrapping it as necessary
 */
-void wz_draw_multi_text( float x,
-                         float y,
-                         float width,
-                         float height,
-                         int halign,
-                         int valign,
-                         ALLEGRO_COLOR color,
-                         ALLEGRO_FONT *font,
-                         ALLEGRO_USTR *text )
+void WZ_DEF_THEME::draw_multi_text( float x,
+                                    float y,
+                                    float width,
+                                    float height,
+                                    int halign,
+                                    int valign,
+                                    ALLEGRO_COLOR color,
+                                    ALLEGRO_FONT *font,
+                                    ALLEGRO_USTR *text )
 {
     float cur_y = y;
     float text_height = al_get_font_line_height( font );
@@ -229,7 +235,7 @@ void wz_draw_multi_text( float x,
         {
             int start = ret;
             int end;
-            ret = wz_find_eol( text, font, width, start, &end );
+            ret = find_eol( text, font, width, start, &end );
             total_height += text_height;
         } while( ret > 0 );
     }
@@ -250,47 +256,44 @@ void wz_draw_multi_text( float x,
         {
             int start = ret;
             int end;
-            ret = wz_find_eol( text, font, width, start, &end );
+            ret = find_eol( text, font, width, start, &end );
             {
                 ALLEGRO_USTR_INFO info;
                 const ALLEGRO_USTR *token = al_ref_ustr( &info, text, start, end );
-                wz_draw_single_text(
-                    x, cur_y, width, height, halign, WZ_ALIGN_TOP, color, font, (ALLEGRO_USTR *)token );
+                draw_single_text( x, cur_y, width, height, halign, WZ_ALIGN_TOP, color, font, (ALLEGRO_USTR *)token );
             }
             cur_y += text_height;
         } while( ret > 0 );
     }
 }
 
-void wz_def_draw_box( struct WZ_THEME *theme, float x, float y, float width, float height, int style )
+void WZ_DEF_THEME::draw_box( float x, float y, float width, float height, int style )
 {
-    WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
-    al_draw_filled_rectangle( x, y, x + width, y + height, wz_scale_color( thm->color1, 0.5 ) );
+    al_draw_filled_rectangle( x, y, x + width, y + height, wz_scale_color( this->color1, 0.5 ) );
 
     if( style & WZ_STYLE_FOCUSED )
-        al_draw_rectangle( x, y, x + width, y + height, wz_scale_color( thm->color1, 1.5 ), 1 );
+        al_draw_rectangle( x, y, x + width, y + height, wz_scale_color( this->color1, 1.5 ), 1 );
     else
-        al_draw_rectangle( x, y, x + width, y + height, thm->color1, 1 );
+        al_draw_rectangle( x, y, x + width, y + height, this->color1, 1 );
 }
 
-void wz_def_draw_button( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_USTR *text, int style )
+void WZ_DEF_THEME::draw_button( float x, float y, float width, float height, ALLEGRO_USTR *text, int style )
 {
-    WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
     ALLEGRO_COLOR button_col;
     ALLEGRO_COLOR text_col;
     bool invert = false;
-    button_col = thm->color1;
-    text_col = thm->color2;
+    button_col = this->color1;
+    text_col = this->color2;
 
     if( style & WZ_STYLE_FOCUSED )
     {
-        button_col = wz_scale_color( thm->color1, 1.25 );
+        button_col = wz_scale_color( this->color1, 1.25 );
     }
 
     if( style & WZ_STYLE_DISABLED )
     {
-        button_col = wz_scale_color( thm->color1, 0.5 );
-        text_col = wz_scale_color( thm->color2, 0.5 );
+        button_col = wz_scale_color( this->color1, 0.5 );
+        text_col = wz_scale_color( this->color2, 0.5 );
     }
 
     if( style & WZ_STYLE_DOWN )
@@ -298,41 +301,37 @@ void wz_def_draw_button( WZ_THEME *theme, float x, float y, float width, float h
         invert = true;
     }
 
-    wz_draw_3d_rectangle( x, y, x + width, y + height, 2, button_col, invert );
-    wz_draw_multi_text( x, y, width, height, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, text_col, thm->font, text );
+    draw_3d_rectangle( x, y, x + width, y + height, 2, button_col, invert );
+    draw_multi_text( x, y, width, height, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, text_col, this->font, text );
 }
 
-void wz_def_draw_textbox( struct WZ_THEME *theme,
-                          float x,
-                          float y,
-                          float width,
-                          float height,
-                          int halign,
-                          int valign,
-                          ALLEGRO_USTR *text,
-                          int style )
+void WZ_DEF_THEME::draw_textbox( float x,
+                                 float y,
+                                 float width,
+                                 float height,
+                                 int halign,
+                                 int valign,
+                                 ALLEGRO_USTR *text,
+                                 int style )
 {
-    WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
     ALLEGRO_COLOR text_col;
 
     if( style & WZ_STYLE_DISABLED )
-        text_col = wz_scale_color( thm->color2, 0.5 );
+        text_col = wz_scale_color( this->color2, 0.5 );
     else
-        text_col = thm->color2;
+        text_col = this->color2;
 
-    wz_draw_multi_text( x, y, width, height, halign, valign, text_col, thm->font, text );
+    draw_multi_text( x, y, width, height, halign, valign, text_col, this->font, text );
 }
 
-void wz_def_draw_scroll( struct WZ_THEME *theme,
-                         float x,
-                         float y,
-                         float width,
-                         float height,
-                         float fraction,
-                         float slider_size,
-                         int style )
+void WZ_DEF_THEME::draw_scroll( float x,
+                                float y,
+                                float width,
+                                float height,
+                                float fraction,
+                                float slider_size,
+                                int style )
 {
-    WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
     int vertical = height > width;
     ALLEGRO_COLOR col;
     float xpos;
@@ -342,15 +341,15 @@ void wz_def_draw_scroll( struct WZ_THEME *theme,
 
     if( style & WZ_STYLE_FOCUSED )
     {
-        col = wz_scale_color( thm->color1, 1.5 );
+        col = wz_scale_color( this->color1, 1.5 );
     }
     else if( style & WZ_STYLE_DISABLED )
     {
-        col = wz_scale_color( thm->color1, 0.5 );
+        col = wz_scale_color( this->color1, 0.5 );
     }
     else
     {
-        col = thm->color1;
+        col = this->color1;
     }
 
     if( vertical )
@@ -360,8 +359,8 @@ void wz_def_draw_scroll( struct WZ_THEME *theme,
         slider_w = width;
         xpos = x;
         ypos = y + fraction * ( height - slider_h );
-        wz_draw_3d_rectangle(
-            xpos - 4 + width / 2, y, xpos + 4 + width / 2, y + height, 2, wz_scale_color( thm->color1, 0.75 ), true );
+        draw_3d_rectangle(
+            xpos - 4 + width / 2, y, xpos + 4 + width / 2, y + height, 2, wz_scale_color( this->color1, 0.75 ), true );
     }
     else
     {
@@ -370,24 +369,22 @@ void wz_def_draw_scroll( struct WZ_THEME *theme,
         slider_w = slider_size > max_size ? max_size : slider_size;
         xpos = x + fraction * ( width - slider_w );
         ypos = y;
-        wz_draw_3d_rectangle(
-            x, ypos - 4 + height / 2, x + width, ypos + 4 + height / 2, 2, wz_scale_color( thm->color1, 0.75 ), true );
+        draw_3d_rectangle(
+            x, ypos - 4 + height / 2, x + width, ypos + 4 + height / 2, 2, wz_scale_color( this->color1, 0.75 ), true );
     }
 
-    wz_draw_3d_rectangle( xpos, ypos, xpos + slider_w, ypos + slider_h, 1, col, false );
+    draw_3d_rectangle( xpos, ypos, xpos + slider_w, ypos + slider_h, 1, col, false );
 }
 
-void wz_def_draw_editbox( struct WZ_THEME *theme,
-                          float x,
-                          float y,
-                          float width,
-                          float height,
-                          int cursor_pos,
-                          ALLEGRO_USTR *text,
-                          int style )
+void WZ_DEF_THEME::draw_editbox( float x,
+                                 float y,
+                                 float width,
+                                 float height,
+                                 int cursor_pos,
+                                 ALLEGRO_USTR *text,
+                                 int style )
 {
-    WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
-    int len = wz_get_text_pos( thm->font, text, width - 4 );
+    int len = wz_get_text_pos( this->font, text, width - 4 );
     int cx, cy, cw, ch;
     int len2 = al_ustr_length( text );
     int offset;
@@ -398,32 +395,32 @@ void wz_def_draw_editbox( struct WZ_THEME *theme,
     len = len + 1 > len2 ? len2 : len + 1;
     offset = al_ustr_offset( text, len );
     token = al_ref_ustr( &info, text, 0, offset );
-    border_col = thm->color1;
-    text_col = thm->color2;
+    border_col = this->color1;
+    text_col = this->color2;
 
     if( style & WZ_STYLE_FOCUSED )
     {
-        border_col = wz_scale_color( thm->color1, 1.5 );
+        border_col = wz_scale_color( this->color1, 1.5 );
     }
 
     if( style & WZ_STYLE_DISABLED )
     {
-        border_col = wz_scale_color( thm->color1, 0.5 );
-        text_col = wz_scale_color( thm->color2, 0.5 );
+        border_col = wz_scale_color( this->color1, 0.5 );
+        text_col = wz_scale_color( this->color2, 0.5 );
     }
 
-    wz_draw_3d_rectangle( x, y, x + width, y + height, 1, border_col, true );
+    draw_3d_rectangle( x, y, x + width, y + height, 1, border_col, true );
     al_get_clipping_rectangle( &cx, &cy, &cw, &ch );
     al_set_clipping_rectangle( x + 2, y + 2, width - 4, height - 4 );
-    wz_draw_single_text( x + 2,
-                         y + 2,
-                         width - 4,
-                         height - 4,
-                         WZ_ALIGN_LEFT,
-                         WZ_ALIGN_CENTRE,
-                         text_col,
-                         thm->font,
-                         (ALLEGRO_USTR *)token );
+    draw_single_text( x + 2,
+                      y + 2,
+                      width - 4,
+                      height - 4,
+                      WZ_ALIGN_LEFT,
+                      WZ_ALIGN_CENTRE,
+                      text_col,
+                      this->font,
+                      (ALLEGRO_USTR *)token );
     al_set_clipping_rectangle( cx, cy, cw, ch );
 
     if( style & WZ_STYLE_FOCUSED )
@@ -434,8 +431,8 @@ void wz_def_draw_editbox( struct WZ_THEME *theme,
             float halfheight;
             offset = al_ustr_offset( text, cursor_pos );
             token = al_ref_ustr( &info, text, 0, offset );
-            len = al_get_ustr_width( thm->font, token );
-            halfheight = al_get_font_line_height( thm->font ) / 2.0f;
+            len = al_get_ustr_width( this->font, token );
+            halfheight = al_get_font_line_height( this->font ) / 2.0f;
             al_draw_line( x + 2 + len,
                           y + 2 + height / 2 - halfheight,
                           x + 2 + len,
@@ -446,31 +443,30 @@ void wz_def_draw_editbox( struct WZ_THEME *theme,
     }
 }
 
-void wz_def_draw_image( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_BITMAP *image )
+void WZ_DEF_THEME::draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image )
 {
     float ix = x + ( width - al_get_bitmap_width( image ) ) / 2;
     float iy = y + ( height - al_get_bitmap_height( image ) ) / 2;
     al_draw_bitmap( image, ix, iy, 0 );
 }
 
-ALLEGRO_FONT *wz_def_get_font( WZ_THEME *theme, int font_num )
+ALLEGRO_FONT *WZ_DEF_THEME::get_font( int font_num )
 {
-    WZ_DEF_THEME *thm = (WZ_DEF_THEME *)theme;
-    return thm->font;
+    return this->font;
 }
 
-/*
-Variable: wz_def_theme
+WZ_DEF_THEME::WZ_DEF_THEME() : color1( NULL_COLOR ), color2( NULL_COLOR ), font( nullptr ) { }
+WZ_DEF_THEME::WZ_DEF_THEME( ALLEGRO_COLOR color1_, ALLEGRO_COLOR color2_, ALLEGRO_FONT *font_ )
+    : color1( color1_ ),
+      color2( color2_ ),
+      font( font_ )
+{
+}
 
-The default theme.
-*/
-const WZ_DEF_THEME wz_def_theme = { {
-    0,
-    wz_def_draw_button,
-    wz_def_draw_box,
-    wz_def_draw_textbox,
-    wz_def_draw_scroll,
-    wz_def_draw_editbox,
-    wz_def_draw_image,
-    wz_def_get_font,
-} };
+WZ_DEF_THEME::~WZ_DEF_THEME() { }
+
+WZ_DEF_THEME *get_def_theme()
+{
+    static WZ_DEF_THEME instance;
+    return &instance;
+}

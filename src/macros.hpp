@@ -1,21 +1,16 @@
 /* Koro's macros */
+// ntanrikut: replaced macros with C++ constexpr when possible
 #pragma once
 
 #pragma region helper functions
 
 #define SWITCH( x ) ( ( x = ( x ) ? ( 0 ) : ( 1 ) ) )
 
-#define nfree( x ) \
-    do \
-    { \
-        free( ( x ) ); \
-        ( x ) = NULL; \
-    } while( 0 )
 #define ndestroy_bitmap( x ) \
     do \
     { \
         al_destroy_bitmap( ( x ) ); \
-        ( x ) = NULL; \
+        ( x ) = nullptr; \
     } while( 0 )
 
 #define al_rewind( x ) al_fseek( x, 0, ALLEGRO_SEEK_SET )
@@ -24,8 +19,8 @@
 
 #pragma region version related
 
-#define PRE_VERSION "0.9.0"
-#define PRE_DATE "2021-05-27"
+#define PRE_VERSION "1.0.0"
+#define PRE_DATE "2021-06-02"
 
 #pragma endregion
 

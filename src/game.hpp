@@ -58,9 +58,9 @@ private:
     void emit_event( int event_type );
 
     void handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mclick );
-    void handle_mouse_click_panel_tile(TiledBlock *tiled_block, int mclick);
-    void handle_mouse_click_panel_block(TiledBlock *tiled_block, int mclick);
-    void handle_mouse_click_clue_tile(TiledBlock *tiled_block, int mx, int my, int mclick);
+    void handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick );
+    void handle_mouse_click_panel_block( TiledBlock *tiled_block, int mclick );
+    void handle_mouse_click_clue_tile( TiledBlock *tiled_block, int mx, int my, int mclick );
     void handle_mouse_click_button_clue();
     void handle_mouse_click_button_settings();
     void handle_mouse_click_button_help();
@@ -118,7 +118,7 @@ private:
     ALLEGRO_DISPLAY *display;
 
     bool noexit;
-    int restart;  // 0, 1, or 2
+    int restart; // 0, 1, or 2
     bool redraw;
     bool mouse_move;
     bool keypress;

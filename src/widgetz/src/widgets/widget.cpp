@@ -21,6 +21,10 @@ misrepresented as being the original software.
 distribution.
 */
 
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
+#include <spdlog/spdlog.h>
+
 #include "../../widgetz_internal.hpp"
 
 #include "../../../macros.hpp"
@@ -39,7 +43,7 @@ Returns:
 
 1 if the event was handled by the widget, 0 otherwise
 */
-int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
+int WZ_WIDGET::proc( const ALLEGRO_EVENT *event )
 {
     int ret = 1;
 
@@ -47,64 +51,64 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
     {
         case WZ_HIDE:
         {
-            wgt->flags |= WZ_STATE_HIDDEN;
+            this->flags |= WZ_STATE_HIDDEN;
             break;
         }
         case WZ_SHOW:
         {
-            wgt->flags &= ~WZ_STATE_HIDDEN;
+            this->flags &= ~WZ_STATE_HIDDEN;
             break;
         }
         case WZ_DISABLE:
         {
-            wgt->flags |= WZ_STATE_DISABLED;
+            this->flags |= WZ_STATE_DISABLED;
             break;
         }
         case WZ_ENABLE:
         {
-            wgt->flags &= ~WZ_STATE_DISABLED;
+            this->flags &= ~WZ_STATE_DISABLED;
             break;
         }
         case WZ_UPDATE_POSITION:
         {
-            if( wgt->parent )
+            if( this->parent )
             {
-                wgt->local_x = wgt->parent->local_x + wgt->x;
-                wgt->local_y = wgt->parent->local_y + wgt->y;
+                this->local_x = this->parent->local_x + this->x;
+                this->local_y = this->parent->local_y + this->y;
             }
             else
             {
-                wgt->local_x = wgt->x;
-                wgt->local_y = wgt->y;
+                this->local_x = this->x;
+                this->local_y = this->y;
             }
 
             break;
         }
         case WZ_DESTROY:
         {
-            al_destroy_user_event_source( wgt->source );
-            free( wgt->source );
-            free( wgt );
+            al_destroy_user_event_source( this->source );
+            delete this->source;
+            delete this;
             break;
         }
         case WZ_LOSE_FOCUS:
         {
-            wgt->flags &= ~WZ_STATE_HAS_FOCUS;
+            this->flags &= ~WZ_STATE_HAS_FOCUS;
             break;
         }
         case WZ_TAKE_FOCUS:
         {
-            wz_focus( wgt, 0 );
-            wgt->flags |= WZ_STATE_HAS_FOCUS;
+            this->focus( 0 );
+            this->flags |= WZ_STATE_HAS_FOCUS;
 
-            if( wgt->first_child )
-                wz_focus( wgt->first_child, 1 );
+            if( this->first_child )
+                this->first_child->focus( 1 );
 
             break;
         }
         case WZ_WANT_FOCUS:
         {
-            WZ_WIDGET *child = wgt->first_child;
+            WZ_WIDGET *child = this->first_child;
             ALLEGRO_EVENT ev;
             int all_unfocused = 1;
 
@@ -116,14 +120,15 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                     break;
                 }
 
-                wz_focus( child, 0 );
+                child->focus( 0 );
                 child = child->next_sib;
             }
 
             if( all_unfocused )
             {
-                wz_craft_event( &ev, WZ_TAKE_FOCUS, wgt, 0 );
-                wz_send_event( (WZ_WIDGET *)event->user.data2, &ev );
+                wz_craft_event( &ev, WZ_TAKE_FOCUS, this, 0 );
+                WZ_WIDGET *wgt = (WZ_WIDGET *)event->user.data2;
+                wgt->send_event( &ev );
             }
 
             break;
@@ -131,41 +136,23 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
         case WZ_RESIZE:
         {
             float factor = *(float *)&event->user.data3;
-            wgt->x *= factor;
-            wgt->y *= factor;
-            wgt->width *= factor;
-            wgt->height *= factor;
-            wgt->local_x *= factor;
-            wgt->local_y *= factor;
+            this->x *= factor;
+            this->y *= factor;
+            this->width *= factor;
+            this->height *= factor;
+            this->local_x *= factor;
+            this->local_y *= factor;
             break;
         }
 
-        /* Switch through elements on Touch:
-		case ALLEGRO_EVENT_TOUCH_BEGIN:
-		{
-			if (wgt->flags & WZ_STATE_DISABLED)
-			{
-				ret = 0;
-			}
-			else if (wgt->first_child == 0 && wgt->parent != 0)
-			{
-				wz_ask_parent_to_focus_next(wgt);
-			}
-			else
-			{
-				ret = 0;
-			}
-			break;
-		}
-		*/
         case ALLEGRO_EVENT_KEY_CHAR:
         {
-            if( event->keyboard.keycode == wgt->shortcut.keycode
-                && ( ( event->keyboard.modifiers & wgt->shortcut.modifiers ) || wgt->shortcut.modifiers == 0 ) )
+            if( event->keyboard.keycode == this->shortcut.keycode
+                && ( ( event->keyboard.modifiers & this->shortcut.modifiers ) || this->shortcut.modifiers == 0 ) )
             {
                 ALLEGRO_EVENT ev;
-                wz_craft_event( &ev, WZ_HANDLE_SHORTCUT, wgt, 0 );
-                wz_send_event( wgt, &ev );
+                wz_craft_event( &ev, WZ_HANDLE_SHORTCUT, this, 0 );
+                this->send_event( &ev );
             }
             else
             {
@@ -173,30 +160,30 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                 {
                     case ALLEGRO_KEY_TAB:
                     {
-                        if( wgt->first_child != 0 )
+                        if( this->first_child != 0 )
                         {
                             ret = 0;
                         }
                         else if( event->keyboard.modifiers & 1 )
                         {
-                            wz_ask_parent_to_focus_prev( wgt );
+                            this->ask_parent_to_focus_prev();
                         }
                         else
                         {
-                            wz_ask_parent_to_focus_next( wgt );
+                            this->ask_parent_to_focus_next();
                         }
 
                         break;
                     }
                     case ALLEGRO_KEY_UP:
                     {
-                        if( wgt->first_child != 0 )
+                        if( this->first_child != 0 )
                         {
                             ret = 0;
                         }
-                        else if( wgt->parent != 0 )
+                        else if( this->parent != 0 )
                         {
-                            wz_ask_parent_for_focus( wz_get_widget_dir( wgt, 0 ) );
+                            this->get_widget_dir( 0 )->ask_parent_for_focus();
                         }
                         else
                             ret = 0;
@@ -205,13 +192,13 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                     }
                     case ALLEGRO_KEY_RIGHT:
                     {
-                        if( wgt->first_child != 0 )
+                        if( this->first_child != 0 )
                         {
                             ret = 0;
                         }
-                        else if( wgt->parent != 0 )
+                        else if( this->parent != 0 )
                         {
-                            wz_ask_parent_for_focus( wz_get_widget_dir( wgt, 1 ) );
+                            this->get_widget_dir( 1 )->ask_parent_for_focus();
                         }
                         else
                             ret = 0;
@@ -220,13 +207,13 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                     }
                     case ALLEGRO_KEY_DOWN:
                     {
-                        if( wgt->first_child != 0 )
+                        if( this->first_child != 0 )
                         {
                             ret = 0;
                         }
-                        else if( wgt->parent != 0 )
+                        else if( this->parent != 0 )
                         {
-                            wz_ask_parent_for_focus( wz_get_widget_dir( wgt, 2 ) );
+                            this->get_widget_dir( 2 )->ask_parent_for_focus();
                         }
                         else
                             ret = 0;
@@ -235,13 +222,13 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                     }
                     case ALLEGRO_KEY_LEFT:
                     {
-                        if( wgt->first_child != 0 )
+                        if( this->first_child != 0 )
                         {
                             ret = 0;
                         }
-                        else if( wgt->parent != 0 )
+                        else if( this->parent != 0 )
                         {
-                            wz_ask_parent_for_focus( wz_get_widget_dir( wgt, 3 ) );
+                            this->get_widget_dir( 3 )->ask_parent_for_focus();
                         }
                         else
                             ret = 0;
@@ -263,33 +250,28 @@ int wz_widget_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
 }
 
 /*
-Function: wz_
+Function: wz_set_theme
 
-Initializes a generic widget to some sane values
+Sets the theme to a widget, setting it for every widget in the widget tree
+
+Parameters:
+
+theme - Widget theme to use
+
+See also:
+
+<WZ_DEF_THEME>
 */
-void wz_init_widget( WZ_WIDGET *wgt, WZ_WIDGET *parent, float x, float y, float width, float height, int id )
+void WZ_WIDGET::set_theme( WZ_THEME *theme )
 {
-    wgt->x = x;
-    wgt->y = y;
-    wgt->height = height;
-    wgt->width = width;
-    wgt->flags = 1;
-    wgt->theme = (WZ_THEME *)&wz_def_theme;
-    wgt->proc = wz_widget_proc;
-    wgt->parent = 0;
-    wgt->last_child = 0;
-    wgt->first_child = 0;
-    wgt->next_sib = 0;
-    wgt->prev_sib = 0;
-    wgt->id = id;
-    wgt->hold_focus = 0;
+    this->theme = theme;
+    WZ_WIDGET *child = this->first_child;
 
-    wgt->source = new ALLEGRO_EVENT_SOURCE();
-    al_init_user_event_source( wgt->source );
-    wgt->shortcut.modifiers = 0;
-    wgt->shortcut.keycode = -1;
-    wz_attach( wgt, parent );
-    wz_ask_parent_for_focus( wgt );
+    while( child )
+    {
+        child->set_theme( theme );
+        child = child->next_sib;
+    }
 }
 
 /*
@@ -307,9 +289,26 @@ plus one, or if it has none, the id of its parent plus one. If it has no parent,
 See Also:
 <WZ_WIDGET>
 */
-WZ_WIDGET *wz_create_widget( WZ_WIDGET *parent, float x, float y, int id )
+WZ_WIDGET::WZ_WIDGET( WZ_WIDGET *parent, float x, float y, float width, float height, int id )
 {
-    WZ_WIDGET *wgt = new WZ_WIDGET();
-    wz_init_widget( wgt, parent, x, y, 0, 0, id );
-    return wgt;
+    this->x = x;
+    this->y = y;
+    this->height = height;
+    this->width = width;
+    this->flags = 1;
+    this->theme = get_def_theme();
+    this->parent = nullptr;
+    this->last_child = nullptr;
+    this->first_child = nullptr;
+    this->next_sib = nullptr;
+    this->prev_sib = nullptr;
+    this->id = id;
+    this->hold_focus = 0;
+
+    this->source = new ALLEGRO_EVENT_SOURCE();
+    al_init_user_event_source( this->source );
+    this->shortcut.modifiers = 0;
+    this->shortcut.keycode = -1;
+    this->attach( parent );
+    this->ask_parent_for_focus();
 }

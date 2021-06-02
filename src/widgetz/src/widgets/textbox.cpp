@@ -12,7 +12,7 @@ freely, subject to the following restrictions:
 1. The origin of this software must not be misrepresented; you must not
 claim that you wrote the original software. If you use this software
 in a product, an acknowledgment in the product documentation would be
-appreciated but is not required.
+appreciated this is not required.
 
 2. Altered source versions must be plainly marked as such, and must not be
 misrepresented as being the original software.
@@ -20,6 +20,10 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source
 distribution.
 */
+
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
+#include <spdlog/spdlog.h>
 
 #include "../../widgetz_internal.hpp"
 
@@ -35,53 +39,51 @@ Function: wz_textbox_proc
 See also:
 <wz_widget_proc>
 */
-int wz_textbox_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
+int WZ_TEXTBOX::proc( const ALLEGRO_EVENT *event )
 {
     int ret = 1;
-    WZ_TEXTBOX *box = (WZ_TEXTBOX *)wgt;
 
     switch( event->type )
     {
         case WZ_DRAW:
         {
-            if( wgt->flags & WZ_STATE_HIDDEN )
+            if( this->flags & WZ_STATE_HIDDEN )
             {
                 ret = 0;
             }
             else
             {
-                int flags = ( wgt->flags & WZ_STATE_DISABLED ) ? WZ_STYLE_DISABLED : 0;
-                wgt->theme->draw_textbox( wgt->theme,
-                                          wgt->local_x,
-                                          wgt->local_y,
-                                          wgt->width,
-                                          wgt->height,
-                                          box->h_align,
-                                          box->v_align,
-                                          box->text,
-                                          flags );
+                int flags = ( this->flags & WZ_STATE_DISABLED ) ? WZ_STYLE_DISABLED : 0;
+                this->theme->draw_textbox( this->local_x,
+                                           this->local_y,
+                                           this->width,
+                                           this->height,
+                                           this->h_align,
+                                           this->v_align,
+                                           this->text,
+                                           flags );
             }
 
             break;
         }
         case WZ_DESTROY:
         {
-            if( box->own )
-                al_ustr_free( box->text );
+            if( this->own )
+                al_ustr_free( this->text );
 
             ret = 0;
             break;
         }
         case WZ_SET_TEXT:
         {
-            if( box->own )
+            if( this->own )
             {
-                al_ustr_free( box->text );
-                box->text = al_ustr_dup( (ALLEGRO_USTR *)event->user.data3 );
+                al_ustr_free( this->text );
+                this->text = al_ustr_dup( (ALLEGRO_USTR *)event->user.data3 );
             }
             else
             {
-                box->text = (ALLEGRO_USTR *)event->user.data3;
+                this->text = (ALLEGRO_USTR *)event->user.data3;
             }
 
             break;
@@ -91,34 +93,9 @@ int wz_textbox_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
     }
 
     if( ret == 0 )
-        ret = wz_widget_proc( wgt, event );
+        ret = WZ_WIDGET::proc( event );
 
     return ret;
-}
-
-/*
-Function: wz_init_textbox
-*/
-void wz_init_textbox( WZ_TEXTBOX *box,
-                      WZ_WIDGET *parent,
-                      float x,
-                      float y,
-                      float width,
-                      float height,
-                      int halign,
-                      int valign,
-                      ALLEGRO_USTR *text,
-                      int own,
-                      int id )
-{
-    WZ_WIDGET *wgt = (WZ_WIDGET *)box;
-    wz_init_widget( wgt, parent, x, y, width, height, id );
-    wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
-    wgt->proc = wz_textbox_proc;
-    box->own = own;
-    box->h_align = halign;
-    box->v_align = valign;
-    box->text = text;
 }
 
 /*
@@ -126,7 +103,7 @@ Section: Public
 
 Function: wz_create_textbox
 
-Creates a text box.
+Creates a text this.
 
 Parameters:
 
@@ -142,18 +119,21 @@ See Also:
 
 <wz_create_widget>
 */
-WZ_TEXTBOX *wz_create_textbox( WZ_WIDGET *parent,
-                               float x,
-                               float y,
-                               float width,
-                               float height,
-                               int halign,
-                               int valign,
-                               ALLEGRO_USTR *text,
-                               int own,
-                               int id )
+WZ_TEXTBOX::WZ_TEXTBOX( WZ_WIDGET *parent,
+                        float x,
+                        float y,
+                        float width,
+                        float height,
+                        int halign,
+                        int valign,
+                        ALLEGRO_USTR *text,
+                        int own,
+                        int id )
+    : WZ_WIDGET( parent, x, y, width, height, id )
 {
-    WZ_TEXTBOX *box = new WZ_TEXTBOX();
-    wz_init_textbox( box, parent, x, y, width, height, halign, valign, text, own, id );
-    return box;
+    this->flags |= WZ_STATE_NOTWANT_FOCUS;
+    this->own = own;
+    this->h_align = halign;
+    this->v_align = valign;
+    this->text = text;
 }

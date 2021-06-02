@@ -21,6 +21,9 @@ misrepresented as being the original software.
 distribution.
 */
 
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
+#include <spdlog/spdlog.h>
 #include "../../widgetz_internal.hpp"
 
 #include "../../../macros.hpp"
@@ -35,10 +38,9 @@ Function: wz_button_proc
 See also:
 <wz_widget_proc>
 */
-int wz_image_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
+int WZ_IMAGE_BUTTON::proc( const ALLEGRO_EVENT *event )
 {
     int ret = 1;
-    WZ_IMAGE_BUTTON *but = (WZ_IMAGE_BUTTON *)wgt;
 
     switch( event->type )
     {
@@ -46,23 +48,21 @@ int wz_image_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
         {
             ALLEGRO_BITMAP *image = 0;
 
-            if( wgt->flags & WZ_STATE_HIDDEN )
+            if( this->flags & WZ_STATE_HIDDEN )
                 break;
-            else if( wgt->flags & WZ_STATE_DISABLED )
-                image = but->disabled;
+            else if( this->flags & WZ_STATE_DISABLED )
+                image = this->disabled;
             else
             {
-                WZ_BUTTON *button = (WZ_BUTTON *)but;
-
-                if( button->down )
-                    image = but->down;
-                else if( wgt->flags & WZ_STATE_HAS_FOCUS )
-                    image = but->focused;
+                if( this->down )
+                    image = this->down;
+                else if( this->flags & WZ_STATE_HAS_FOCUS )
+                    image = this->focused;
                 else
-                    image = but->normal;
+                    image = this->normal;
             }
 
-            wgt->theme->draw_image( wgt->theme, wgt->local_x, wgt->local_y, wgt->width, wgt->height, image );
+            this->theme->draw_image( this->local_x, this->local_y, this->width, this->height, image );
             break;
         }
         default:
@@ -70,33 +70,9 @@ int wz_image_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
     }
 
     if( ret == 0 )
-        ret = wz_button_proc( wgt, event );
+        ret = WZ_BUTTON::proc( event );
 
     return ret;
-}
-
-/*
-Function: wz_init_image_button
-*/
-void wz_init_image_button( WZ_IMAGE_BUTTON *but,
-                           WZ_WIDGET *parent,
-                           float x,
-                           float y,
-                           float width,
-                           float height,
-                           ALLEGRO_BITMAP *normal,
-                           ALLEGRO_BITMAP *down,
-                           ALLEGRO_BITMAP *focused,
-                           ALLEGRO_BITMAP *disabled,
-                           int id )
-{
-    WZ_WIDGET *wgt = (WZ_WIDGET *)but;
-    wz_init_button( (WZ_BUTTON *)wgt, parent, x, y, width, height, 0, 0, id );
-    but->normal = normal;
-    but->down = down;
-    but->focused = focused;
-    but->disabled = disabled;
-    wgt->proc = wz_image_button_proc;
 }
 
 /*
@@ -121,18 +97,20 @@ See Also:
 
 <wz_create_button>
 */
-WZ_IMAGE_BUTTON *wz_create_image_button( WZ_WIDGET *parent,
-                                         float x,
-                                         float y,
-                                         float width,
-                                         float height,
-                                         ALLEGRO_BITMAP *normal,
-                                         ALLEGRO_BITMAP *down,
-                                         ALLEGRO_BITMAP *focused,
-                                         ALLEGRO_BITMAP *disabled,
-                                         int id )
+WZ_IMAGE_BUTTON::WZ_IMAGE_BUTTON( WZ_WIDGET *parent,
+                                  float x,
+                                  float y,
+                                  float width,
+                                  float height,
+                                  ALLEGRO_BITMAP *normal,
+                                  ALLEGRO_BITMAP *down,
+                                  ALLEGRO_BITMAP *focused,
+                                  ALLEGRO_BITMAP *disabled,
+                                  int id )
+    : WZ_BUTTON( parent, x, y, width, height, nullptr, 0, id )
 {
-    WZ_IMAGE_BUTTON *but = new WZ_IMAGE_BUTTON();
-    wz_init_image_button( but, parent, x, y, width, height, normal, down, focused, disabled, id );
-    return but;
+    this->normal = normal;
+    this->down = down;
+    this->focused = focused;
+    this->disabled = disabled;
 }

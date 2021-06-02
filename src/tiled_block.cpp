@@ -31,7 +31,7 @@ int get_TiledBlock_tile( TiledBlock *tiled_block, int x, int y, int *path )
 TiledBlock *get_TiledBlock( TiledBlock *tiled_block, int x, int y )
 {
     int m;
-    TiledBlock *rt = NULL;
+    TiledBlock *rt = nullptr;
 
     if( ( x >= tiled_block->x ) && ( x < tiled_block->x + tiled_block->width ) && ( y >= tiled_block->y )
         && ( y < tiled_block->y + tiled_block->height ) )
@@ -39,13 +39,13 @@ TiledBlock *get_TiledBlock( TiledBlock *tiled_block, int x, int y )
         for( m = 0; m < tiled_block->number_of_subblocks; m++ )
         {
             rt = get_TiledBlock( tiled_block->sub[m], x - tiled_block->x, y - tiled_block->y );
-            if( rt && ( rt->hidden != -1 ) )
+            if( rt && ( rt->hidden != TiledBlock::Visibility::TotallyHidden ) )
                 return rt;
         }
         return tiled_block;
     }
     else
-        return NULL;
+        return nullptr;
 };
 
 // Draw the tiled block in the target allegro display
@@ -53,9 +53,9 @@ void draw_TiledBlock( TiledBlock *tiled_block, int x, int y )
 {
     int i;
 
-    if( tiled_block->bmp && ( tiled_block->hidden != -1 ) )
+    if( tiled_block->bmp && ( tiled_block->hidden != TiledBlock::Visibility::TotallyHidden ) )
     {
-        if( tiled_block->hidden )
+        if( tiled_block->hidden != TiledBlock::Visibility::Visible )
         {
             al_draw_tinted_bitmap(
                 *( tiled_block->bmp ), al_map_rgba_f( 0.1, 0.1, 0.1, 0.1 ), tiled_block->x + x, tiled_block->y + y, 0 );
@@ -111,10 +111,4 @@ void highlight_TiledBlock( TiledBlock *tiled_block )
         al_draw_rectangle( x, y, x + tiled_block->width, y + tiled_block->height, al_premul_rgba_f( 1, 0, 0, 0.2 ), i );
     }
     al_draw_filled_rectangle( x, y, x + tiled_block->width, y + tiled_block->height, al_premul_rgba_f( 1, 1, 1, 0.3 ) );
-}
-
-TiledBlock *new_TiledBlock( void )
-{
-    TiledBlock *tiled_block = new TiledBlock();
-    return tiled_block;
 }

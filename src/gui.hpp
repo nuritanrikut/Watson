@@ -52,16 +52,7 @@ private:
     void init_theme_noskin();
     void scale_gui( float factor );
     void destroy_theme();
-    WZ_WIDGET *create_fill_layout( WZ_WIDGET *parent,
-                                   float x,
-                                   float y,
-                                   float width,
-                                   float height,
-                                   float hspace,
-                                   float vspace,
-                                   int halign,
-                                   int valign,
-                                   int id );
+
     WZ_WIDGET *new_widget( int id, int x, int y );
     WZ_WIDGET *create_msg_gui( int id, ALLEGRO_USTR *msg );
     WZ_WIDGET *create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg );

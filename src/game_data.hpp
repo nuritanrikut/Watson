@@ -42,7 +42,7 @@ struct Clue
     int i[3], j[3], k[3];
     RELATION rel; // how they relate
     int index;
-    int hidden;
+    bool hidden;
 };
 
 struct GameData

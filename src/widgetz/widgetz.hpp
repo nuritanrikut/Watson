@@ -15,37 +15,22 @@ A struct that defines a bunch of rendering functions to render various types of 
 */
 struct WZ_THEME
 {
-    int pad;
-    void (
-        *draw_button )( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_USTR *text, int style );
-    void ( *draw_box )( WZ_THEME *theme, float x, float y, float width, float height, int style );
-    void ( *draw_textbox )( WZ_THEME *theme,
-                            float x,
-                            float y,
-                            float width,
-                            float height,
-                            int halign,
-                            int valign,
-                            ALLEGRO_USTR *text,
-                            int style );
-    void ( *draw_scroll )( WZ_THEME *theme,
-                           float x,
-                           float y,
-                           float width,
-                           float height,
-                           float fraction,
-                           float slider_size,
-                           int style );
-    void ( *draw_editbox )( WZ_THEME *theme,
-                            float x,
-                            float y,
-                            float width,
-                            float height,
-                            int cursor_pos,
-                            ALLEGRO_USTR *text,
-                            int style );
-    void ( *draw_image )( WZ_THEME *theme, float x, float y, float width, float height, ALLEGRO_BITMAP *image );
-    ALLEGRO_FONT *( *get_font )( WZ_THEME *theme, int font_num );
+    virtual void draw_button( float x, float y, float width, float height, ALLEGRO_USTR *text, int style ) = 0;
+    virtual void draw_box( float x, float y, float width, float height, int style ) = 0;
+    virtual void draw_textbox( float x,
+                               float y,
+                               float width,
+                               float height,
+                               int halign,
+                               int valign,
+                               ALLEGRO_USTR *text,
+                               int style ) = 0;
+    virtual void
+    draw_scroll( float x, float y, float width, float height, float fraction, float slider_size, int style ) = 0;
+    virtual void
+    draw_editbox( float x, float y, float width, float height, int cursor_pos, ALLEGRO_USTR *text, int style ) = 0;
+    virtual void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) = 0;
+    virtual ALLEGRO_FONT *get_font( int font_num ) = 0;
 };
 
 /*
@@ -57,9 +42,44 @@ The default theme struct
 Inherits From:
 <WZ_THEME>
 */
-struct WZ_DEF_THEME
+struct WZ_DEF_THEME : WZ_THEME
 {
-    WZ_THEME theme;
+    WZ_DEF_THEME();
+    WZ_DEF_THEME( ALLEGRO_COLOR color1, ALLEGRO_COLOR color2, ALLEGRO_FONT *font );
+    virtual ~WZ_DEF_THEME();
+
+    virtual void draw_button( float x, float y, float width, float height, ALLEGRO_USTR *text, int style ) override;
+    virtual void draw_box( float x, float y, float width, float height, int style ) override;
+    virtual void
+    draw_textbox( float x, float y, float width, float height, int halign, int valign, ALLEGRO_USTR *text, int style )
+        override;
+    virtual void
+    draw_scroll( float x, float y, float width, float height, float fraction, float slider_size, int style ) override;
+    virtual void
+    draw_editbox( float x, float y, float width, float height, int cursor_pos, ALLEGRO_USTR *text, int style ) override;
+    virtual void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) override;
+    virtual ALLEGRO_FONT *get_font( int font_num ) override;
+
+    void draw_3d_rectangle( float x1, float y1, float x2, float y2, float border, ALLEGRO_COLOR col, bool invert );
+    int find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end );
+    void draw_single_text( float x,
+                           float y,
+                           float width,
+                           float height,
+                           int halign,
+                           int valign,
+                           ALLEGRO_COLOR color,
+                           ALLEGRO_FONT *font,
+                           ALLEGRO_USTR *text );
+    void draw_multi_text( float x,
+                          float y,
+                          float width,
+                          float height,
+                          int halign,
+                          int valign,
+                          ALLEGRO_COLOR color,
+                          ALLEGRO_FONT *font,
+                          ALLEGRO_USTR *text );
 
     /*
 	Variable: color1
@@ -77,7 +97,7 @@ struct WZ_DEF_THEME
 	Font to use for this GUI
 	*/
     ALLEGRO_FONT *font;
-    int pad[3];
+    int def_pad[3];
 };
 
 /*
@@ -92,9 +112,29 @@ Inherits From:
 See Also:
 <wz_init_skin_theme>, <wz_destroy_skin_theme>
 */
-struct WZ_SKIN_THEME
+struct WZ_SKIN_THEME : WZ_DEF_THEME
 {
-    WZ_DEF_THEME theme;
+    WZ_SKIN_THEME();
+    WZ_SKIN_THEME( WZ_DEF_THEME *other );
+    WZ_SKIN_THEME( WZ_SKIN_THEME *other );
+    ~WZ_SKIN_THEME();
+
+    void init();
+
+    void draw_button( float x, float y, float width, float height, ALLEGRO_USTR *text, int style ) override;
+    void draw_box( float x, float y, float width, float height, int style ) override;
+    void
+    draw_textbox( float x, float y, float width, float height, int halign, int valign, ALLEGRO_USTR *text, int style )
+        override;
+    void
+    draw_scroll( float x, float y, float width, float height, float fraction, float slider_size, int style ) override;
+    void
+    draw_editbox( float x, float y, float width, float height, int cursor_pos, ALLEGRO_USTR *text, int style ) override;
+    void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) override;
+    ALLEGRO_FONT *get_font( int font_num ) override;
+
+    WZ_NINE_PATCH_PADDING
+    draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float y, float width, float height );
 
     WZ_NINE_PATCH_BITMAP *button_up_patch;
     WZ_NINE_PATCH_BITMAP *button_down_patch;
@@ -138,7 +178,12 @@ struct WZ_SKIN_THEME
 	Bitmap to use to draw scrollbar sliders
 	*/
     ALLEGRO_BITMAP *slider_bitmap;
+
+    int skin_pad;
 };
+
+WZ_DEF_THEME *get_def_theme();
+WZ_SKIN_THEME *get_skin_theme();
 
 struct WZ_SHORTCUT
 {
@@ -156,6 +201,45 @@ See Also:
 */
 struct WZ_WIDGET
 {
+    WZ_WIDGET( WZ_WIDGET *parent, float x, float y, float width, float height, int id );
+
+    void attach( WZ_WIDGET *parent );
+    void attach_after( WZ_WIDGET *sib );
+    void attach_before( WZ_WIDGET *sib );
+    void detach();
+
+    void set_shortcut( int keycode, int modifiers );
+    void register_sources( ALLEGRO_EVENT_QUEUE *queue );
+
+    int send_event( const ALLEGRO_EVENT *event );
+    int broadcast_event( const ALLEGRO_EVENT *event );
+    void update( double dt );
+
+    void trigger();
+    void draw();
+    void set_text( ALLEGRO_USTR *text );
+
+    void show( int show );
+    void destroy();
+
+    void resize( float factor );
+    void enable( int enable );
+    void focus( int focus );
+    void set_scroll_pos( int pos, int max );
+    void set_cursor_pos( int pos );
+
+    int widget_rect_test( float x, float y );
+    int widget_rect_test_all( float x, float y );
+
+    int ask_parent_for_focus();
+    void ask_parent_to_focus_next();
+    void ask_parent_to_focus_prev();
+    WZ_WIDGET *get_widget_dir( int dir );
+
+    void set_theme( WZ_THEME *theme );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
+
     /*
 	Variable: x
 	x coordinate of the widget
@@ -205,8 +289,13 @@ struct WZ_WIDGET
 	id of the widget
 	*/
     int id;
+};
 
-    int ( *proc )( WZ_WIDGET *, const ALLEGRO_EVENT * );
+struct WZ_BOX : WZ_WIDGET
+{
+    WZ_BOX( WZ_WIDGET *parent, float x, float y, float width, float height, int id );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
 };
 
 /*
@@ -220,9 +309,12 @@ Inherits From:
 See Also:
 <wz_create_button>
 */
-struct WZ_BUTTON
+struct WZ_BUTTON : WZ_BOX
 {
-    WZ_WIDGET wgt;
+    WZ_BUTTON( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
+
     ALLEGRO_USTR *text;
     int own;
     int down;
@@ -240,9 +332,21 @@ Inherits From:
 See Also:
 <wz_create_image_button>
 */
-struct WZ_IMAGE_BUTTON
+struct WZ_IMAGE_BUTTON : WZ_BUTTON
 {
-    WZ_BUTTON button;
+    WZ_IMAGE_BUTTON( WZ_WIDGET *parent,
+                     float x,
+                     float y,
+                     float width,
+                     float height,
+                     ALLEGRO_BITMAP *normal,
+                     ALLEGRO_BITMAP *down,
+                     ALLEGRO_BITMAP *focused,
+                     ALLEGRO_BITMAP *disabled,
+                     int id );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
+
     ALLEGRO_BITMAP *normal;
     ALLEGRO_BITMAP *down;
     ALLEGRO_BITMAP *focused;
@@ -263,9 +367,21 @@ Inherits From:
 See Also:
 <wz_create_fill_layout>
 */
-struct WZ_FILL_LAYOUT
+struct WZ_FILL_LAYOUT : WZ_BOX
 {
-    WZ_WIDGET wgt;
+    WZ_FILL_LAYOUT( WZ_WIDGET *parent,
+                    float x,
+                    float y,
+                    float width,
+                    float height,
+                    float hspace,
+                    float vspace,
+                    int halign,
+                    int valign,
+                    int id );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
+
     float h_spacing;
     float v_spacing;
     int h_align;
@@ -283,9 +399,21 @@ Inherits From:
 See Also:
 <wz_create_textbox>
 */
-struct WZ_TEXTBOX
+struct WZ_TEXTBOX : WZ_WIDGET
 {
-    WZ_WIDGET wgt;
+    WZ_TEXTBOX( WZ_WIDGET *parent,
+                float x,
+                float y,
+                float width,
+                float height,
+                int halign,
+                int valign,
+                ALLEGRO_USTR *text,
+                int own,
+                int id );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
+
     ALLEGRO_USTR *text;
     int own;
     int h_align;
@@ -304,9 +432,14 @@ Inherits From:
 See Also:
 <wz_create_scroll>
 */
-struct WZ_SCROLL
+struct WZ_SCROLL : WZ_WIDGET
 {
-    WZ_WIDGET wgt;
+    WZ_SCROLL( WZ_WIDGET *parent, float x, float y, float width, float height, int max_pos, int slider_size, int id );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
+
+    int set_scroll_pos( float x, float y );
+
     int max_pos;
     int cur_pos;
     int down;
@@ -326,9 +459,20 @@ Inherits From:
 See Also:
 <wz_create_toggle_button>
 */
-struct WZ_TOGGLE
+struct WZ_TOGGLE : WZ_BUTTON
 {
-    WZ_BUTTON but;
+    WZ_TOGGLE( WZ_WIDGET *parent,
+               float x,
+               float y,
+               float width,
+               float height,
+               ALLEGRO_USTR *text,
+               int own,
+               int group,
+               int id );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
+
     int group;
 };
 
@@ -344,9 +488,14 @@ Inherits From:
 See Also:
 <wz_create_editbox>
 */
-struct WZ_EDITBOX
+struct WZ_EDITBOX : WZ_WIDGET
 {
-    WZ_WIDGET wgt;
+    WZ_EDITBOX( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id );
+
+    virtual int proc( const ALLEGRO_EVENT *event );
+
+    void snap();
+
     /*
 	Variable: text
 	Holds the current text that is entered inside the textbox.
@@ -434,124 +583,5 @@ enum
 extern const WZ_DEF_THEME wz_def_theme;
 extern const WZ_SKIN_THEME wz_skin_theme;
 
-void wz_init_skin_theme( WZ_SKIN_THEME *theme );
-void wz_destroy_skin_theme( WZ_SKIN_THEME *theme );
-
-void wz_register_sources( WZ_WIDGET *wgt, ALLEGRO_EVENT_QUEUE *queue );
-void wz_set_theme( WZ_WIDGET *wgt, WZ_THEME *theme );
-void wz_detach( WZ_WIDGET *wgt );
-void wz_attach( WZ_WIDGET *wgt, WZ_WIDGET *parent );
-void wz_attach_after( WZ_WIDGET *wgt, WZ_WIDGET *sib );
-void wz_attach_before( WZ_WIDGET *wgt, WZ_WIDGET *sib );
-
-int wz_send_event( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event );
-int wz_broadcast_event( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event );
-
-void wz_update( WZ_WIDGET *wgt, double dt );
-void wz_draw( WZ_WIDGET *wgt );
-void wz_destroy( WZ_WIDGET *wgt );
-void wz_trigger( WZ_WIDGET *wgt );
-void wz_resize( WZ_WIDGET *wgt, float factor );
-
-void wz_set_text( WZ_WIDGET *wgt, ALLEGRO_USTR *text );
-void wz_set_scroll_pos( WZ_WIDGET *wgt, int pos, int max );
-void wz_set_cursor_pos( WZ_WIDGET *wgt, int pos );
-void wz_focus( WZ_WIDGET *wgt, int focus );
-void wz_show( WZ_WIDGET *wgt, int show );
-void wz_enable( WZ_WIDGET *wgt, int enable );
-void wz_set_shortcut( WZ_WIDGET *wgt, int keycode, int modifiers );
-
-void wz_draw_multi_text( float x,
-                         float y,
-                         float width,
-                         float height,
-                         int halign,
-                         int valign,
-                         ALLEGRO_COLOR color,
-                         ALLEGRO_FONT *font,
-                         ALLEGRO_USTR *text );
 ALLEGRO_COLOR wz_blend_colors( ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac );
 ALLEGRO_COLOR wz_scale_color( ALLEGRO_COLOR c, float scale );
-
-WZ_WIDGET *wz_create_widget( WZ_WIDGET *parent, float x, float y, int id );
-WZ_BUTTON *
-wz_create_button( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id );
-WZ_TEXTBOX *wz_create_textbox( WZ_WIDGET *parent,
-                               float x,
-                               float y,
-                               float width,
-                               float height,
-                               int halign,
-                               int valign,
-                               ALLEGRO_USTR *text,
-                               int own,
-                               int id );
-WZ_TOGGLE *wz_create_toggle_button( WZ_WIDGET *parent,
-                                    float x,
-                                    float y,
-                                    float width,
-                                    float height,
-                                    ALLEGRO_USTR *text,
-                                    int own,
-                                    int group,
-                                    int id );
-WZ_WIDGET *wz_create_box( WZ_WIDGET *parent, float x, float y, float width, float height, int id );
-WZ_FILL_LAYOUT *wz_create_fill_layout( WZ_WIDGET *parent,
-                                       float x,
-                                       float y,
-                                       float width,
-                                       float height,
-                                       float hspace,
-                                       float vspace,
-                                       int halign,
-                                       int valign,
-                                       int id );
-WZ_SCROLL *wz_create_scroll( WZ_WIDGET *parent,
-                             float x,
-                             float y,
-                             float width,
-                             float height,
-                             int max_pos,
-                             int slider_size,
-                             int id );
-WZ_EDITBOX *wz_create_editbox( WZ_WIDGET *parent,
-                               float x,
-                               float y,
-                               float width,
-                               float height,
-                               ALLEGRO_USTR *text,
-                               int own,
-                               int id );
-WZ_WIDGET *wz_create_layout_stop( WZ_WIDGET *parent, int id );
-WZ_IMAGE_BUTTON *wz_create_image_button( WZ_WIDGET *parent,
-                                         float x,
-                                         float y,
-                                         float width,
-                                         float height,
-                                         ALLEGRO_BITMAP *normal,
-                                         ALLEGRO_BITMAP *down,
-                                         ALLEGRO_BITMAP *focused,
-                                         ALLEGRO_BITMAP *disabled,
-                                         int id );
-
-void wz_draw_multiline_text( float x,
-                             float y,
-                             float width,
-                             float height,
-                             int halign,
-                             int valign,
-                             ALLEGRO_COLOR color,
-                             ALLEGRO_FONT *font,
-                             ALLEGRO_USTR *text );
-void wz_draw_single_text( float x,
-                          float y,
-                          float width,
-                          float height,
-                          int halign,
-                          int valign,
-                          ALLEGRO_COLOR color,
-                          ALLEGRO_FONT *font,
-                          ALLEGRO_USTR *text );
-
-int wz_widget_rect_test( WZ_WIDGET *wgt, float x, float y );
-int wz_widget_rect_test_all( WZ_WIDGET *wgt, float x, float y );

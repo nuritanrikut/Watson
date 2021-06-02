@@ -12,7 +12,7 @@ freely, subject to the following restrictions:
 1. The origin of this software must not be misrepresented; you must not
 claim that you wrote the original software. If you use this software
 in a product, an acknowledgment in the product documentation would be
-appreciated but is not required.
+appreciated this is not required.
 
 2. Altered source versions must be plainly marked as such, and must not be
 misrepresented as being the original software.
@@ -20,6 +20,9 @@ misrepresented as being the original software.
 3. This notice may not be removed or altered from any source
 distribution.
 */
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
+#include <spdlog/spdlog.h>
 
 #include "../../widgetz_internal.hpp"
 
@@ -35,10 +38,9 @@ Function: wz_button_proc
 See also:
 <wz_widget_proc>
 */
-int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
+int WZ_BUTTON::proc( const ALLEGRO_EVENT *event )
 {
     int ret = 1;
-    WZ_BUTTON *but = (WZ_BUTTON *)wgt;
     float x, y;
 
     switch( event->type )
@@ -50,23 +52,22 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
         }
         case WZ_DRAW:
         {
-            if( wgt->flags & WZ_STATE_HIDDEN )
+            if( this->flags & WZ_STATE_HIDDEN )
             {
                 ret = 0;
             }
             else
             {
                 int flags = 0;
-                if( wgt->flags & WZ_STATE_DISABLED )
+                if( this->flags & WZ_STATE_DISABLED )
                     flags |= WZ_STYLE_DISABLED;
-                else if( wgt->flags & WZ_STATE_HAS_FOCUS )
+                else if( this->flags & WZ_STATE_HAS_FOCUS )
                     flags |= WZ_STYLE_FOCUSED;
 
-                if( but->down )
+                if( this->down )
                     flags |= WZ_STYLE_DOWN;
 
-                wgt->theme->draw_button(
-                    wgt->theme, wgt->local_x, wgt->local_y, wgt->width, wgt->height, but->text, flags );
+                this->theme->draw_button( this->local_x, this->local_y, this->width, this->height, this->text, flags );
             }
 
             break;
@@ -84,14 +85,14 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                 y = event->mouse.y;
             }
 
-            if( wgt->flags & WZ_STATE_DISABLED )
+            if( this->flags & WZ_STATE_DISABLED )
             {
                 ret = 0;
             }
-            else if( ( event->mouse.dx != 0 || event->mouse.dy != 0 ) && wz_widget_rect_test( wgt, x, y )
-                     && !( wgt->flags & WZ_STATE_HAS_FOCUS ) )
+            else if( ( event->mouse.dx != 0 || event->mouse.dy != 0 ) && this->widget_rect_test( x, y )
+                     && !( this->flags & WZ_STATE_HAS_FOCUS ) )
             {
-                wz_ask_parent_for_focus( wgt );
+                this->ask_parent_for_focus();
             }
             else
             {
@@ -113,18 +114,20 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                 y = event->mouse.y;
             }
 
-            if( wgt->flags & WZ_STATE_DISABLED )
+            if( this->flags & WZ_STATE_DISABLED )
             {
                 ret = 0;
             }
-            else if( wz_widget_rect_test( wgt, x, y ) )
+            else if( this->widget_rect_test( x, y ) )
             {
-                wz_ask_parent_for_focus( wgt );
-                but->down = 1;
-                wgt->hold_focus = 1;
+                this->ask_parent_for_focus();
+                this->down = 1;
+                this->hold_focus = 1;
             }
             else
+            {
                 ret = 0;
+            }
 
             break;
         }
@@ -134,13 +137,13 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
             {
                 case ALLEGRO_KEY_ENTER:
                 {
-                    if( wgt->flags & WZ_STATE_DISABLED )
+                    if( this->flags & WZ_STATE_DISABLED )
                     {
                         ret = 0;
                     }
-                    else if( wgt->flags & WZ_STATE_HAS_FOCUS )
+                    else if( this->flags & WZ_STATE_HAS_FOCUS )
                     {
-                        but->down = 1;
+                        this->down = 1;
                     }
                     else
                         ret = 0;
@@ -159,13 +162,13 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
             {
                 case ALLEGRO_KEY_ENTER:
                 {
-                    if( wgt->flags & WZ_STATE_DISABLED )
+                    if( this->flags & WZ_STATE_DISABLED )
                     {
                         ret = 0;
                     }
-                    else if( wgt->flags & WZ_STATE_HAS_FOCUS )
+                    else if( this->flags & WZ_STATE_HAS_FOCUS )
                     {
-                        wz_trigger( wgt );
+                        this->trigger();
                     }
                     else
                         ret = 0;
@@ -180,18 +183,18 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
         }
         case WZ_HANDLE_SHORTCUT:
         {
-            if( wgt->flags & WZ_STATE_DISABLED )
+            if( this->flags & WZ_STATE_DISABLED )
             {
                 ret = 0;
             }
             else
             {
-                if( !( wgt->flags & WZ_STATE_HAS_FOCUS ) )
+                if( !( this->flags & WZ_STATE_HAS_FOCUS ) )
                 {
-                    wz_ask_parent_for_focus( wgt );
+                    this->ask_parent_for_focus();
                 }
 
-                wz_trigger( wgt );
+                this->trigger();
             }
 
             break;
@@ -209,17 +212,19 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                 y = event->mouse.y;
             }
 
-            if( wgt->flags & WZ_STATE_DISABLED )
+            if( this->flags & WZ_STATE_DISABLED )
             {
                 ret = 0;
             }
-            else if( but->down == 1 )
+            else if( this->down == 1 )
             {
-                if( wz_widget_rect_test( wgt, x, y ) )
-                    wz_trigger( wgt );
+                if( this->widget_rect_test( x, y ) )
+                {
+                    this->trigger();
+                }
 
-                but->down = 0;
-                wgt->hold_focus = 0;
+                this->down = 0;
+                this->hold_focus = 0;
             }
             else
             {
@@ -230,22 +235,22 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
         }
         case WZ_DESTROY:
         {
-            if( but->own )
-                al_ustr_free( but->text );
+            if( this->own )
+                al_ustr_free( this->text );
 
             ret = 0;
             break;
         }
         case WZ_SET_TEXT:
         {
-            if( but->own )
+            if( this->own )
             {
-                al_ustr_free( but->text );
-                but->text = al_ustr_dup( (ALLEGRO_USTR *)event->user.data3 );
+                al_ustr_free( this->text );
+                this->text = al_ustr_dup( (ALLEGRO_USTR *)event->user.data3 );
             }
             else
             {
-                but->text = (ALLEGRO_USTR *)event->user.data3;
+                this->text = (ALLEGRO_USTR *)event->user.data3;
             }
 
             break;
@@ -253,9 +258,9 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
         case WZ_TRIGGER:
         {
             ALLEGRO_EVENT ev;
-            but->down = 0;
-            wz_craft_event( &ev, WZ_BUTTON_PRESSED, wgt, 0 );
-            al_emit_user_event( wgt->source, &ev, 0 );
+            this->down = 0;
+            wz_craft_event( &ev, WZ_BUTTON_PRESSED, this, (intptr_t)this );
+            al_emit_user_event( this->source, &ev, 0 );
             break;
         }
         default:
@@ -263,30 +268,9 @@ int wz_button_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
     }
 
     if( ret == 0 )
-        ret = wz_widget_proc( wgt, event );
+        ret = WZ_WIDGET::proc( event );
 
     return ret;
-}
-
-/*
-Function: wz_init_button
-*/
-void wz_init_button( WZ_BUTTON *but,
-                     WZ_WIDGET *parent,
-                     float x,
-                     float y,
-                     float width,
-                     float height,
-                     ALLEGRO_USTR *text,
-                     int own,
-                     int id )
-{
-    WZ_WIDGET *wgt = (WZ_WIDGET *)but;
-    wz_init_widget( wgt, parent, x, y, width, height, id );
-    but->down = 0;
-    but->own = own;
-    but->text = text;
-    wgt->proc = wz_button_proc;
 }
 
 /*
@@ -308,10 +292,17 @@ See Also:
 
 <wz_create_widget>
 */
-WZ_BUTTON *
-wz_create_button( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id )
+WZ_BUTTON::WZ_BUTTON( WZ_WIDGET *parent,
+                      float x,
+                      float y,
+                      float width,
+                      float height,
+                      ALLEGRO_USTR *text,
+                      int own,
+                      int id )
+    : WZ_BOX( parent, x, y, width, height, id )
 {
-    WZ_BUTTON *but = new WZ_BUTTON();
-    wz_init_button( but, parent, x, y, width, height, text, own, id );
-    return but;
+    this->down = 0;
+    this->own = own;
+    this->text = text;
 }

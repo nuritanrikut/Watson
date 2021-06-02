@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <cstdio>
 #include "game_data.hpp"
 #include "tiled_block.hpp"
@@ -11,7 +13,14 @@ struct Board
 {
     Board();
 
-    int create_board( GameData *game_data, int mode ); // mode = 0: update, 1: create
+    enum class CreateMode
+    {
+        Update = 0,
+        Create = 1,
+        CreateFullscreen = 2
+    };
+
+    int create_board( GameData *game_data, CreateMode mode );
     void destroy_board();
     void destroy_board_clue_blocks();
     void clear_info_panel();
@@ -30,7 +39,7 @@ struct Board
     TiledBlock info_panel;
     TiledBlock time_panel;
     TiledBlock all;
-    TiledBlock **clue_tiledblock; // pointer to the tiled block where clue is
+    std::vector<TiledBlock *> clue_tiledblock; // pointer to the tiled block where clue is
     TiledBlock *dragging;
     TiledBlock *highlight;
     TiledBlock *rule_out;
@@ -64,7 +73,7 @@ struct Board
     ALLEGRO_BITMAP *guess_bmp[8][8];
     ALLEGRO_BITMAP *clue_unit_bmp[8][8];
     ALLEGRO_BITMAP *symbol_bmp[8];
-    ALLEGRO_BITMAP **clue_bmp;
+    std::vector<ALLEGRO_BITMAP *> clue_bmp;
     ALLEGRO_BITMAP *button_bmp[4];
     ALLEGRO_BITMAP *button_bmp_scaled[4];
     ALLEGRO_BITMAP *time_bmp;

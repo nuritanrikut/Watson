@@ -11,7 +11,7 @@
 
 #include "sound.hpp"
 
-ALLEGRO_FONT *default_font = NULL;
+ALLEGRO_FONT *default_font = nullptr;
 MemFile text_font_mem = { 0 };
 MemFile tile_font_mem = { 0 };
 const char *TILE_FONT_FILE = "fonts/tiles.ttf";
@@ -23,7 +23,7 @@ struct Buffer_USTR
     Buffer_USTR *next;
 };
 
-Buffer_USTR *buffer_ustr = NULL;
+Buffer_USTR *buffer_ustr = nullptr;
 
 int init_fonts( void )
 {
@@ -47,12 +47,12 @@ int init_fonts( void )
 ALLEGRO_FONT *load_font_mem( MemFile font_mem, const char *filename, int size )
 {
     // filename is only to detect extension
-    ALLEGRO_FILE *fp = NULL;
+    ALLEGRO_FILE *fp = nullptr;
     ALLEGRO_FONT *font;
 
     fp = al_open_memfile( font_mem.mem, font_mem.size, "r" );
     if( !fp )
-        return NULL;
+        return nullptr;
 
     font = al_load_ttf_font_f( fp, filename, size, 0 );
     return font;
@@ -153,7 +153,7 @@ MemFile create_memfile( const char *filename )
 
     if( al_fread( fp, ret.mem, ret.size ) != ret.size )
     {
-        ret.mem = NULL;
+        ret.mem = nullptr;
         SPDLOG_ERROR( "Error reading %s", filename );
     }
 
@@ -198,7 +198,7 @@ void wait_for_keypress()
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
 
     al_register_event_source( queue, al_get_keyboard_event_source() );
-    al_wait_for_event( queue, NULL );
+    al_wait_for_event( queue, nullptr );
     al_destroy_event_queue( queue );
 }
 
@@ -260,7 +260,9 @@ void free_ustr( void )
     while( buffer_ustr )
     {
         al_ustr_free( buffer_ustr->ustr );
+        auto ptr = buffer_ustr;
         buffer_ustr = buffer_ustr->next;
+        delete ptr;
     }
 }
 
@@ -299,7 +301,7 @@ ALLEGRO_BITMAP *scaled_clone_bitmap( ALLEGRO_BITMAP *source, int width, int heig
     al_draw_scaled_bitmap(
         source, 0, 0, al_get_bitmap_width( source ), al_get_bitmap_height( source ), 0, 0, width, height, 0 );
     al_set_target_bitmap( currbuf );
-    
+
     return ret;
 }
 

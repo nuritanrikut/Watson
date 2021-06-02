@@ -1,6 +1,10 @@
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
 #include "game_data.hpp"
 
 #include <algorithm> // for std::swap
+
+#include <spdlog/spdlog.h>
 
 // xxx todo: in clue creation - check that the clue includes one non-guessed
 // block xxx todo: add TOGETHER_FIRST_WITH_ONLY_ONE logic xxx todo: improve
@@ -625,14 +629,11 @@ void create_game_with_clues( GameData *game_data )
     }
 
     if( !check_solution( game_data ) ) // debug
-        fprintf( stderr, "ERROR: SOLUTION DOESN'T MATCH CLUES\n" );
+        SPDLOG_ERROR( "ERROR: SOLUTION DOESN'T MATCH CLUES" );
 
     filter_clues( game_data );
-    fprintf( stdout,
-             "%dx%d game created with %d clues.\n",
-             game_data->number_of_columns,
-             game_data->column_height,
-             game_data->clue_n );
+    SPDLOG_INFO(
+        "{}x{} game created with {} clues", game_data->number_of_columns, game_data->column_height, game_data->clue_n );
 
     // clean guesses and tiles
     init_game( game_data );

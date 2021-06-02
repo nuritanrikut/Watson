@@ -21,6 +21,9 @@ misrepresented as being the original software.
 distribution.
 */
 
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
+#include <spdlog/spdlog.h>
 #include "../../widgetz_internal.hpp"
 
 #include "../../../macros.hpp"
@@ -35,59 +38,57 @@ Function: wz_fill_layout_proc
 See also:
 <wz_widget_proc>
 */
-int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
+int WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event )
 {
     int ret = 1;
-    WZ_FILL_LAYOUT *box = (WZ_FILL_LAYOUT *)wgt;
 
     switch( event->type )
     {
         case WZ_DRAW:
         {
-            if( wgt->flags & WZ_STATE_HIDDEN )
+            if( this->flags & WZ_STATE_HIDDEN )
             {
                 ret = 0;
             }
             else
             {
-                wgt->theme->draw_box( wgt->theme,
-                                      wgt->local_x,
-                                      wgt->local_y,
-                                      wgt->width,
-                                      wgt->height,
-                                      wgt->flags & WZ_STATE_DISABLED ? WZ_STYLE_DISABLED : 0 );
+                this->theme->draw_box( this->local_x,
+                                       this->local_y,
+                                       this->width,
+                                       this->height,
+                                       this->flags & WZ_STATE_DISABLED ? WZ_STYLE_DISABLED : 0 );
             }
 
             break;
         }
         case WZ_TAKE_FOCUS:
         {
-            wz_ask_parent_to_focus_next( wgt );
+            this->ask_parent_to_focus_next();
             ret = 0;
             break;
         }
         case WZ_RESIZE:
         {
             float factor = *(float *)&event->user.data3;
-            wgt->x *= factor;
-            wgt->y *= factor;
-            wgt->width *= factor;
-            wgt->height *= factor;
-            wgt->local_x *= factor;
-            wgt->local_y *= factor;
-            box->h_spacing *= factor;
-            box->v_spacing *= factor;
+            this->x *= factor;
+            this->y *= factor;
+            this->width *= factor;
+            this->height *= factor;
+            this->local_x *= factor;
+            this->local_y *= factor;
+            this->h_spacing *= factor;
+            this->v_spacing *= factor;
             break;
         }
         case WZ_UPDATE:
         {
-            float total_width = box->h_spacing;
-            float total_height = box->v_spacing;
+            float total_width = this->h_spacing;
+            float total_height = this->v_spacing;
             float max_height = 0;
             float x = 0;
             float y = 0;
             int row = 0;
-            WZ_WIDGET *child = wgt->next_sib;
+            WZ_WIDGET *child = this->next_sib;
             WZ_WIDGET *row_start = child;
             WZ_WIDGET *it;
 
@@ -98,9 +99,9 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
 
                 if( !( child->flags & WZ_STATE_HIDDEN ) )
                 {
-                    if( total_width + child->width > wgt->width )
+                    if( total_width + child->width > this->width )
                     {
-                        if( total_width > 2 * box->h_spacing + 0.1 )
+                        if( total_width > 2 * this->h_spacing + 0.1 )
                         {
                             /*
 							I.e. we actually added something
@@ -108,19 +109,19 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                             float x = 0;
                             it = row_start;
 
-                            if( box->h_align == WZ_ALIGN_LEFT )
-                                x = box->h_spacing;
-                            else if( box->h_align == WZ_ALIGN_RIGHT )
-                                x = wgt->width - total_width + box->h_spacing;
+                            if( this->h_align == WZ_ALIGN_LEFT )
+                                x = this->h_spacing;
+                            else if( this->h_align == WZ_ALIGN_RIGHT )
+                                x = this->width - total_width + this->h_spacing;
                             else
-                                x = ( wgt->width - total_width ) / 2 + box->h_spacing;
+                                x = ( this->width - total_width ) / 2 + this->h_spacing;
 
                             while( it != child )
                             {
                                 if( !( it->flags & WZ_STATE_HIDDEN ) )
                                 {
-                                    it->x = x + wgt->x;
-                                    x += it->width + box->h_spacing;
+                                    it->x = x + this->x;
+                                    x += it->width + this->h_spacing;
 
                                     if( it->height > max_height )
                                     {
@@ -131,15 +132,15 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                                 it = it->next_sib;
                             }
 
-                            total_width = box->h_spacing;
-                            total_height += max_height + box->v_spacing;
+                            total_width = this->h_spacing;
+                            total_height += max_height + this->v_spacing;
                             max_height = 0;
                             row += 1;
                             row_start = child;
                         }
                     }
 
-                    total_width += child->width + box->h_spacing;
+                    total_width += child->width + this->h_spacing;
                     child->y = row;
                 }
 
@@ -149,12 +150,12 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
             it = row_start;
             x = 0;
 
-            if( box->h_align == WZ_ALIGN_LEFT )
-                x = box->h_spacing;
-            else if( box->h_align == WZ_ALIGN_RIGHT )
-                x = wgt->width - total_width + box->h_spacing;
+            if( this->h_align == WZ_ALIGN_LEFT )
+                x = this->h_spacing;
+            else if( this->h_align == WZ_ALIGN_RIGHT )
+                x = this->width - total_width + this->h_spacing;
             else
-                x = ( wgt->width - total_width ) / 2 + box->h_spacing;
+                x = ( this->width - total_width ) / 2 + this->h_spacing;
 
             while( it != 0 )
             {
@@ -163,8 +164,8 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
 
                 if( !( it->flags & WZ_STATE_HIDDEN ) )
                 {
-                    it->x = x + wgt->x;
-                    x += it->width + box->h_spacing;
+                    it->x = x + this->x;
+                    x += it->width + this->h_spacing;
 
                     if( it->height > max_height )
                     {
@@ -175,20 +176,20 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                 it = it->next_sib;
             }
 
-            total_height += max_height + box->v_spacing;
+            total_height += max_height + this->v_spacing;
             /*
 			And now, arrange them in the vertical direction
 			*/
             row = 0;
             max_height = 0;
-            child = wgt->next_sib;
+            child = this->next_sib;
 
-            if( box->v_align == WZ_ALIGN_TOP )
-                y = box->v_spacing;
-            else if( box->v_align == WZ_ALIGN_BOTTOM )
-                y = wgt->height - total_height + box->v_spacing;
+            if( this->v_align == WZ_ALIGN_TOP )
+                y = this->v_spacing;
+            else if( this->v_align == WZ_ALIGN_BOTTOM )
+                y = this->height - total_height + this->v_spacing;
             else
-                y = ( wgt->height - total_height ) / 2 + box->v_spacing;
+                y = ( this->height - total_height ) / 2 + this->v_spacing;
 
             while( child )
             {
@@ -199,7 +200,7 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                 {
                     if( child->y != row )
                     {
-                        y += max_height + box->v_spacing;
+                        y += max_height + this->v_spacing;
                         max_height = 0;
                         row += 1;
                     }
@@ -209,7 +210,7 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
                         max_height = child->height;
                     }
 
-                    child->y = y + wgt->y;
+                    child->y = y + this->y;
                 }
 
                 child = child->next_sib;
@@ -222,35 +223,9 @@ int wz_fill_layout_proc( WZ_WIDGET *wgt, const ALLEGRO_EVENT *event )
     }
 
     if( ret == 0 )
-        ret = wz_box_proc( wgt, event );
+        ret = WZ_BOX::proc( event );
 
     return ret;
-}
-
-/*
-Function: wz_init_fill_layout
-*/
-void wz_init_fill_layout( WZ_FILL_LAYOUT *box,
-                          WZ_WIDGET *parent,
-                          float x,
-                          float y,
-                          float width,
-                          float height,
-                          float hspace,
-                          float vspace,
-                          int halign,
-                          int valign,
-                          int id )
-{
-    WZ_WIDGET *wgt = (WZ_WIDGET *)box;
-    wz_init_box( wgt, parent, x, y, width, height, id );
-    wgt->proc = wz_fill_layout_proc;
-    wgt->flags |= WZ_STATE_LAYOUT;
-    wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
-    box->h_spacing = hspace;
-    box->v_spacing = vspace;
-    box->h_align = halign;
-    box->v_align = valign;
 }
 
 /*
@@ -268,19 +243,23 @@ See Also:
 
 <wz_create_widget>
 */
-WZ_FILL_LAYOUT *wz_create_fill_layout( WZ_WIDGET *parent,
-                                       float x,
-                                       float y,
-                                       float width,
-                                       float height,
-                                       float hspace,
-                                       float vspace,
-                                       int halign,
-                                       int valign,
-                                       int id )
+WZ_FILL_LAYOUT::WZ_FILL_LAYOUT( WZ_WIDGET *parent,
+                                float x,
+                                float y,
+                                float width,
+                                float height,
+                                float hspace,
+                                float vspace,
+                                int halign,
+                                int valign,
+                                int id )
+    : WZ_BOX( parent, x, y, width, height, id )
 {
-    WZ_FILL_LAYOUT *box = new WZ_FILL_LAYOUT();
-    wz_init_fill_layout( box, parent, x, y, width, height, hspace, vspace, halign, valign, id );
-    wz_ask_parent_to_focus_next( (WZ_WIDGET *)box );
-    return box;
+    this->flags |= WZ_STATE_LAYOUT;
+    this->flags |= WZ_STATE_NOTWANT_FOCUS;
+    this->h_spacing = hspace;
+    this->v_spacing = vspace;
+    this->h_align = halign;
+    this->v_align = valign;
+    this->ask_parent_to_focus_next();
 }

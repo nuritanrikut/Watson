@@ -16,10 +16,10 @@ struct Settings
 
     int number_of_columns;
     int column_height;
-    int advanced;
-    int sound_mute;
+    bool advanced;
+    bool sound_mute;
     int type_of_tiles;
-    int fat_fingers; // todo: implement zoom of tiledblocks for small screens
+    bool fat_fingers; // todo: implement zoom of tiledblocks for small screens
     int restart;
-    int saved; // is there a saved game?
+    bool saved; // is there a saved game?
 };

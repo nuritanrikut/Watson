@@ -2,6 +2,8 @@
 Taken from Allegro Nine Patch library. See LICENSE for copying information.
 */
 
+#include <vector>
+
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 
@@ -20,7 +22,7 @@ typedef struct nine_patch_mark_tag
 
 typedef struct nine_patch_side_tag
 {
-    NINE_PATCH_MARK *m;
+    std::vector<NINE_PATCH_MARK> m;
     int count;
     int fix;
 } NINE_PATCH_SIDE;
@@ -41,8 +43,8 @@ static bool init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int 
     const int len = vertical ? al_get_bitmap_height( bmp ) : al_get_bitmap_width( bmp );
     int i, s, t, n, z;
     ALLEGRO_COLOR c;
-    int alloc = 8;
-    ps->m = static_cast<NINE_PATCH_MARK *>( al_malloc( alloc * sizeof( *ps->m ) ) );
+
+    ps->m.resize( 8 );
 
     for( i = 1, s = -1, t = 0, n = 0, z = -1; i < len; ++i )
     {
@@ -84,16 +86,15 @@ static bool init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int 
             z = zz;
         }
 
-        if( n == alloc )
+        if( n == ps->m.size() )
         {
-            alloc *= 2;
-            ps->m = static_cast<NINE_PATCH_MARK *>( al_realloc( ps->m, alloc * sizeof( *ps->m ) ) );
+            ps->m.resize( ps->m.size() * 2 );
         }
     }
 
-    if( n != alloc )
+    if( n != ps->m.size() )
     {
-        ps->m = static_cast<NINE_PATCH_MARK *>( al_realloc( ps->m, n * sizeof( *ps->m ) ) );
+        ps->m.resize( n );
     }
 
     ps->count = n;
@@ -111,13 +112,11 @@ static bool init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int 
 WZ_NINE_PATCH_BITMAP *wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap )
 {
     int i;
-    WZ_NINE_PATCH_BITMAP *p9;
     ALLEGRO_COLOR c;
-    p9 = static_cast<WZ_NINE_PATCH_BITMAP *>( al_malloc( sizeof( *p9 ) ) );
+
+    WZ_NINE_PATCH_BITMAP *p9 = new WZ_NINE_PATCH_BITMAP();
     p9->bmp = bmp;
     p9->destroy_bmp = owns_bitmap;
-    p9->h.m = NULL;
-    p9->v.m = NULL;
     p9->cached_dw = 0;
     p9->cached_dh = 0;
     p9->mutex = al_create_mutex();
@@ -188,14 +187,11 @@ WZ_NINE_PATCH_BITMAP *wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool own
     bad_bitmap:
         al_destroy_mutex( p9->mutex );
 
-        if( p9->h.m )
-            al_free( p9->h.m );
+        p9->h.m.clear();
+        p9->v.m.clear();
 
-        if( p9->v.m )
-            al_free( p9->v.m );
-
-        al_free( p9 );
-        p9 = NULL;
+        delete p9;
+        p9 = nullptr;
     }
 
     al_unlock_bitmap( bmp );
@@ -305,7 +301,7 @@ ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int 
     ALLEGRO_STATE s;
 
     if( !bmp )
-        return NULL;
+        return nullptr;
 
     al_store_state( &s, ALLEGRO_STATE_TARGET_BITMAP );
     al_set_target_bitmap( bmp );
@@ -318,7 +314,7 @@ ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int 
 WZ_NINE_PATCH_BITMAP *wz_load_nine_patch_bitmap( const char *filename )
 {
     ALLEGRO_BITMAP *bmp = al_load_bitmap( filename );
-    return bmp ? wz_create_nine_patch_bitmap( bmp, true ) : NULL;
+    return bmp ? wz_create_nine_patch_bitmap( bmp, true ) : nullptr;
 }
 
 int wz_get_nine_patch_bitmap_width( const WZ_NINE_PATCH_BITMAP *p9 )
@@ -360,7 +356,7 @@ void wz_destroy_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9 )
         al_destroy_bitmap( p9->bmp );
 
     al_destroy_mutex( p9->mutex );
-    al_free( p9->h.m );
-    al_free( p9->v.m );
-    al_free( p9 );
+    p9->h.m.clear();
+    p9->v.m.clear();
+    delete p9;
 }

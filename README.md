@@ -7,7 +7,7 @@ Watson is a clone of “Sherlock”, an old game by Everett Kaser which is itsel
 </p>
 
 ## Download 
-Latest binaries [here](https://github.com/koro-xx/Watson/releases).
+Latest binaries [here](https://github.com/nuritanrikut/Watson/releases).
 
 ## How to play
 

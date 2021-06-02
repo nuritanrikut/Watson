@@ -1,3 +1,5 @@
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+
 #include "game.hpp"
 
 #include <cstdio>
@@ -68,7 +70,7 @@ Game::Game()
 bool Game::init()
 {
     // seed random number generator. comment out for debug
-    srand( (unsigned int)time( NULL ) );
+    srand( (unsigned int)time( nullptr ) );
 
     SPDLOG_DEBUG( "Watson v" PRE_VERSION " - " PRE_DATE " has started." );
     if( init_allegro() )
@@ -271,14 +273,16 @@ void Game::handle_mouse_click_clue_tile( TiledBlock *tiled_block, int mx, int my
     {
         if( ( mclick == 2 ) || ( mclick == 3 ) )
         { // toggle hide-show clue on double or right click
-            SWITCH( tiled_block->hidden );
-            SWITCH( game_data.clue[tiled_block->index].hidden );
+            tiled_block->hidden = tiled_block->hidden == TiledBlock::Visibility::Visible
+                                      ? TiledBlock::Visibility::PartiallyHidden
+                                      : TiledBlock::Visibility::Visible;
+            game_data.clue[tiled_block->index].hidden = !game_data.clue[tiled_block->index].hidden;
             if( !set.sound_mute )
                 play_sound( SOUND_HIDE_TILE );
         }
         else if( mclick == 1 )
         { // explain clue in info panel
-            if( !tiled_block->hidden )
+            if( tiled_block->hidden != TiledBlock::Visibility::Visible )
             {
                 if( !set.sound_mute )
                     play_sound( SOUND_CLICK );
@@ -341,8 +345,8 @@ void Game::handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mcli
 
     board.clear_info_panel(); // remove text if there was any
 
-    board.highlight = NULL;
-    board.rule_out = NULL;
+    board.highlight = nullptr;
+    board.rule_out = nullptr;
 
     gui.emit_event( EVENT_REDRAW );
 
@@ -367,7 +371,7 @@ void Game::handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mcli
         }
     }
 
-    board.zoom = NULL;
+    board.zoom = nullptr;
 
     switch( tiled_block->type )
     { // which board component was clicked
@@ -428,17 +432,17 @@ void Game::update_board()
             else
             {
                 block->number_of_subblocks = board.number_of_columns;
-                block->bmp = NULL;
+                block->bmp = nullptr;
 
                 for( int k = 0; k < game_data.number_of_columns; k++ )
                 {
                     if( game_data.tile[i][j][k] )
                     {
-                        block->sub[k]->hidden = 0;
+                        block->sub[k]->hidden = TiledBlock::Visibility::Visible;
                     }
                     else
                     {
-                        block->sub[k]->hidden = 1;
+                        block->sub[k]->hidden = TiledBlock::Visibility::PartiallyHidden;
                     }
                 }
             }
@@ -456,7 +460,7 @@ void Game::mouse_grab( int mx, int my )
 
     if( !board.dragging->bmp )
     {
-        board.dragging = NULL;
+        board.dragging = nullptr;
         return;
     }
 
@@ -471,7 +475,7 @@ void Game::mouse_grab( int mx, int my )
         return;
     }
 
-    board.dragging = NULL;
+    board.dragging = nullptr;
 }
 
 void Game::mouse_drop( int mx, int my )
@@ -497,7 +501,7 @@ void Game::mouse_drop( int mx, int my )
             play_sound( SOUND_HIDE_TILE );
     }
 
-    board.dragging = NULL;
+    board.dragging = nullptr;
     board.clear_info_panel();
 }
 
@@ -514,7 +518,7 @@ TiledBlock *Game::get_TiledBlock_at( int x, int y )
     if( tiled_block && ( tiled_block->parent == board.zoom ) )
         return tiled_block;
     else
-        return NULL;
+        return nullptr;
 }
 
 void Game::show_hint()
@@ -746,6 +750,7 @@ ALLEGRO_USTR *Game::get_hint_info_text( RELATION relation, char *b0, char *b1, c
 
         case REVEAL:
         case NUMBER_OF_RELATIONS:
+        default:
             return nullptr;
             break;
     }
@@ -873,7 +878,7 @@ void Game::halt( ALLEGRO_EVENT_QUEUE *queue )
     SPDLOG_DEBUG( "ACKNOWLEDGED HALT" );
 
     // otherwise it keeps streaming when the app is on background
-    al_set_default_voice( NULL );
+    al_set_default_voice( nullptr );
 
     ALLEGRO_EVENT ev;
     do
@@ -1000,7 +1005,7 @@ int Game::switch_tiles()
     board.max_width = al_get_display_width( display );
     board.max_height = al_get_display_height( display );
 
-    board.create_board( &game_data, 0 );
+    board.create_board( &game_data, Board::CreateMode::Update );
 
     al_set_target_backbuffer( display );
 
@@ -1085,7 +1090,7 @@ int Game::toggle_fullscreen()
     board.max_width = desktop_width * display_factor;
     board.max_height = desktop_height * display_factor;
 
-    board.create_board( &game_data, fullscreen ? 2 : 1 );
+    board.create_board( &game_data, fullscreen ? Board::CreateMode::CreateFullscreen : Board::CreateMode::Create );
 
     al_set_target_backbuffer( display );
 
@@ -1211,7 +1216,7 @@ void Game::handle_allegro_event_mouse_button_down( ALLEGRO_EVENT &ev )
 
     if( board.zoom && !tb_down )
     {
-        board.zoom = NULL;
+        board.zoom = nullptr;
         redraw = true;
         return;
     }
@@ -1387,7 +1392,9 @@ void Game::handle_events()
         }
 
         if( gui.gui_n && gui.gui_send_event( &ev ) )
+        {
             continue;
+        }
 
         switch( ev.type )
         {
@@ -1430,21 +1437,21 @@ void Game::handle_events()
 
             case ALLEGRO_EVENT_TOUCH_BEGIN:
                 handle_allegro_event_touch_begin( ev );
-                // fallthru
+                [[fallthrough]];
             case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
                 handle_allegro_event_mouse_button_down( ev );
                 break;
 
             case ALLEGRO_EVENT_TOUCH_END:
                 handle_allegro_event_touch_end( ev );
-                // fallthru
+                [[fallthrough]];
             case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
                 handle_allegro_event_mouse_button_up( ev );
                 break;
 
             case ALLEGRO_EVENT_TOUCH_MOVE:
                 handle_allegro_event_touch_move( ev );
-                //fallthru
+                [[fallthrough]];
             case ALLEGRO_EVENT_MOUSE_AXES:
                 handle_allegro_event_mouse_axes( ev );
                 break;
@@ -1487,7 +1494,7 @@ void Game::game_inner_loop()
         destroy_board_bitmaps( &board );
         board.max_width = al_get_display_width( display );
         board.max_height = al_get_display_height( display );
-        board.create_board( &game_data, 0 );
+        board.create_board( &game_data, Board::CreateMode::Update );
         gui.update_guis( board.all.x, board.all.y, board.width, board.height );
         al_set_target_backbuffer( display );
         update_board();
@@ -1652,7 +1659,7 @@ void Game::game_loop()
     board.number_of_columns = game_data.number_of_columns;
     board.column_height = game_data.column_height;
 
-    if( board.create_board( &game_data, 1 ) )
+    if( board.create_board( &game_data, Board::CreateMode::Create ) )
     {
         SPDLOG_ERROR( "Failed to create game board." );
         noexit = false;
@@ -1720,7 +1727,7 @@ void Game::game_loop()
     mbdown_x = 0;
     mbdown_y = 0;
     touch_down = false;
-    tb_down = tb_up = NULL;
+    tb_down = tb_up = nullptr;
     win_gui = false;
 
     const char *fmt = "Click on clue for info. Click %s for help, %s for settings, or %s for a hint at any time.";

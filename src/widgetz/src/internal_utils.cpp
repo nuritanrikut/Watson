@@ -43,37 +43,37 @@ Returns:
 
 0 if the widget cannot be focused
 */
-int wz_ask_parent_for_focus( WZ_WIDGET *wgt )
+int WZ_WIDGET::ask_parent_for_focus()
 {
-    if( wgt->flags & WZ_STATE_HAS_FOCUS )
+    if( this->flags & WZ_STATE_HAS_FOCUS )
         return 1;
 
-    if( wgt->flags & WZ_STATE_NOTWANT_FOCUS )
+    if( this->flags & WZ_STATE_NOTWANT_FOCUS )
         return 0;
 
-    if( wgt->flags & WZ_STATE_DISABLED )
+    if( this->flags & WZ_STATE_DISABLED )
         return 0;
 
-    if( wgt->flags & WZ_STATE_HIDDEN )
+    if( this->flags & WZ_STATE_HIDDEN )
         return 0;
 
-    if( wgt->parent == 0 )
+    if( this->parent == 0 )
     {
         ALLEGRO_EVENT event;
-        wz_craft_event( &event, WZ_TAKE_FOCUS, wgt, 0 );
-        wz_send_event( wgt, &event );
+        wz_craft_event( &event, WZ_TAKE_FOCUS, this, 0 );
+        this->send_event( &event );
     }
     else
     {
         ALLEGRO_EVENT event;
 
-        if( !( wgt->parent->flags & WZ_STATE_HAS_FOCUS ) )
+        if( !( this->parent->flags & WZ_STATE_HAS_FOCUS ) )
         {
-            wz_ask_parent_for_focus( wgt->parent );
+            this->parent->ask_parent_for_focus();
         }
 
-        wz_craft_event( &event, WZ_WANT_FOCUS, wgt, 0 );
-        wz_send_event( wgt->parent, &event );
+        wz_craft_event( &event, WZ_WANT_FOCUS, this, 0 );
+        this->parent->send_event( &event );
     }
 
     return 1;
@@ -84,28 +84,28 @@ Function: wz_ask_parent_to_focus_next
 
 Asks the parent to focus the next child if possible
 */
-void wz_ask_parent_to_focus_next( WZ_WIDGET *wgt )
+void WZ_WIDGET::ask_parent_to_focus_next()
 {
     WZ_WIDGET *child;
 
-    if( wgt->parent == 0 )
+    if( this->parent == 0 )
         return;
 
-    child = wgt->next_sib;
+    child = this->next_sib;
 
     while( child )
     {
-        if( wz_ask_parent_for_focus( child ) )
+        if( child->ask_parent_for_focus() )
             return;
 
         child = child->next_sib;
     }
 
-    child = wgt->parent->first_child;
+    child = this->parent->first_child;
 
-    while( child != wgt )
+    while( child != this )
     {
-        if( wz_ask_parent_for_focus( child ) )
+        if( child->ask_parent_for_focus() )
             return;
 
         child = child->next_sib;
@@ -117,28 +117,28 @@ Function: wz_ask_parent_to_focus_prev
 
 Asks the parent to focus the previous child if possible
 */
-void wz_ask_parent_to_focus_prev( WZ_WIDGET *wgt )
+void WZ_WIDGET::ask_parent_to_focus_prev()
 {
     WZ_WIDGET *child;
 
-    if( wgt->parent == 0 )
+    if( this->parent == 0 )
         return;
 
-    child = wgt->prev_sib;
+    child = this->prev_sib;
 
     while( child )
     {
-        if( wz_ask_parent_for_focus( child ) )
+        if( child->ask_parent_for_focus() )
             return;
 
         child = child->prev_sib;
     }
 
-    child = wgt->parent->last_child;
+    child = this->parent->last_child;
 
-    while( child != wgt )
+    while( child != this )
     {
-        if( wz_ask_parent_for_focus( child ) )
+        if( child->ask_parent_for_focus() )
             return;
 
         child = child->prev_sib;
@@ -157,16 +157,16 @@ Returns:
 
 The widget it found, or the passed widget if it found nothing
 */
-WZ_WIDGET *wz_get_widget_dir( WZ_WIDGET *wgt, int dir )
+WZ_WIDGET *WZ_WIDGET::get_widget_dir( int dir )
 {
     float least_dev = 100000;
-    WZ_WIDGET *ret = wgt;
+    WZ_WIDGET *ret = this;
     WZ_WIDGET *child;
 
-    if( wgt->parent == 0 )
-        return wgt;
+    if( this->parent == 0 )
+        return this;
 
-    child = wgt->parent->first_child;
+    child = this->parent->first_child;
 
     while( child )
     {
@@ -176,43 +176,43 @@ WZ_WIDGET *wz_get_widget_dir( WZ_WIDGET *wgt, int dir )
         {
             case 0:
             {
-                if( child->y + child->height < wgt->y )
+                if( child->y + child->height < this->y )
                 {
-                    dev = wgt->y - ( child->y + child->height ) + fabs( wgt->x - child->x );
+                    dev = this->y - ( child->y + child->height ) + fabs( this->x - child->x );
                 }
 
                 break;
             }
             case 1:
             {
-                if( child->x > wgt->x + wgt->width )
+                if( child->x > this->x + this->width )
                 {
-                    dev = child->x - ( wgt->x + wgt->width ) + fabs( wgt->y - child->y );
+                    dev = child->x - ( this->x + this->width ) + fabs( this->y - child->y );
                 }
 
                 break;
             }
             case 2:
             {
-                if( child->y > wgt->y + wgt->height )
+                if( child->y > this->y + this->height )
                 {
-                    dev = child->y - ( wgt->y + wgt->height ) + fabs( wgt->x - child->x );
+                    dev = child->y - ( this->y + this->height ) + fabs( this->x - child->x );
                 }
 
                 break;
             }
             default:
             {
-                if( child->x + child->width < wgt->x )
+                if( child->x + child->width < this->x )
                 {
-                    dev = wgt->x - ( child->x + child->width ) + fabs( wgt->y - child->y );
+                    dev = this->x - ( child->x + child->width ) + fabs( this->y - child->y );
                 }
 
                 break;
             }
         }
 
-        if( child != wgt && dev < least_dev && !( child->flags & WZ_STATE_NOTWANT_FOCUS )
+        if( child != this && dev < least_dev && !( child->flags & WZ_STATE_NOTWANT_FOCUS )
             && !( child->flags & WZ_STATE_DISABLED ) && !( child->flags & WZ_STATE_HIDDEN ) )
         {
             least_dev = dev;
