@@ -1310,7 +1310,7 @@ void Game::handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev )
     mouse_move = true;
 
     // don't grab if movement was small
-    if( ( abs( ev.mouse.x - mbdown_x ) < 10 ) && ( ( ev.mouse.y - mbdown_y ) < 10 ) )
+    if( ( abs( ev.mouse.x - mbdown_x ) < 10 ) && ( abs( ev.mouse.y - mbdown_y ) < 10 ) )
         return;
 
     if( mouse_button_down && !hold_click_check )
