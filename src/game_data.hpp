@@ -97,12 +97,6 @@ struct GameData
     int advanced;
 };
 
-struct Pair
-{
-    int i;
-    int j;
-};
-
 // Prototypes
 
 int rand_int( int n );
