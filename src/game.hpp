@@ -137,7 +137,7 @@ private:
     double mouse_down_time;
 
     bool wait_for_double_click;
-    int hold_click_check; // 0, 1, or 2
+    HOLD_CLICK_CHECK hold_click_check;
 
     // pos where mouse was pressed
     int mbdown_x;

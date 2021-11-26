@@ -48,7 +48,7 @@ Game::Game()
       mouse_up_time( 0 ),
       mouse_down_time( 0 ),
       wait_for_double_click( false ),
-      hold_click_check( 0 ),
+      hold_click_check( HOLD_CLICK_CHECK::RELEASED ),
       mbdown_x( 0 ),
       mbdown_y( 0 ),
       touch_down( false ),
@@ -1255,14 +1255,14 @@ void Game::handle_allegro_event_mouse_button_up( ALLEGRO_EVENT &ev )
         mouse_button_down = 0;
     }
 
-    if( hold_click_check == 2 )
+    if( hold_click_check == HOLD_CLICK_CHECK::HOLDING )
     {
-        hold_click_check = 0;
+        hold_click_check = HOLD_CLICK_CHECK::RELEASED;
         mouse_button_down = 0;
         return;
     }
 
-    hold_click_check = 0;
+    hold_click_check = HOLD_CLICK_CHECK::RELEASED;
 
     if( !mouse_button_down )
         return;
@@ -1315,14 +1315,14 @@ void Game::handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev )
     if( ( abs( ev.mouse.x - mbdown_x ) < 10 ) && ( abs( ev.mouse.y - mbdown_y ) < 10 ) )
         return;
 
-    if( mouse_button_down && !hold_click_check )
+    if( mouse_button_down && hold_click_check == HOLD_CLICK_CHECK::RELEASED )
     {
         if( tb_down
             && ( ( tb_down->type == TiledBlock::BLOCK_TYPE::TB_HCLUE_TILE )
                  || ( tb_down->type == TiledBlock::BLOCK_TYPE::TB_VCLUE_TILE ) ) )
         {
             handle_mouse_click( tb_down, mbdown_x, mbdown_y, 4 );
-            hold_click_check = 1;
+            hold_click_check = HOLD_CLICK_CHECK::DRAGGING;
         }
     }
 }
@@ -1519,11 +1519,11 @@ void Game::game_inner_loop()
         handle_mouse_click( tb_down, mbdown_x, mbdown_y, 1 ); // single click
     }
 
-    if( mouse_button_down && !hold_click_check && !board.dragging )
+    if( mouse_button_down && hold_click_check == HOLD_CLICK_CHECK::RELEASED && !board.dragging )
     {
         if( al_get_time() - mouse_down_time > DELTA_HOLD_CLICK )
         {
-            hold_click_check = 1;
+            hold_click_check = HOLD_CLICK_CHECK::DRAGGING;
             if( tb_down )
             {
                 int tbdx, tbdy;
@@ -1546,7 +1546,7 @@ void Game::game_inner_loop()
                 if( tb_up == tb_down )
                 {
                     handle_mouse_click( tb_up, tbdx, tbdy, 4 ); // hold click
-                    hold_click_check = 2;
+                    hold_click_check = HOLD_CLICK_CHECK::HOLDING;
                 }
             }
         }

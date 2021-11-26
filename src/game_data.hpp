@@ -4,6 +4,13 @@
 #include "macros.hpp"
 
 // Structures
+enum class HOLD_CLICK_CHECK
+{
+    RELEASED = 0,
+    DRAGGING,
+    HOLDING
+};
+
 enum class RESTART_STATE
 {
     NO_RESTART = 0,
