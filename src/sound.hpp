@@ -17,6 +17,6 @@ enum SOUND
 };
 
 /* Prototypes */
-int init_sound( void );
+int init_sound();
 void play_sound( SOUND s );
-void destroy_sound( void );
+void destroy_sound();

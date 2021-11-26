@@ -179,7 +179,7 @@ void Gui::wz_set_text_own( WZ_WIDGET *wgt, ALLEGRO_USTR *text )
     al_ustr_free( text );
 }
 
-void Gui::draw_guis( void )
+void Gui::draw_guis()
 {
     WZ_WIDGET *gui;
 
@@ -196,7 +196,7 @@ void Gui::draw_guis( void )
 }
 
 // unused
-void Gui::init_theme_noskin( void )
+void Gui::init_theme_noskin()
 {
     if( skin_theme )
         delete skin_theme;
@@ -209,7 +209,7 @@ void Gui::init_theme_noskin( void )
     skin_theme->color2 = WHITE_COLOR;
 }
 
-void Gui::init_theme( void )
+void Gui::init_theme()
 {
     if( skin_theme )
         delete skin_theme;
@@ -310,7 +310,7 @@ void Gui::remove_gui( WZ_WIDGET *wgt )
     emit_event( EVENT_REDRAW );
 }
 
-void Gui::remove_all_guis( void )
+void Gui::remove_all_guis()
 {
     while( base_gui->last_child )
         remove_gui( base_gui->last_child );
@@ -400,7 +400,7 @@ WZ_WIDGET *Gui::create_yesno_gui( int id, int button_ok_id, int button_cancel_id
     return gui;
 }
 
-WZ_WIDGET *Gui::create_settings_gui( void )
+WZ_WIDGET *Gui::create_settings_gui()
 {
     int fh = gui_font_h;
     int rh = 2.5 * fh; // row height
@@ -848,22 +848,22 @@ void Gui::confirm_restart( Settings *new_set )
                                              settings_new.advanced ? " advanced" : "" ) ) );
 }
 
-void Gui::confirm_exit( void )
+void Gui::confirm_exit()
 {
     add_gui( base_gui, create_yesno_gui( -1, BUTTON_EXIT_NOW, BUTTON_CLOSE, al_ustr_newf( "Exit game?" ) ) );
 }
 
-void Gui::show_help( void )
+void Gui::show_help()
 {
     add_gui( base_gui, create_msg_gui( -1, al_ustr_new( HELP_TEXT ) ) );
 }
 
-void Gui::show_about( void )
+void Gui::show_about()
 {
     add_gui( base_gui, create_msg_gui( -1, al_ustr_newf( ABOUT_TEXT, PRE_VERSION, PRE_DATE ) ) );
 }
 
-void Gui::confirm_save( void )
+void Gui::confirm_save()
 {
     add_gui(
         base_gui,
@@ -871,14 +871,14 @@ void Gui::confirm_save( void )
             -1, BUTTON_SAVE_NOW, BUTTON_CLOSE, al_ustr_new( "Save game? This will overwrite\na previous save." ) ) );
 }
 
-void Gui::confirm_load( void )
+void Gui::confirm_load()
 {
     add_gui( base_gui,
              create_yesno_gui(
                  -1, BUTTON_LOAD_NOW, BUTTON_CLOSE, al_ustr_new( "Discard current progress and load saved game?" ) ) );
 }
 
-void Gui::show_settings( void )
+void Gui::show_settings()
 {
     add_gui( base_gui, create_settings_gui() );
 }
@@ -888,7 +888,7 @@ void Gui::show_win_gui( double time )
     add_gui( base_gui, create_win_gui( time ) );
 }
 
-void Gui::show_params( void )
+void Gui::show_params()
 {
     add_gui( base_gui, create_params_gui() );
 }

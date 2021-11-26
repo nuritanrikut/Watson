@@ -617,7 +617,7 @@ int make_clue_bitmaps( GameData *game_data, Board *board )
         }
         al_set_target_bitmap( board->clue_bmp[i] );
         al_clear_to_color( board->clue_tiledblock[i]->background_color );
-        auto &clue = game_data->clue[i];
+        auto &clue = game_data->clues[i];
         switch( clue.rel )
         {
             case NEXT_TO:
@@ -906,9 +906,9 @@ int init_bitmaps_classic()
 
     al_set_target_bitmap( dispbuf );
     return 0;
-};
+}
 
-void draw_title( void )
+void draw_title()
 {
     ALLEGRO_FONT *font = nullptr;
     int width;

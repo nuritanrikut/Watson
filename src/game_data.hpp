@@ -85,8 +85,8 @@ struct GameData
 {
     int guess[8][8];   // guessed value for guess[column][row] = cell;
     int puzzle[8][8];  // [col][block] = [tile]
-    int tile[8][8][8]; // [col][block][tile]
-    Clue clue[MAX_CLUES];
+    int tiles[8][8][8]; // [col][block][tile]
+    Clue clues[MAX_CLUES];
     int clue_n;
     int number_of_columns; // number of columns
     int column_height;     // column height
@@ -95,29 +95,68 @@ struct GameData
     int tile_col[8][8]; // column where puzzle tile [row][tile] is located (in solution);
     int where[8][8];
     int advanced;
+
+    void init_game(); // clean board and guesses xxx todo: add clues?
+    void switch_game( int type );
+    int advanced_check_clues();
+    void create_game_with_clues();
+    void create_puzzle();
+    Hint get_hint();
+    int check_solution();
+    int check_panel_consistency();
+    int check_panel_correctness();
+    void guess_tile( TileAddress tile );
+    void hide_tile_and_check( TileAddress tile );
+    void unguess_tile( int i, int j );
+    int is_guessed( int j, int k ); // is the value k on row j guessed?
+    void get_clue( int i, int j, Clue *clue );
+
+    void remove_clue( int i );
+    int is_clue_compatible( Clue *clue );
+    int filter_clues();
+    int get_random_tile( int column, int *row, int *cell );
+    int random_relation();
+    void get_random_item_col( int column, int *row, int *cell );
+    void get_random_item_col_except( int column, int *row, int *cell, int ej1, int ej2 );
+
+    void get_clue_consecutive( int column, int row, int cell, Clue *clue );
+    void get_clue_one_side( int column, int row, int cell, Clue *clue );
+    void get_clue_next_to( int column, int row, int cell, Clue *clue );
+    void get_clue_not_next_to( int column, int row, int cell, Clue *clue );
+    void get_clue_not_middle( int column, int row, int cell, Clue *clue );
+    void get_clue_together_2( int column, int row, int cell, Clue *clue );
+    void get_clue_together_3( int column, int row, int cell, Clue *clue );
+    void get_clue_not_together( int column, int row, int cell, Clue *clue );
+    void get_clue_together_not_middle( int column, int row, int cell, Clue *clue );
+    void get_clue_reveal( int column, int row, int cell, Clue *clue );
+    void get_clue_together_first_with_only_one( int column, int row, int cell, Clue *clue );
+
+    int check_clues();
+    int check_clues_for_solution();
+    TileAddress check_this_clue( Clue *clue );
+    TileAddress check_this_clue_reveal( Clue *clue );
+    TileAddress check_this_clue_one_side( Clue *clue );
+    TileAddress check_this_clue_together_2( Clue *clue );
+    TileAddress check_this_clue_together_3( Clue *clue );
+    TileAddress check_this_clue_together_not_middle( Clue *clue );
+    TileAddress check_this_clue_not_together( Clue *clue );
+    TileAddress check_this_clue_next_to( Clue *clue );
+    TileAddress check_this_clue_not_next_to( Clue *clue );
+    TileAddress check_this_clue_consecutive( Clue *clue );
+    TileAddress check_this_clue_not_middle( Clue *clue );
+    TileAddress check_this_clue_together_first_with_only_one( Clue *clue );
+
+    int last_tile_in_block( int column, int row );
+    int last_tile_in_row( int row, int cell );
+    int check_row( int row );
+
+    // debug
+    int is_clue_valid( Clue *clue );
 };
 
-// Prototypes
-
-int rand_int( int n );
-void init_game( GameData *game_data ); // clean board and guesses xxx todo: add clues?
-void create_game_with_clues( GameData *game_data );
-void create_puzzle( GameData *game_data );
-Hint get_hint( GameData *game_data );
-int check_solution( GameData *game_data );
-int check_panel_consistency( GameData *game_data );
-int check_panel_correctness( GameData *game_data );
 void shuffle( int p[], int n );
-void guess_tile( GameData *game_data, TileAddress tile );
-void hide_tile_and_check( GameData *game_data, TileAddress tile );
-void unguess_tile( GameData *game_data, int i, int j );
-int is_guessed( GameData *game_data, int j, int k ); // is the value k on row j guessed?
-void get_clue( GameData *game_data, int i, int j, Clue *clue );
 int is_vclue( RELATION rel ); // is this relation a vertical clue?
-void reset_rel_params( void );
-
-// debug
-int is_clue_valid( GameData *game_data, Clue *clue );
+void reset_rel_params();
 
 // globals
 extern int REL_PERCENT[NUMBER_OF_RELATIONS];

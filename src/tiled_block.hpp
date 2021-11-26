@@ -70,4 +70,4 @@ void highlight_TiledBlock( TiledBlock *tiled_block );
 void get_TiledBlock_offset( TiledBlock *tiled_block, int *x, int *y );
 TiledBlock *get_TiledBlock( TiledBlock *tiled_block, int x, int y );
 // returns pointer to new tiled block
-TiledBlock *new_TiledBlock( void );
+TiledBlock *new_TiledBlock();

@@ -319,7 +319,7 @@ int Board::create_board( GameData *game_data, CreateMode mode )
         number_of_hclues = 0;
         for( int i = 0; i < game_data->clue_n; i++ )
         {
-            if( is_vclue( game_data->clue[i].rel ) )
+            if( is_vclue( game_data->clues[i].rel ) )
                 number_of_vclues++;
             else
                 number_of_hclues++;
@@ -407,10 +407,10 @@ int Board::create_board( GameData *game_data, CreateMode mode )
         int k = 0;
         for( int i = 0; i < game_data->clue_n; i++ )
         {
-            if( is_vclue( game_data->clue[i].rel ) )
+            if( is_vclue( game_data->clues[i].rel ) )
             {
                 vclue.sub[j]->index = i;
-                vclue.sub[j]->hidden = game_data->clue[i].hidden ? TiledBlock::Visibility::PartiallyHidden
+                vclue.sub[j]->hidden = game_data->clues[i].hidden ? TiledBlock::Visibility::PartiallyHidden
                                                                  : TiledBlock::Visibility::Visible;
                 vclue.sub[j]->bmp = &( clue_bmp[i] );
                 clue_tiledblock[i] = vclue.sub[j];
@@ -419,7 +419,7 @@ int Board::create_board( GameData *game_data, CreateMode mode )
             else
             {
                 hclue.sub[k]->index = i;
-                hclue.sub[k]->hidden = game_data->clue[i].hidden ? TiledBlock::Visibility::PartiallyHidden
+                hclue.sub[k]->hidden = game_data->clues[i].hidden ? TiledBlock::Visibility::PartiallyHidden
                                                                  : TiledBlock::Visibility::Visible;
                 hclue.sub[k]->bmp = &( clue_bmp[i] );
                 clue_tiledblock[i] = hclue.sub[k];

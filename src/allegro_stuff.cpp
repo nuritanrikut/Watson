@@ -25,7 +25,7 @@ struct Buffer_USTR
 
 Buffer_USTR *buffer_ustr = nullptr;
 
-int init_fonts( void )
+int init_fonts()
 {
     text_font_mem = create_memfile( TEXT_FONT_FILE );
     if( !text_font_mem.mem )
@@ -58,7 +58,7 @@ ALLEGRO_FONT *load_font_mem( MemFile font_mem, const char *filename, int size )
     return font;
 }
 
-int init_allegro( void )
+int init_allegro()
 {
     ALLEGRO_PATH *path;
     int no_input = 1;
@@ -127,7 +127,7 @@ int init_allegro( void )
     if( init_fonts() )
         return -1;
     return 0;
-};
+}
 
 MemFile create_memfile( const char *filename )
 {
@@ -169,7 +169,7 @@ void get_desktop_resolution( int adapter, int *width, int *height )
 
     *width = info.x2 - info.x1;
     *height = info.y2 - info.y1;
-};
+}
 
 // get best fullscreen resolution
 void get_highest_resolution( int *width, int *height )
@@ -255,7 +255,7 @@ ALLEGRO_USTR *new_ustr( const char *str )
     return buf->ustr;
 }
 
-void free_ustr( void )
+void free_ustr()
 {
     while( buffer_ustr )
     {

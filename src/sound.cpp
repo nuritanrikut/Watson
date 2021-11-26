@@ -16,7 +16,7 @@ const char *sound_sample_filename[] = { "sounds/click-hide.wav",
                                         "sounds/click-sound.wav",
                                         "sounds/stone.wav" };
 
-int init_sound( void )
+int init_sound()
 {
     int i, err = 0;
 
@@ -45,7 +45,7 @@ int init_sound( void )
         return -1;
     else
         return 0;
-};
+}
 
 void play_sound( SOUND s )
 {
@@ -53,9 +53,9 @@ void play_sound( SOUND s )
     {
         al_play_sample( sound_sample[s], 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, nullptr );
     }
-};
+}
 
-void destroy_sound( void )
+void destroy_sound()
 {
     int i;
     for( i = 0; i < NUMBER_OF_SOUNDS; i++ )

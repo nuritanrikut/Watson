@@ -218,27 +218,27 @@ void Game::handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick )
     if( mclick == 1 )
     {
         save_state();
-        if( game_data.tile[i][j][k] )
+        if( game_data.tiles[i][j][k] )
         { // hide tile
-            hide_tile_and_check( &game_data, { i, j, k } );
+            game_data.hide_tile_and_check( { i, j, k } );
             if( !set.sound_mute )
                 play_sound( SOUND_HIDE_TILE );
         }
     }
     else if( ( mclick == 2 ) || ( mclick == 4 ) )
     { // hold or right click
-        if( game_data.tile[i][j][k] )
+        if( game_data.tiles[i][j][k] )
         {
             save_state();
-            guess_tile( &game_data, { i, j, k } );
+            game_data.guess_tile( { i, j, k } );
             if( !set.sound_mute )
                 play_sound( SOUND_GUESS_TILE );
         }
         else
         { // tile was hidden, unhide
-            if( !is_guessed( &game_data, j, k ) )
+            if( !game_data.is_guessed( j, k ) )
             {
-                game_data.tile[i][j][k] = 1;
+                game_data.tiles[i][j][k] = 1;
                 if( !set.sound_mute )
                     play_sound( SOUND_UNHIDE_TILE );
             }
@@ -257,7 +257,7 @@ void Game::handle_mouse_click_panel_block( TiledBlock *tiled_block, int mclick )
     {
         // we found guessed block - unguess it
         save_state();
-        unguess_tile( &game_data, tiled_block->parent->index, tiled_block->index );
+        game_data.unguess_tile( tiled_block->parent->index, tiled_block->index );
         if( !set.sound_mute )
             play_sound( SOUND_UNHIDE_TILE );
     }
@@ -276,7 +276,7 @@ void Game::handle_mouse_click_clue_tile( TiledBlock *tiled_block, int mx, int my
             tiled_block->hidden = tiled_block->hidden == TiledBlock::Visibility::Visible
                                       ? TiledBlock::Visibility::PartiallyHidden
                                       : TiledBlock::Visibility::Visible;
-            game_data.clue[tiled_block->index].hidden = !game_data.clue[tiled_block->index].hidden;
+            game_data.clues[tiled_block->index].hidden = !game_data.clues[tiled_block->index].hidden;
             if( !set.sound_mute )
                 play_sound( SOUND_HIDE_TILE );
         }
@@ -286,7 +286,7 @@ void Game::handle_mouse_click_clue_tile( TiledBlock *tiled_block, int mx, int my
             {
                 if( !set.sound_mute )
                     play_sound( SOUND_CLICK );
-                explain_clue( &game_data.clue[tiled_block->index] );
+                explain_clue( &game_data.clues[tiled_block->index] );
                 board.highlight = tiled_block; // highlight clue
             }
         }
@@ -436,7 +436,7 @@ void Game::update_board()
 
                 for( int k = 0; k < game_data.number_of_columns; k++ )
                 {
-                    if( game_data.tile[i][j][k] )
+                    if( game_data.tiles[i][j][k] )
                     {
                         block->sub[k]->hidden = TiledBlock::Visibility::Visible;
                     }
@@ -526,13 +526,13 @@ void Game::show_hint()
 {
     if( game_state != GAME_PLAYING )
         return;
-    if( !check_panel_correctness( &game_data ) )
+    if( !game_data.check_panel_correctness() )
     {
         show_info_text( &board, al_ustr_new( "Something is wrong. An item was ruled out incorrectly." ) );
         return;
     }
 
-    Hint hint = get_hint( &game_data );
+    Hint hint = game_data.get_hint();
     if( !hint.valid )
     {
         show_info_text( &board, al_ustr_new( "No hint available." ) );
@@ -542,7 +542,7 @@ void Game::show_hint()
     board.highlight = board.clue_tiledblock[hint.clue_number];
     board.rule_out = board.panel.sub[hint.tile.column]->sub[hint.tile.row]->sub[hint.tile.cell];
 
-    auto &clue = game_data.clue[hint.clue_number];
+    auto &clue = game_data.clues[hint.clue_number];
     auto &tile0 = clue.tile[0];
     auto &tile1 = clue.tile[1];
     auto &tile2 = clue.tile[2];
@@ -569,7 +569,7 @@ void Game::update_guessed()
             val = -1;
             for( k = 0; k < game_data.number_of_columns; k++ )
             {
-                if( game_data.tile[i][j][k] )
+                if( game_data.tiles[i][j][k] )
                 {
                     count++;
                     val = k;
@@ -593,7 +593,7 @@ void Game::execute_undo()
     if( !undo )
         return;
 
-    memcpy( &game_data.tile, &undo->tile, sizeof( game_data.tile ) );
+    memcpy( &game_data.tiles, &undo->tile, sizeof( game_data.tiles ) );
 
     PanelState *undo_old = undo->parent;
 
@@ -614,7 +614,7 @@ void Game::save_state()
     foo->parent = undo;
     undo = foo;
 
-    memcpy( &undo->tile, &game_data.tile, sizeof( undo->tile ) );
+    memcpy( &undo->tile, &game_data.tiles, sizeof( undo->tile ) );
 }
 
 void Game::destroy_undo()
@@ -660,8 +660,8 @@ int Game::save_game_f()
     al_fwrite( fp, &game_data.column_height, sizeof( game_data.column_height ) );
     al_fwrite( fp, &game_data.puzzle, sizeof( game_data.puzzle ) );
     al_fwrite( fp, &game_data.clue_n, sizeof( game_data.clue_n ) );
-    al_fwrite( fp, &game_data.clue, sizeof( game_data.clue ) );
-    al_fwrite( fp, &game_data.tile, sizeof( game_data.tile ) );
+    al_fwrite( fp, &game_data.clues, sizeof( game_data.clues ) );
+    al_fwrite( fp, &game_data.tiles, sizeof( game_data.tiles ) );
     al_fwrite( fp, &game_data.time, sizeof( game_data.time ) );
     al_fclose( fp );
 
@@ -695,8 +695,8 @@ int Game::load_game_f()
     al_fread( fp, &game_data.column_height, sizeof( game_data.column_height ) );
     al_fread( fp, &game_data.puzzle, sizeof( game_data.puzzle ) );
     al_fread( fp, &game_data.clue_n, sizeof( game_data.clue_n ) );
-    al_fread( fp, &game_data.clue, sizeof( game_data.clue ) );
-    al_fread( fp, &game_data.tile, sizeof( game_data.tile ) );
+    al_fread( fp, &game_data.clues, sizeof( game_data.clues ) );
+    al_fread( fp, &game_data.tiles, sizeof( game_data.tiles ) );
     al_fread( fp, &game_data.time, sizeof( game_data.time ) );
     al_fclose( fp );
 
@@ -831,7 +831,7 @@ void Game::swap_clues( TiledBlock *c1, TiledBlock *c2 )
 
     std::swap( c1->index, c2->index );
     std::swap( c1->hidden, c2->hidden );
-};
+}
 
 void Game::zoom_TB( TiledBlock *tiled_block )
 {
@@ -1026,7 +1026,7 @@ int Game::switch_tiles()
 
 void Game::win_or_lose()
 {
-    if( check_solution( &game_data ) )
+    if( game_data.check_solution() )
     {
         game_state = GAME_OVER;
 
@@ -1628,7 +1628,7 @@ void Game::game_loop()
         draw_stuff();
         draw_generating_puzzle( &set );
         al_flip_display();
-        create_game_with_clues( &game_data );
+        game_data.create_game_with_clues();
     }
     else
     {

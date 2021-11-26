@@ -22,14 +22,14 @@ int init_bitmaps_classic();
 int update_bitmaps( GameData *game_data, Board *board );
 int update_font_bitmaps( GameData *game_data, Board *board );
 void fit_board( Board *board );
-ALLEGRO_BITMAP *create_title_bmp( void );
+ALLEGRO_BITMAP *create_title_bmp();
 void destroy_settings_bitmaps( Board *board );
 void create_settings_bitmaps( Board *board );
 void update_timer( int seconds, Board *board );
 void show_info_text( Board *board, ALLEGRO_USTR *msg ); //msg will be freed
 void show_info_text_b( Board *board, const char *msg, ... );
 void clear_info_panel( Board *board );
-void draw_title( void );
+void draw_title();
 void convert_grayscale( ALLEGRO_BITMAP *bmp );
 void create_font_symbols( Board *board );
 

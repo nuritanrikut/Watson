@@ -11,23 +11,23 @@ public:
 
     void get_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score );
     void save_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score );
-    void draw_guis( void );
+    void draw_guis();
     int handle_gui_event( ALLEGRO_EVENT *event );
     int gui_send_event( ALLEGRO_EVENT *event );
-    void init_theme( void );
+    void init_theme();
     void init_guis( int x, int y, int width, int height );
-    void destroy_base_gui( void );
+    void destroy_base_gui();
     void add_gui( WZ_WIDGET *base, WZ_WIDGET *gui );
     void remove_gui( WZ_WIDGET *base );
-    void remove_all_guis( void );
+    void remove_all_guis();
     void update_guis( int x, int y, int width, int height );
     void confirm_restart( Settings *new_set );
-    void confirm_exit( void );
-    void confirm_save( void );
-    void confirm_load( void );
-    void show_settings( void );
-    void show_help( void );
-    void show_about( void );
+    void confirm_exit();
+    void confirm_save();
+    void confirm_load();
+    void show_settings();
+    void show_help();
+    void show_about();
     void show_win_gui( double time );
     void draw_text_gui( ALLEGRO_USTR *text );
 

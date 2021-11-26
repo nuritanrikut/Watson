@@ -47,7 +47,7 @@ int get_TiledBlock_tile( TiledBlock *tiled_block, int x, int y, int *path )
         return depth + 1;
     }
     return 0;
-};
+}
 
 // get pointer to tiledblock at position x,y
 TiledBlock *get_TiledBlock( TiledBlock *tiled_block, int x, int y )
@@ -68,7 +68,7 @@ TiledBlock *get_TiledBlock( TiledBlock *tiled_block, int x, int y )
     }
     else
         return nullptr;
-};
+}
 
 // Draw the tiled block in the target allegro display
 void draw_TiledBlock( TiledBlock *tiled_block, int x, int y )
@@ -109,7 +109,7 @@ void draw_TiledBlock( TiledBlock *tiled_block, int x, int y )
         if( tiled_block->sub[i] )
             draw_TiledBlock( tiled_block->sub[i], tiled_block->x + x, tiled_block->y + y );
     }
-};
+}
 
 void get_TiledBlock_offset( TiledBlock *tiled_block, int *x, int *y )
 {
