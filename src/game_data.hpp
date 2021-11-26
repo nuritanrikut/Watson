@@ -48,6 +48,28 @@ enum RELATION
     NUMBER_OF_RELATIONS
 };
 
+struct TileAddress
+{
+    bool valid;
+    int column;
+    int row;
+    int cell;
+
+    TileAddress() : valid( false ), column( 0 ), row( 0 ), cell( 0 ) { }
+    TileAddress( bool valid_, int i, int j, int k ) : valid( valid_ ), column( i ), row( j ), cell( k ) { }
+    TileAddress( int i, int j, int k ) : valid( true ), column( i ), row( j ), cell( k ) { }
+};
+
+struct Hint
+{
+    bool valid;
+    int clue_number;
+    TileAddress tile;
+
+    Hint() : valid( false ), clue_number( 0 ), tile() { }
+    Hint( bool valid_, int cn, TileAddress t ) : valid( valid_ ), clue_number( cn ), tile( t ) { }
+};
+
 struct Clue
 {
     // the three tiles from the clue are j[m], k[m] for m=0,1,2
@@ -87,7 +109,7 @@ int rand_int( int n );
 void init_game( GameData *game_data ); // clean board and guesses xxx todo: add clues?
 void create_game_with_clues( GameData *game_data );
 void create_puzzle( GameData *game_data );
-int get_hint( GameData *game_data );
+Hint get_hint( GameData *game_data );
 int check_solution( GameData *game_data );
 int check_panel_consistency( GameData *game_data );
 int check_panel_correctness( GameData *game_data );

@@ -98,22 +98,25 @@ void remove_clue( GameData *game_data, int i )
     game_data->clue[i] = game_data->clue[game_data->clue_n];
 };
 
-int check_this_clue_reveal( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_reveal( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     if( game_data->guess[clue->i[0]][j0] < 0 )
     {
         guess_tile( game_data, clue->i[0], j0, k0 );
-        ret = 1 | k0 << 1 | j0 << 4 | clue->i[0] << 7 | 1 << 10;
+        tile.valid = true;
+        tile.column = clue->i[0];
+        tile.row = j0;
+        tile.cell = k0;
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_one_side( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_one_side( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -123,7 +126,7 @@ int check_this_clue_one_side( GameData *game_data, Clue *clue )
         if( game_data->tile[i][j1][k1] )
         {
             hide_tile_and_check( game_data, i, j1, k1 );
-            ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+            tile = { i, j1, k1 };
         }
         if( game_data->tile[i][j0][k0] )
             break;
@@ -133,17 +136,17 @@ int check_this_clue_one_side( GameData *game_data, Clue *clue )
         if( game_data->tile[i][j0][k0] )
         {
             hide_tile_and_check( game_data, i, j0, k0 );
-            ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+            tile = { i, j0, k0 };
         }
         if( game_data->tile[i][j1][k1] )
             break;
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_together_2( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_together_2( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -155,21 +158,21 @@ int check_this_clue_together_2( GameData *game_data, Clue *clue )
             if( game_data->tile[i][j0][k0] )
             {
                 hide_tile_and_check( game_data, i, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+                tile = { i, j0, k0 };
             }
             if( game_data->tile[i][j1][k1] )
             {
                 hide_tile_and_check( game_data, i, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+                tile = { i, j1, k1 };
             }
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_together_3( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_together_3( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -183,28 +186,26 @@ int check_this_clue_together_3( GameData *game_data, Clue *clue )
             if( game_data->tile[i][j0][k0] )
             {
                 hide_tile_and_check( game_data, i, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+                tile = { i, j0, k0 };
             }
             if( game_data->tile[i][j1][k1] )
             {
                 hide_tile_and_check( game_data, i, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                ;
+                tile = { i, j1, k1 };
             }
             if( game_data->tile[i][j2][k2] )
             {
                 hide_tile_and_check( game_data, i, j2, k2 );
-                ret = 1 | k2 << 1 | j2 << 4 | i << 7;
-                ;
+                tile = { i, j2, k2 };
             }
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_together_not_middle( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_together_not_middle( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -218,7 +219,7 @@ int check_this_clue_together_not_middle( GameData *game_data, Clue *clue )
             if( game_data->tile[i][j1][k1] )
             {
                 hide_tile_and_check( game_data, i, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+                tile = { i, j1, k1 };
             }
         }
         if( ( !game_data->tile[i][j0][k0] ) || ( game_data->guess[i][j1] == k1 ) || !game_data->tile[i][j2][k2] )
@@ -226,22 +227,21 @@ int check_this_clue_together_not_middle( GameData *game_data, Clue *clue )
             if( game_data->tile[i][j0][k0] )
             {
                 hide_tile_and_check( game_data, i, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+                tile = { i, j0, k0 };
             }
             if( game_data->tile[i][j2][k2] )
             {
                 hide_tile_and_check( game_data, i, j2, k2 );
-                ret = 1 | k2 << 1 | j2 << 4 | i << 7;
-                ;
+                tile = { i, j2, k2 };
             }
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_not_together( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_not_together( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -251,21 +251,20 @@ int check_this_clue_not_together( GameData *game_data, Clue *clue )
         if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i][j1][k1] )
         {
             hide_tile_and_check( game_data, i, j1, k1 );
-            ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+            tile = { i, j1, k1 };
         }
         if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i][j0][k0] )
         {
             hide_tile_and_check( game_data, i, j0, k0 );
-            ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-            ;
+            tile = { i, j0, k0 };
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_next_to( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_next_to( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -273,25 +272,24 @@ int check_this_clue_next_to( GameData *game_data, Clue *clue )
     if( !game_data->tile[1][j0][k0] && game_data->tile[0][j1][k1] )
     {
         hide_tile_and_check( game_data, 0, j1, k1 );
-        ret = 1 | k1 << 1 | j1 << 4 | 0 << 7;
+        tile = { 0, j1, k1 };
     }
     if( !game_data->tile[1][j1][k1] && game_data->tile[0][j0][k0] )
     {
         hide_tile_and_check( game_data, 0, j0, k0 );
-        ret = 1 | k0 << 1 | j0 << 4 | 0 << 7;
+        tile = { 0, j0, k0 };
     }
     if( !game_data->tile[game_data->number_of_columns - 2][j0][k0]
         && game_data->tile[game_data->number_of_columns - 1][j1][k1] )
     {
         hide_tile_and_check( game_data, game_data->number_of_columns - 1, j1, k1 );
-        ret = 1 | k1 << 1 | j1 << 4 | ( game_data->number_of_columns - 1 ) << 7;
+        tile = { game_data->number_of_columns - 1, j1, k1 };
     }
     if( !game_data->tile[game_data->number_of_columns - 2][j1][k1]
         && game_data->tile[game_data->number_of_columns - 1][j0][k0] )
     {
         hide_tile_and_check( game_data, game_data->number_of_columns - 1, j0, k0 );
-        ret = 1 | k0 << 1 | j0 << 4 | ( game_data->number_of_columns - 1 ) << 7;
-        ;
+        tile = { game_data->number_of_columns - 1, j0, k0 };
     }
 
     for( int i = 1; i < game_data->number_of_columns - 1; i++ )
@@ -301,8 +299,7 @@ int check_this_clue_next_to( GameData *game_data, Clue *clue )
             if( game_data->tile[i][j1][k1] )
             {
                 hide_tile_and_check( game_data, i, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                ;
+                tile = { i, j1, k1 };
             }
         }
         if( !game_data->tile[i - 1][j1][k1] && !game_data->tile[i + 1][j1][k1] )
@@ -310,17 +307,16 @@ int check_this_clue_next_to( GameData *game_data, Clue *clue )
             if( game_data->tile[i][j0][k0] )
             {
                 hide_tile_and_check( game_data, i, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                ;
+                tile = { i, j0, k0 };
             }
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_not_next_to( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_not_next_to( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -332,15 +328,13 @@ int check_this_clue_not_next_to( GameData *game_data, Clue *clue )
             if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i + 1][j1][k1] )
             {
                 hide_tile_and_check( game_data, i + 1, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | ( i + 1 ) << 7;
-                ;
+                tile = { i + 1, j1, k1 };
             }
 
             if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i + 1][j0][k0] )
             {
                 hide_tile_and_check( game_data, i + 1, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | ( i + 1 ) << 7;
-                ;
+                tile = { i + 1, j0, k0 };
             }
         }
         if( i > 0 )
@@ -348,24 +342,22 @@ int check_this_clue_not_next_to( GameData *game_data, Clue *clue )
             if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i - 1][j1][k1] )
             {
                 hide_tile_and_check( game_data, i - 1, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | ( i - 1 ) << 7;
-                ;
+                tile = { i - 1, j1, k1 };
             }
 
             if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i - 1][j0][k0] )
             {
                 hide_tile_and_check( game_data, i - 1, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | ( i - 1 ) << 7;
-                ;
+                tile = { i - 1, j0, k0 };
             }
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_consecutive( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_consecutive( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -406,7 +398,7 @@ int check_this_clue_consecutive( GameData *game_data, Clue *clue )
                 {
                     hide_first = 0;
                     hide_tile_and_check( game_data, i, j0, k0 );
-                    ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+                    tile = { i, j0, k0 };
                 }
             }
             std::swap( j0, j2 );
@@ -431,17 +423,16 @@ int check_this_clue_consecutive( GameData *game_data, Clue *clue )
             {
                 hide_first = 0;
                 hide_tile_and_check( game_data, i, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                ;
+                tile = { i, j1, k1 };
             }
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_not_middle( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_not_middle( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -481,8 +472,7 @@ int check_this_clue_not_middle( GameData *game_data, Clue *clue )
                 if( hide_first )
                 {
                     hide_first = 0;
-                    ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    ;
+                    tile = { i, j0, k0 };
                     hide_tile_and_check( game_data, i, j0, k0 );
                 }
             }
@@ -497,17 +487,17 @@ int check_this_clue_not_middle( GameData *game_data, Clue *clue )
                 if( game_data->tile[i][j1][k1] )
                 {
                     hide_tile_and_check( game_data, i, j1, k1 );
-                    ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+                    tile = { i, j1, k1 };
                 }
             }
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue_together_first_with_only_one( GameData *game_data, Clue *clue )
+TileAddress check_this_clue_together_first_with_only_one( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
     int j0 = clue->j[0];
     int k0 = clue->k[0];
     int j1 = clue->j[1];
@@ -522,7 +512,7 @@ int check_this_clue_together_first_with_only_one( GameData *game_data, Clue *clu
             if( game_data->tile[i][j1][k1] )
             {
                 hide_tile_and_check( game_data, i, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+                tile = { i, j0, k0 };
             }
         }
         else if( game_data->guess[i][j1] == k1 )
@@ -530,7 +520,7 @@ int check_this_clue_together_first_with_only_one( GameData *game_data, Clue *clu
             if( game_data->tile[i][j2][k2] )
             {
                 hide_tile_and_check( game_data, i, j2, k2 );
-                ret = 1 | k2 << 1 | j2 << 4 | i << 7;
+                tile = { i, j2, k2 };
             }
         }
         else if( game_data->guess[i][j2] == k2 )
@@ -538,63 +528,63 @@ int check_this_clue_together_first_with_only_one( GameData *game_data, Clue *clu
             if( game_data->tile[i][j1][k1] )
             {
                 hide_tile_and_check( game_data, i, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+                tile = { i, j1, k1 };
             }
         }
     }
-    return ret;
+    return tile;
 }
 
-int check_this_clue( GameData *game_data, Clue *clue )
+TileAddress check_this_clue( GameData *game_data, Clue *clue )
 {
-    int ret = 0;
+    TileAddress tile;
 
     switch( clue->rel )
     {
         case REVEAL:
-            ret = check_this_clue_reveal( game_data, clue );
+            tile = check_this_clue_reveal( game_data, clue );
             break;
         case ONE_SIDE:
-            ret = check_this_clue_one_side( game_data, clue );
+            tile = check_this_clue_one_side( game_data, clue );
             break;
 
         case TOGETHER_2:
-            ret = check_this_clue_together_2( game_data, clue );
+            tile = check_this_clue_together_2( game_data, clue );
             break;
         case TOGETHER_3:
-            ret = check_this_clue_together_3( game_data, clue );
+            tile = check_this_clue_together_3( game_data, clue );
             break;
 
         case TOGETHER_NOT_MIDDLE:
-            ret = check_this_clue_together_not_middle( game_data, clue );
+            tile = check_this_clue_together_not_middle( game_data, clue );
             break;
 
         case NOT_TOGETHER:
-            ret = check_this_clue_not_together( game_data, clue );
+            tile = check_this_clue_not_together( game_data, clue );
             break;
 
         case NEXT_TO:
-            ret = check_this_clue_next_to( game_data, clue );
+            tile = check_this_clue_next_to( game_data, clue );
             break;
 
         case NOT_NEXT_TO:
-            ret = check_this_clue_not_next_to( game_data, clue );
+            tile = check_this_clue_not_next_to( game_data, clue );
             break;
 
         case CONSECUTIVE:
-            ret = check_this_clue_consecutive( game_data, clue );
+            tile = check_this_clue_consecutive( game_data, clue );
             break;
 
         case NOT_MIDDLE:
-            ret = check_this_clue_not_middle( game_data, clue );
+            tile = check_this_clue_not_middle( game_data, clue );
             break;
         case TOGETHER_FIRST_WITH_ONLY_ONE:
-            ret = check_this_clue_together_first_with_only_one( game_data, clue );
+            tile = check_this_clue_together_first_with_only_one( game_data, clue );
             break;
         default:
             break;
     }
-    return ret;
+    return tile;
 }
 
 int check_solution( GameData *game_data )
@@ -626,23 +616,28 @@ void switch_game( GameData *game_data, int type )
     std::swap( game_data->guessed, guessed );
 }
 
-// returns: clue number | 1<<8 | k<<9 | j<<12 | k<<15
-// where i,j,k is a tile that can be ruled out with this clue
-int get_hint( GameData *game_data )
+// returns a hint that contains a clue and a tile that can be ruled out with this clue
+Hint get_hint( GameData *game_data )
 { // still not working properly
-    int ret = 0, tile_to_rule_out = 0;
+    int clue_number = 0;
+    TileAddress tile_to_rule_out;
 
     switch_game( game_data, 0 ); // store game_data
     for( int i = 0; i < game_data->clue_n; i++ )
     {
-        if( ( tile_to_rule_out = check_this_clue( game_data, &game_data->clue[i] ) ) )
+        tile_to_rule_out = check_this_clue( game_data, &game_data->clue[i] );
+        if( tile_to_rule_out.valid )
         {
-            ret = i;
+            clue_number = i;
             break;
         }
     }
     switch_game( game_data, 1 ); // restore game
-    return ret | tile_to_rule_out << 8;
+    Hint hint;
+    hint.valid = tile_to_rule_out.valid;
+    hint.clue_number = clue_number;
+    hint.tile = tile_to_rule_out;
+    return hint;
 }
 int advanced_check_clues( GameData *game_data )
 {
@@ -663,7 +658,7 @@ int advanced_check_clues( GameData *game_data )
                         info = 0;
                         for( m = 0; m < game_data->clue_n; m++ )
                         {
-                            if( check_this_clue( game_data, &game_data->clue[m] ) )
+                            if( check_this_clue( game_data, &game_data->clue[m] ).valid )
                             {
                                 info = 1;
                             }
@@ -701,7 +696,7 @@ int check_clues( GameData *game_data )
         info = 0;
         for( m = 0; m < game_data->clue_n; m++ )
         {
-            if( check_this_clue( game_data, &game_data->clue[m] ) )
+            if( check_this_clue( game_data, &game_data->clue[m] ).valid )
             {
                 ret = 1;
                 info = 1;
@@ -738,8 +733,8 @@ void create_game_with_clues( GameData *game_data )
                       rand_int( game_data->column_height ),
                       -1,
                       &game_data->clue[game_data->clue_n - 1] );
-        } while( !check_this_clue( game_data, &game_data->clue[game_data->clue_n - 1] ) ); // should be while
-                                                                                           // !check_clues?
+        } while( !check_this_clue( game_data, &game_data->clue[game_data->clue_n - 1] ).valid ); // should be while
+                                                                                                 // !check_clues?
         check_clues( game_data );
         if( game_data->guessed == game_data->number_of_columns * game_data->column_height )
             break;
@@ -966,7 +961,7 @@ int check_clues_for_solution( GameData *game_data )
         info = 0;
         for( m = 0; m < game_data->clue_n; m++ )
         {
-            if( check_this_clue( game_data, &game_data->clue[m] ) )
+            if( check_this_clue( game_data, &game_data->clue[m] ).valid )
             {
                 info = 1;
             }

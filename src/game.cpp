@@ -532,22 +532,24 @@ void Game::show_hint()
         return;
     }
 
-    int hint = get_hint( &game_data );
-    if( !hint )
+    Hint hint = get_hint( &game_data );
+    if( !hint.valid )
     {
         show_info_text( &board, al_ustr_new( "No hint available." ) );
         return;
     }
 
-    board.highlight = board.clue_tiledblock[hint & 255];
-    board.rule_out = board.panel.sub[( hint >> 15 ) & 7]->sub[( hint >> 12 ) & 7]->sub[( hint >> 9 ) & 7];
+    board.highlight = board.clue_tiledblock[hint.clue_number];
+    board.rule_out = board.panel.sub[hint.tile.column]->sub[hint.tile.row]->sub[hint.tile.cell];
 
-    char *b0 = symbol_char[game_data.clue[hint & 255].j[0]][game_data.clue[hint & 255].k[0]];
-    char *b1 = symbol_char[game_data.clue[hint & 255].j[1]][game_data.clue[hint & 255].k[1]];
-    char *b2 = symbol_char[game_data.clue[hint & 255].j[2]][game_data.clue[hint & 255].k[2]];
-    char *b3 = symbol_char[( hint >> 12 ) & 7][( hint >> 9 ) & 7];
+    auto &clue = game_data.clue[hint.clue_number];
 
-    show_info_text( &board, get_hint_info_text( game_data.clue[hint & 255].rel, b0, b1, b2, b3 ) );
+    char *b0 = symbol_char[clue.j[0]][clue.k[0]];
+    char *b1 = symbol_char[clue.j[1]][clue.k[1]];
+    char *b2 = symbol_char[clue.j[2]][clue.k[2]];
+    char *b3 = symbol_char[hint.tile.row][hint.tile.cell];
+
+    show_info_text( &board, get_hint_info_text( clue.rel, b0, b1, b2, b3 ) );
 }
 
 void Game::update_guessed()
