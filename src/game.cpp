@@ -282,7 +282,7 @@ void Game::handle_mouse_click_clue_tile( TiledBlock *tiled_block, int mx, int my
         }
         else if( mclick == 1 )
         { // explain clue in info panel
-            if( tiled_block->hidden != TiledBlock::Visibility::Visible )
+            if( tiled_block->hidden == TiledBlock::Visibility::Visible )
             {
                 if( !set.sound_mute )
                     play_sound( SOUND_CLICK );
