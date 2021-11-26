@@ -118,7 +118,7 @@ private:
     ALLEGRO_DISPLAY *display;
 
     bool noexit;
-    int restart; // 0, 1, or 2
+    RESTART_STATE restart;
     bool redraw;
     bool mouse_move;
     bool keypress;

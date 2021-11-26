@@ -35,7 +35,7 @@ Game::Game()
       gui( set, nset ),
       display( nullptr ),
       noexit( true ),
-      restart( 0 ),
+      restart( RESTART_STATE::NO_RESTART ),
       redraw( false ),
       mouse_move( false ),
       keypress( false ),
@@ -1144,7 +1144,7 @@ void Game::handle_event_switch_tiles()
 
 void Game::handle_event_restart()
 {
-    restart = 1;
+    restart = RESTART_STATE::NEW_GAME;
 
     set = nset;
 }
@@ -1179,7 +1179,7 @@ bool Game::handle_event_load()
     }
     else
     {
-        restart = 2;
+        restart = RESTART_STATE::LOADED_GAME;
         return true;
     }
 }
@@ -1479,7 +1479,7 @@ void Game::game_inner_loop()
     gui.update_base_gui( dt );
 
     handle_events();
-    if( restart )
+    if( restart != RESTART_STATE::NO_RESTART )
         return;
 
     if( resizing )
@@ -1608,14 +1608,13 @@ void Game::game_inner_loop()
 
 void Game::game_loop()
 {
-    if( restart )
+    if( restart != RESTART_STATE::NO_RESTART )
     {
         SPDLOG_DEBUG( "Restarting game" );
         gui.remove_all_guis();
     }
 
-    // 2 is for loaded game
-    if( restart != 2 )
+    if( restart != RESTART_STATE::LOADED_GAME )
     {
         game_data.advanced = set.advanced; // use "what if" depth 1?
         game_data.number_of_columns = set.number_of_columns;
@@ -1635,7 +1634,7 @@ void Game::game_loop()
         set.column_height = game_data.column_height;
     }
 
-    if( restart == 1 )
+    if( restart == RESTART_STATE::NEW_GAME )
         game_data.time = 0; // new game, otherwise it's a load game
 
     get_desktop_resolution( 0, &desktop_width, &desktop_height );
@@ -1647,7 +1646,7 @@ void Game::game_loop()
     else
         max_display_factor = 1;
 
-    if( restart )
+    if( restart != RESTART_STATE::NO_RESTART )
     {
         al_set_target_backbuffer( display );
         board.destroy_board();
@@ -1655,7 +1654,7 @@ void Game::game_loop()
         al_set_target_backbuffer( display );
     }
 
-    restart = 0;
+    restart = RESTART_STATE::NO_RESTART;
 
     board.max_width = desktop_width * max_display_factor;
     board.max_height = desktop_height * max_display_factor; // change this later to something adequate
@@ -1715,7 +1714,7 @@ void Game::game_loop()
     redraw = true;
     noexit = true;
     mouse_move = false;
-    restart = 0;
+    restart = RESTART_STATE::NO_RESTART;
     keypress = false;
     resizing = false;
     mouse_button_down = 0;
@@ -1748,7 +1747,9 @@ void Game::game_loop()
     while( noexit )
     {
         game_inner_loop();
-        if( restart )
+        if( restart != RESTART_STATE::NO_RESTART )
+        {
             return;
+        }
     }
 }

@@ -4,6 +4,13 @@
 #include "macros.hpp"
 
 // Structures
+enum class RESTART_STATE
+{
+    NO_RESTART = 0,
+    NEW_GAME,
+    LOADED_GAME
+};
+
 enum GAME_STATE
 {
     GAME_NULL = 0,
