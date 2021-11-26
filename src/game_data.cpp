@@ -288,14 +288,12 @@ TileAddress GameData::check_this_clue_next_to( Clue *clue )
         tile = { 0, tile0.row, tile0.cell };
         hide_tile_and_check( tile );
     }
-    if( !tiles[number_of_columns - 2][tile0.row][tile0.cell]
-        && tiles[number_of_columns - 1][tile1.row][tile1.cell] )
+    if( !tiles[number_of_columns - 2][tile0.row][tile0.cell] && tiles[number_of_columns - 1][tile1.row][tile1.cell] )
     {
         tile = { number_of_columns - 1, tile1.row, tile1.cell };
         hide_tile_and_check( tile );
     }
-    if( !tiles[number_of_columns - 2][tile1.row][tile1.cell]
-        && tiles[number_of_columns - 1][tile0.row][tile0.cell] )
+    if( !tiles[number_of_columns - 2][tile1.row][tile1.cell] && tiles[number_of_columns - 1][tile0.row][tile0.cell] )
     {
         tile = { number_of_columns - 1, tile0.row, tile0.cell };
         hide_tile_and_check( tile );
@@ -382,16 +380,14 @@ TileAddress GameData::check_this_clue_consecutive( Clue *clue )
             {
                 if( ( column < number_of_columns - 2 ) && ( column < 2 ) )
                 {
-                    if( ( !tiles[column + 1][tile1.row][tile1.cell] )
-                        || ( !tiles[column + 2][tile2.row][tile2.cell] ) )
+                    if( ( !tiles[column + 1][tile1.row][tile1.cell] ) || ( !tiles[column + 2][tile2.row][tile2.cell] ) )
                     {
                         hide_first = 1;
                     }
                 }
                 if( ( column >= 2 ) && ( column >= number_of_columns - 2 ) )
                 {
-                    if( ( !tiles[column - 2][tile2.row][tile2.cell] )
-                        || ( !tiles[column - 1][tile1.row][tile1.cell] ) )
+                    if( ( !tiles[column - 2][tile2.row][tile2.cell] ) || ( !tiles[column - 1][tile1.row][tile1.cell] ) )
                     {
                         hide_first = 1;
                     }
@@ -426,8 +422,7 @@ TileAddress GameData::check_this_clue_consecutive( Clue *clue )
             }
             else
             {
-                if( ( ( !tiles[column - 1][tile0.row][tile0.cell] )
-                      && !( tiles[column + 1][tile0.row][tile0.cell] ) )
+                if( ( ( !tiles[column - 1][tile0.row][tile0.cell] ) && !( tiles[column + 1][tile0.row][tile0.cell] ) )
                     || ( ( !tiles[column - 1][tile2.row][tile2.cell] )
                          && !( tiles[column + 1][tile2.row][tile2.cell] ) ) )
                 { // error here! incorrect check!
@@ -747,7 +742,7 @@ void GameData::create_game_with_clues()
         {
             get_clue( rand_int( number_of_columns ), rand_int( column_height ), &clues[clue_n - 1] );
         } while( !check_this_clue( &clues[clue_n - 1] ).valid ); // should be while
-                                                                      // !check_clues?
+                                                                 // !check_clues?
         check_clues();
         if( guessed == number_of_columns * column_height )
             break;
@@ -781,163 +776,268 @@ void GameData::create_game_with_clues()
     }
 }
 
-// checks if clue is compatible with current panel (not necessarily with
-// solution)
-int GameData::is_clue_compatible( Clue *clue )
+int GameData::is_clue_compatible_reveal( Clue *clue )
 {
-    int column, row, ret = 0;
-
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
     auto &tile2 = clue->tile[2];
 
-    ret = 0;
+    if( tiles[clue->tile[0].column][tile0.row][tile0.cell] )
+    {
+        return 1;
+    }
 
+    return 0;
+}
+
+int GameData::is_clue_compatible_one_side( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    int ret = 0;
+
+    for( int column = 0; column < number_of_columns; column++ )
+    {
+        if( tiles[column][tile1.row][tile1.cell] && ( ret == -1 ) )
+        {
+            ret = 1;
+            break; // loop
+        }
+
+        if( tiles[column][tile0.row][tile0.cell] )
+        {
+            ret = -1;
+        }
+    }
+    if( ret != 1 )
+        ret = 0;
+
+    return ret;
+}
+
+int GameData::is_clue_compatible_together_2( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    for( int column = 0; column < number_of_columns; column++ )
+    {
+        if( tiles[column][tile0.row][tile0.cell] && tiles[column][tile1.row][tile1.cell] )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int GameData::is_clue_compatible_together_3( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    for( int column = 0; column < number_of_columns; column++ )
+    {
+        if( tiles[column][tile0.row][tile0.cell] && tiles[column][tile1.row][tile1.cell]
+            && tiles[column][tile2.row][tile2.cell] )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int GameData::is_clue_compatible_together_not_middle( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    for( int column = 0; column < number_of_columns; column++ )
+    {
+        if( ( tiles[column][tile0.row][tile0.cell] ) && ( this->guess[column][tile1.row] != tile1.cell )
+            && tiles[column][tile2.row][tile2.cell] )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int GameData::is_clue_compatible_not_together( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    for( int column = 0; column < number_of_columns; column++ )
+    {
+        if( ( this->guess[column][tile0.row] != tile0.cell ) && tiles[column][tile1.row][tile1.cell] )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int GameData::is_clue_compatible_next_to( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    for( int column = 0; column < number_of_columns - 1; column++ )
+    {
+        if( ( tiles[column][tile0.row][tile0.cell] && tiles[column + 1][tile1.row][tile1.cell] )
+            || ( tiles[column][tile1.row][tile1.cell] && tiles[column + 1][tile0.row][tile0.cell] ) )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int GameData::is_clue_compatible_not_next_to( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    for( int column = 0; column < number_of_columns; column++ )
+    {
+        for( int row = 0; row < number_of_columns; row++ )
+        {
+            if( tiles[column][tile0.row][tile0.cell] && tiles[row][tile1.row][tile1.cell] )
+            {
+                if( ( column - row != 1 ) && ( row - column ) != 1 )
+                {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+int GameData::is_clue_compatible_consecutive( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    for( int column = 0; column < number_of_columns - 2; column++ )
+    {
+        if( ( tiles[column][tile0.row][tile0.cell] && tiles[column + 1][tile1.row][tile1.cell]
+              && tiles[column + 2][tile2.row][tile2.cell] )
+            || ( tiles[column][tile2.row][tile2.cell] && tiles[column + 1][tile1.row][tile1.cell]
+                 && tiles[column + 2][tile0.row][tile0.cell] ) )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int GameData::is_clue_compatible_not_middle( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    for( int column = 0; column < number_of_columns - 2; column++ )
+    {
+        if( ( tiles[column][tile0.row][tile0.cell] && ( this->guess[column + 1][tile1.row] != tile1.cell )
+              && tiles[column + 2][tile2.row][tile2.cell] )
+            || ( tiles[column][tile2.row][tile2.cell] && ( this->guess[column + 1][tile1.row] != tile1.cell )
+                 && tiles[column + 2][tile0.row][tile0.cell] ) )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int GameData::is_clue_compatible_together_first_with_only_one( Clue *clue )
+{
+    auto &tile0 = clue->tile[0];
+    auto &tile1 = clue->tile[1];
+    auto &tile2 = clue->tile[2];
+
+    // xxx todo: check this:
+    for( int column = 0; column < number_of_columns; column++ )
+    {
+        if( tiles[column][tile0.row][tile0.cell]
+            && ( tiles[column][tile1.row][tile1.cell] || tiles[column][tile2.row][tile2.cell] )
+            && !( ( this->guess[column][tile1.row] == tile1.cell )
+                  && ( this->guess[column][tile2.row] == tile2.cell ) ) )
+            return 1;
+    }
+
+    return 0;
+}
+
+// checks if clue is compatible with current panel (not necessarily with solution)
+int GameData::is_clue_compatible( Clue *clue )
+{
     switch( clue->rel )
     {
         case REVEAL:
-            if( tiles[clue->tile[0].column][tile0.row][tile0.cell] )
-                ret = 1;
+            return is_clue_compatible_reveal( clue );
             break;
         case ONE_SIDE:
-            for( column = 0; column < number_of_columns; column++ )
-            {
-                if( tiles[column][tile1.row][tile1.cell] && ( ret == -1 ) )
-                {
-                    ret = 1;
-                    break; // loop
-                }
-
-                if( tiles[column][tile0.row][tile0.cell] )
-                {
-                    ret = -1;
-                }
-            }
-            if( ret != 1 )
-                ret = 0;
+            return is_clue_compatible_one_side( clue );
             break; // switch
 
         case TOGETHER_2:
-            for( column = 0; column < number_of_columns; column++ )
-            {
-                if( tiles[column][tile0.row][tile0.cell] && tiles[column][tile1.row][tile1.cell] )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
+            return is_clue_compatible_together_2( clue );
             break;
 
         case TOGETHER_3:
-            for( column = 0; column < number_of_columns; column++ )
-            {
-                if( tiles[column][tile0.row][tile0.cell] && tiles[column][tile1.row][tile1.cell]
-                    && tiles[column][tile2.row][tile2.cell] )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
+            return is_clue_compatible_together_3( clue );
             break;
 
         case TOGETHER_NOT_MIDDLE:
-            for( column = 0; column < number_of_columns; column++ )
-            {
-                if( ( tiles[column][tile0.row][tile0.cell] ) && ( this->guess[column][tile1.row] != tile1.cell )
-                    && tiles[column][tile2.row][tile2.cell] )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
+            return is_clue_compatible_together_not_middle( clue );
             break;
 
         case NOT_TOGETHER:
-            for( column = 0; column < number_of_columns; column++ )
-            {
-                if( ( this->guess[column][tile0.row] != tile0.cell ) && tiles[column][tile1.row][tile1.cell] )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
+            return is_clue_compatible_not_together( clue );
             break;
 
         case NEXT_TO:
-            for( column = 0; column < number_of_columns - 1; column++ )
-            {
-                if( ( tiles[column][tile0.row][tile0.cell] && tiles[column + 1][tile1.row][tile1.cell] )
-                    || ( tiles[column][tile1.row][tile1.cell] && tiles[column + 1][tile0.row][tile0.cell] ) )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
+            return is_clue_compatible_next_to( clue );
             break;
 
         case NOT_NEXT_TO:
-            for( column = 0; column < number_of_columns; column++ )
-            {
-                for( row = 0; row < number_of_columns; row++ )
-                {
-                    if( tiles[column][tile0.row][tile0.cell] && tiles[row][tile1.row][tile1.cell] )
-                    {
-                        if( ( column - row != 1 ) && ( row - column ) != 1 )
-                        {
-                            ret = 1;
-                            break;
-                        }
-                    }
-                }
-                if( ret )
-                    break;
-            }
+            return is_clue_compatible_not_next_to( clue );
             break;
 
         case CONSECUTIVE:
-            for( column = 0; column < number_of_columns - 2; column++ )
-            {
-                if( ( tiles[column][tile0.row][tile0.cell] && tiles[column + 1][tile1.row][tile1.cell]
-                      && tiles[column + 2][tile2.row][tile2.cell] )
-                    || ( tiles[column][tile2.row][tile2.cell] && tiles[column + 1][tile1.row][tile1.cell]
-                         && tiles[column + 2][tile0.row][tile0.cell] ) )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
+            return is_clue_compatible_consecutive( clue );
             break;
 
         case NOT_MIDDLE:
-            for( column = 0; column < number_of_columns - 2; column++ )
-            {
-                if( ( tiles[column][tile0.row][tile0.cell] && ( this->guess[column + 1][tile1.row] != tile1.cell )
-                      && tiles[column + 2][tile2.row][tile2.cell] )
-                    || ( tiles[column][tile2.row][tile2.cell]
-                         && ( this->guess[column + 1][tile1.row] != tile1.cell )
-                         && tiles[column + 2][tile0.row][tile0.cell] ) )
-                {
-                    ret = 1;
-                    break;
-                }
-            }
+            return is_clue_compatible_not_middle( clue );
             break;
         case TOGETHER_FIRST_WITH_ONLY_ONE:
-            // xxx todo: check this:
-            for( column = 0; column < number_of_columns; column++ )
-            {
-                if( tiles[column][tile0.row][tile0.cell]
-                    && ( tiles[column][tile1.row][tile1.cell] || tiles[column][tile2.row][tile2.cell] )
-                    && !( ( this->guess[column][tile1.row] == tile1.cell )
-                          && ( this->guess[column][tile2.row] == tile2.cell ) ) )
-                    ret = 1;
-            }
+            return is_clue_compatible_together_first_with_only_one( clue );
 
             break;
         default:
             break;
     }
-    return ret;
+    return 0;
 }
 
 int GameData::check_panel_consistency()
@@ -996,26 +1096,8 @@ int GameData::check_clues_for_solution()
         return 0;
 }
 
-int GameData::filter_clues()
+void GameData::join_clues()
 {
-    int ret = 0;
-
-    for( int m = 0; m < clue_n; m++ )
-    { // test reduction
-        std::swap( clues[clue_n - 1], clues[m] );
-        init_game();
-        clue_n--;
-        if( check_clues_for_solution() )
-        {
-            ret = 1;
-        }
-        else
-        {
-            clue_n++;
-        }
-    }
-
-    // join clues if possible
     // xxx todo: check this
     for( int i = clue_n - 1; i > 0; i-- )
     {
@@ -1075,8 +1157,10 @@ int GameData::filter_clues()
             }
         }
     }
+}
 
-    // sort clues
+void GameData::sort_clues()
+{
     for( int i = 0; i < clue_n; i++ )
     {
         auto &clue = clues[i];
@@ -1113,6 +1197,29 @@ int GameData::filter_clues()
                 break;
         }
     }
+}
+
+int GameData::filter_clues()
+{
+    int ret = 0;
+
+    for( int m = 0; m < clue_n; m++ )
+    { // test reduction
+        std::swap( clues[clue_n - 1], clues[m] );
+        init_game();
+        clue_n--;
+        if( check_clues_for_solution() )
+        {
+            ret = 1;
+        }
+        else
+        {
+            clue_n++;
+        }
+    }
+
+    join_clues();
+    sort_clues();
 
     return ret;
 }

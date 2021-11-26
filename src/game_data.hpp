@@ -112,8 +112,10 @@ struct GameData
     void get_clue( int i, int j, Clue *clue );
 
     void remove_clue( int i );
-    int is_clue_compatible( Clue *clue );
+    void join_clues();
     int filter_clues();
+    void sort_clues();
+
     int get_random_tile( int column, int *row, int *cell );
     int random_relation();
     void get_random_item_col( int column, int *row, int *cell );
@@ -152,6 +154,19 @@ struct GameData
 
     // debug
     int is_clue_valid( Clue *clue );
+
+    int is_clue_compatible( Clue *clue );
+    int is_clue_compatible_reveal(Clue *clue);
+    int is_clue_compatible_one_side(Clue *clue);
+    int is_clue_compatible_together_2(Clue *clue);
+    int is_clue_compatible_together_3(Clue *clue);
+    int is_clue_compatible_together_not_middle(Clue *clue);
+    int is_clue_compatible_not_together(Clue *clue);
+    int is_clue_compatible_next_to(Clue *clue);
+    int is_clue_compatible_not_next_to(Clue *clue);
+    int is_clue_compatible_consecutive(Clue *clue);
+    int is_clue_compatible_not_middle(Clue *clue);
+    int is_clue_compatible_together_first_with_only_one(Clue *clue);
 };
 
 void shuffle( int p[], int n );
