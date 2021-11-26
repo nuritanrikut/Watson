@@ -75,7 +75,7 @@ struct Clue
     // the three tiles from the clue are j[m], k[m] for m=0,1,2
     // if clue uses only 1 or 2 tiles, use the first and repeat them arbitrarily
     // i coordinate points to the column in the solution where the item appears (not shown to user)
-    int column[3], row[3], cell[3];
+    TileAddress tile[3];
     RELATION rel; // how they relate
     int index;
     bool hidden;
@@ -114,11 +114,11 @@ int check_solution( GameData *game_data );
 int check_panel_consistency( GameData *game_data );
 int check_panel_correctness( GameData *game_data );
 void shuffle( int p[], int n );
-void guess_tile( GameData *game_data, int column, int row, int cell );
-void hide_tile_and_check( GameData *game_data, int i, int j, int k );
+void guess_tile( GameData *game_data, TileAddress tile );
+void hide_tile_and_check( GameData *game_data, TileAddress tile );
 void unguess_tile( GameData *game_data, int i, int j );
 int is_guessed( GameData *game_data, int j, int k ); // is the value k on row j guessed?
-void get_clue( GameData *game_data, int i, int j, int rel, Clue *clue );
+void get_clue( GameData *game_data, int i, int j, Clue *clue );
 int is_vclue( RELATION rel ); // is this relation a vertical clue?
 void reset_rel_params( void );
 

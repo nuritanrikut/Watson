@@ -220,7 +220,7 @@ void Game::handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick )
         save_state();
         if( game_data.tile[i][j][k] )
         { // hide tile
-            hide_tile_and_check( &game_data, i, j, k );
+            hide_tile_and_check( &game_data, { i, j, k } );
             if( !set.sound_mute )
                 play_sound( SOUND_HIDE_TILE );
         }
@@ -230,7 +230,7 @@ void Game::handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick )
         if( game_data.tile[i][j][k] )
         {
             save_state();
-            guess_tile( &game_data, i, j, k );
+            guess_tile( &game_data, { i, j, k } );
             if( !set.sound_mute )
                 play_sound( SOUND_GUESS_TILE );
         }
@@ -543,10 +543,13 @@ void Game::show_hint()
     board.rule_out = board.panel.sub[hint.tile.column]->sub[hint.tile.row]->sub[hint.tile.cell];
 
     auto &clue = game_data.clue[hint.clue_number];
+    auto &tile0 = clue.tile[0];
+    auto &tile1 = clue.tile[1];
+    auto &tile2 = clue.tile[2];
 
-    char *b0 = symbol_char[clue.row[0]][clue.cell[0]];
-    char *b1 = symbol_char[clue.row[1]][clue.cell[1]];
-    char *b2 = symbol_char[clue.row[2]][clue.cell[2]];
+    char *b0 = symbol_char[tile0.row][tile0.cell];
+    char *b1 = symbol_char[tile1.row][tile1.cell];
+    char *b2 = symbol_char[tile2.row][tile2.cell];
     char *b3 = symbol_char[hint.tile.row][hint.tile.cell];
 
     show_info_text( &board, get_hint_info_text( clue.rel, b0, b1, b2, b3 ) );
@@ -760,9 +763,9 @@ ALLEGRO_USTR *Game::get_hint_info_text( RELATION relation, char *b0, char *b1, c
 }
 void Game::explain_clue( Clue *clue )
 {
-    char *b0 = symbol_char[clue->row[0]][clue->cell[0]];
-    char *b1 = symbol_char[clue->row[1]][clue->cell[1]];
-    char *b2 = symbol_char[clue->row[2]][clue->cell[2]];
+    char *b0 = symbol_char[clue->tile[0].row][clue->tile[0].cell];
+    char *b1 = symbol_char[clue->tile[1].row][clue->tile[1].cell];
+    char *b2 = symbol_char[clue->tile[2].row][clue->tile[2].cell];
 
     ALLEGRO_USTR *clue_explanation = nullptr;
     const char *fmt = nullptr;
