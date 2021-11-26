@@ -24,7 +24,7 @@ enum SYMBOL
 };
 
 ALLEGRO_COLOR INFO_TEXT_COLOR = { 1, 1, 1, 1 };
-ALLEGRO_COLOR TILE_GENERAL_BD_COLOR = { 0, 0, 0, 1 };
+ALLEGRO_COLOR TILE_GENERAL_BORDER_COLOR = { 0, 0, 0, 1 };
 
 // temporary bmp to store icons
 ALLEGRO_BITMAP *basic_bmp[8][8];
@@ -40,7 +40,8 @@ const float SHADOW_ALPHA = 0.3;
 
 int make_clue_bitmaps( GameData *game_data, Board *board );
 
-const char *CLUE_BG_COLOR[8] = { "808080", "5522F0", "008080", "840543", "BB6000", "DAB520", "FFB6C1", "9ACD32" };
+const char *CLUE_BACKGROUND_COLOR[8] =
+    { "808080", "5522F0", "008080", "840543", "BB6000", "DAB520", "FFB6C1", "9ACD32" };
 
 const char *CLUE_FG_COLOR[8] = {
     "FFFFFF",
@@ -53,7 +54,7 @@ const char *CLUE_FG_COLOR[8] = {
     "000000",
 };
 
-const char *CLUE_BG_COLOR_BMP[8] = {
+const char *CLUE_BACKGROUND_COLOR_BMP[8] = {
     "999999",
     "999999",
     "999999",
@@ -122,7 +123,7 @@ void update_timer( int seconds, Board *board )
     ALLEGRO_BITMAP *bmp = al_get_target_bitmap();
 
     al_set_target_bitmap( *board->time_panel.sub[0]->bmp );
-    al_clear_to_color( board->time_panel.sub[0]->bg_color );
+    al_clear_to_color( board->time_panel.sub[0]->background_color );
     al_draw_textf( default_font,
                    WHITE_COLOR,
                    board->time_panel.sub[0]->width / 2,
@@ -512,7 +513,7 @@ int update_font_bitmaps( GameData *game_data, Board *board )
 
             // guessed bitmaps
             al_set_target_bitmap( board->guess_bmp[i][j] );
-            al_clear_to_color( al_color_html( CLUE_BG_COLOR[i] ) );
+            al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR[i] ) );
             al_get_glyph_dimensions( tile_font1, CLUE_CODE[i][j][0], &bbx, &bby, &bbw, &bbh );
             if( GLYPH_SHADOWS )
             {
@@ -535,13 +536,13 @@ int update_font_bitmaps( GameData *game_data, Board *board )
                                    .5,
                                    board->panel.sub[0]->sub[0]->width - .5,
                                    board->panel.sub[0]->sub[0]->height - .5,
-                                   TILE_GENERAL_BD_COLOR,
+                                   TILE_GENERAL_BORDER_COLOR,
                                    1 );
 
             // panel bitmaps
 
             al_set_target_bitmap( board->panel_tile_bmp[i][j] );
-            al_clear_to_color( al_color_html( CLUE_BG_COLOR[i] ) );
+            al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR[i] ) );
             al_get_glyph_dimensions( tile_font2, CLUE_CODE[i][j][0], &bbx, &bby, &bbw, &bbh );
             if( GLYPH_SHADOWS )
             {
@@ -560,11 +561,11 @@ int update_font_bitmaps( GameData *game_data, Board *board )
                 draw_shadow( board->panel_tile_size, board->panel_tile_size, 2 );
             else
                 al_draw_rectangle(
-                    .5, .5, board->panel_tile_size - .5, board->panel_tile_size - .5, TILE_GENERAL_BD_COLOR, 1 );
+                    .5, .5, board->panel_tile_size - .5, board->panel_tile_size - .5, TILE_GENERAL_BORDER_COLOR, 1 );
 
             // clue unit tile bitmaps
             al_set_target_bitmap( board->clue_unit_bmp[i][j] );
-            al_clear_to_color( al_color_html( CLUE_BG_COLOR[i] ) );
+            al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR[i] ) );
             al_get_glyph_dimensions( tile_font3, CLUE_CODE[i][j][0], &bbx, &bby, &bbw, &bbh );
             if( GLYPH_SHADOWS )
             {
@@ -583,7 +584,7 @@ int update_font_bitmaps( GameData *game_data, Board *board )
                 draw_shadow( board->clue_unit_size, board->clue_unit_size, 2 );
             else
                 al_draw_rectangle(
-                    .5, .5, board->clue_unit_size - .5, board->clue_unit_size - .5, TILE_GENERAL_BD_COLOR, 1 );
+                    .5, .5, board->clue_unit_size - .5, board->clue_unit_size - .5, TILE_GENERAL_BORDER_COLOR, 1 );
         }
     }
 
@@ -615,7 +616,7 @@ int make_clue_bitmaps( GameData *game_data, Board *board )
             return -1;
         }
         al_set_target_bitmap( board->clue_bmp[i] );
-        al_clear_to_color( board->clue_tiledblock[i]->bg_color );
+        al_clear_to_color( board->clue_tiledblock[i]->background_color );
         switch( game_data->clue[i].rel )
         {
             case NEXT_TO:
@@ -695,7 +696,7 @@ void show_info_text( Board *board, ALLEGRO_USTR *msg )
     ndestroy_bitmap( board->info_text_bmp );
     board->info_text_bmp = al_create_bitmap( board->info_panel.width, board->info_panel.height );
     al_set_target_bitmap( board->info_text_bmp );
-    al_clear_to_color( board->info_panel.bg_color );
+    al_clear_to_color( board->info_panel.background_color );
     al_draw_multiline_ustr( board->text_font,
                             INFO_TEXT_COLOR,
                             10,
@@ -730,7 +731,7 @@ int update_bitmaps( GameData *game_data, Board *board )
     // update buttons and timer bmps
     board->time_bmp = al_create_bitmap( board->time_panel.sub[0]->width, board->time_panel.sub[0]->height );
     al_set_target_bitmap( board->time_bmp );
-    al_clear_to_color( board->time_panel.sub[0]->bg_color );
+    al_clear_to_color( board->time_panel.sub[0]->background_color );
 
     for( i = 0; i < 4; i++ )
     {
@@ -765,9 +766,9 @@ int update_bitmaps( GameData *game_data, Board *board )
             // guessed bitmaps
             al_set_target_bitmap( board->guess_bmp[i][j] );
             if( board->type_of_tiles != 2 ) // not classic tiles
-                al_clear_to_color( al_color_html( CLUE_BG_COLOR_BMP[i] ) );
+                al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR_BMP[i] ) );
             else
-                al_clear_to_color( board->panel.sub[0]->sub[0]->bg_color );
+                al_clear_to_color( board->panel.sub[0]->sub[0]->background_color );
 
             if( TILE_SHADOWS )
                 draw_shadow( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height, 2 );
@@ -776,7 +777,7 @@ int update_bitmaps( GameData *game_data, Board *board )
                                    .5,
                                    board->panel.sub[0]->sub[0]->width - .5,
                                    board->panel.sub[0]->sub[0]->height - .5,
-                                   TILE_GENERAL_BD_COLOR,
+                                   TILE_GENERAL_BORDER_COLOR,
                                    1 );
 
             al_draw_scaled_bitmap( basic_bmp[i][j],
@@ -792,12 +793,12 @@ int update_bitmaps( GameData *game_data, Board *board )
 
             // panel bitmaps
             al_set_target_bitmap( board->panel_tile_bmp[i][j] );
-            al_clear_to_color( al_color_html( CLUE_BG_COLOR_BMP[i] ) );
+            al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR_BMP[i] ) );
             if( TILE_SHADOWS )
                 draw_shadow( board->panel_tile_size, board->panel_tile_size, 1 );
             else
                 al_draw_rectangle(
-                    .5, .5, board->panel_tile_size - .5, board->panel_tile_size - .5, TILE_GENERAL_BD_COLOR, 1 );
+                    .5, .5, board->panel_tile_size - .5, board->panel_tile_size - .5, TILE_GENERAL_BORDER_COLOR, 1 );
 
             al_draw_scaled_bitmap( basic_bmp[i][j],
                                    0,
@@ -812,12 +813,12 @@ int update_bitmaps( GameData *game_data, Board *board )
 
             // clue unit tile bitmaps
             al_set_target_bitmap( board->clue_unit_bmp[i][j] );
-            al_clear_to_color( al_color_html( CLUE_BG_COLOR_BMP[i] ) );
+            al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR_BMP[i] ) );
             if( TILE_SHADOWS )
                 draw_shadow( board->clue_unit_size, board->clue_unit_size, 2 );
             else
                 al_draw_rectangle(
-                    .5, .5, board->clue_unit_size - .5, board->clue_unit_size - .5, TILE_GENERAL_BD_COLOR, 1 );
+                    .5, .5, board->clue_unit_size - .5, board->clue_unit_size - .5, TILE_GENERAL_BORDER_COLOR, 1 );
 
             al_draw_scaled_bitmap( basic_bmp[i][j],
                                    0,

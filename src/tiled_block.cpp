@@ -71,16 +71,16 @@ void draw_TiledBlock( TiledBlock *tiled_block, int x, int y )
                                   tiled_block->y + y,
                                   tiled_block->x + x + tiled_block->width,
                                   tiled_block->y + y + tiled_block->height,
-                                  tiled_block->bg_color );
+                                  tiled_block->background_color );
     }
 
-    if( tiled_block->bd )
+    if( tiled_block->draw_border )
         al_draw_rectangle( tiled_block->x + x,
                            tiled_block->y + y,
                            tiled_block->x + x + tiled_block->width,
                            tiled_block->y + y + tiled_block->height,
-                           tiled_block->bd_color,
-                           tiled_block->bd );
+                           tiled_block->border_color,
+                           tiled_block->draw_border );
 
     for( i = 0; i < tiled_block->number_of_subblocks; i++ )
     {

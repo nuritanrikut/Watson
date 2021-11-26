@@ -64,7 +64,7 @@ Board::Board()
       dragging_relative_position_of_grabbing_y( 0 ),
       type_of_tiles( 0 ),
       time_start( 0.0 ),
-      bg_color(),
+      background_color(),
       time_bmp( nullptr ),
       info_text_bmp( nullptr ),
       text_font( nullptr )
@@ -147,7 +147,7 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     width = max_width;
     height = max_height * ( 1.0 - INFO_PANEL_PORTION );
 
-    bg_color = BG_COLOR;
+    background_color = BACKGROUND_COLOR;
     dragging = nullptr;
     highlight = nullptr;
     rule_out = nullptr;
@@ -276,9 +276,9 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     vclue.margin = VCLUEBOX_MARGIN;
     vclue.y = panel.y + panel.height + panel.margin + vclue.margin;
     vclue.x = vclue.margin;
-    vclue.bg_color = CLUE_PANEL_BG_COLOR;
-    vclue.bd_color = CLUE_PANEL_BD_COLOR;
-    vclue.bd = 1;
+    vclue.background_color = CLUE_PANEL_BACKGROUND_COLOR;
+    vclue.border_color = CLUE_PANEL_BORDER_COLOR;
+    vclue.draw_border = 1;
     vclue.bmp = nullptr;
     vclue.width = panel.width;
     vclue.height = height - panel.height - 2 * panel.margin - 2 * vclue.margin;
@@ -293,9 +293,9 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     hclue.y = panel.y;
     hclue.width = width - panel.width - 2 * panel.margin - 2 * hclue.margin;
     hclue.height = height - 2 * HCLUEBOX_MARGIN;
-    hclue.bg_color = CLUE_PANEL_BG_COLOR;
-    hclue.bd_color = CLUE_PANEL_BD_COLOR;
-    hclue.bd = 1;
+    hclue.background_color = CLUE_PANEL_BACKGROUND_COLOR;
+    hclue.border_color = CLUE_PANEL_BORDER_COLOR;
+    hclue.draw_border = 1;
     hclue.parent = &all;
     hclue.number_of_subblocks = 0; // later change
     hclue.sub.clear();             // later change
@@ -436,9 +436,9 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     info_panel.x = panel.x;
     info_panel.width = hclue.x - hclue.margin - INFO_PANEL_MARGIN - panel.x; // assumes margins are equal
     info_panel.margin = INFO_PANEL_MARGIN;
-    info_panel.bd_color = INFO_PANEL_BD_COLOR;
-    info_panel.bg_color = INFO_PANEL_BG_COLOR;
-    info_panel.bd = 1;
+    info_panel.border_color = INFO_PANEL_BORDER_COLOR;
+    info_panel.background_color = INFO_PANEL_BACKGROUND_COLOR;
+    info_panel.draw_border = 1;
     info_panel.number_of_subblocks = 0;
     info_panel.sub.clear();
     info_panel.parent = &all;
@@ -521,9 +521,9 @@ int Board::create_board( GameData *game_data, CreateMode mode )
         all.x = 0;
         all.y = 0;
         all.margin = 0;
-        all.bd_color = NULL_COLOR;
-        all.bg_color = bg_color;
-        all.bd = 0;
+        all.border_color = NULL_COLOR;
+        all.background_color = background_color;
+        all.draw_border = 0;
         all.parent = nullptr;
         all.number_of_subblocks = 5;
         all.sub.resize( all.number_of_subblocks );

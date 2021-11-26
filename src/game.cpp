@@ -198,7 +198,7 @@ void Game::draw_stuff()
                                       board.zoom->y,
                                       board.zoom->x + board.zoom->width,
                                       board.zoom->y + board.zoom->height,
-                                      board.zoom->parent->bg_color );
+                                      board.zoom->parent->background_color );
             draw_TiledBlock( board.zoom, 0, 0 );
             al_use_transform( &board.identity_transform );
         }

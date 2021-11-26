@@ -67,7 +67,7 @@ struct Board
 
     double time_start;
 
-    ALLEGRO_COLOR bg_color;
+    ALLEGRO_COLOR background_color;
 
     ALLEGRO_BITMAP *panel_tile_bmp[8][8];
     ALLEGRO_BITMAP *guess_bmp[8][8];

@@ -16,9 +16,9 @@ struct TiledBlock
     };
     int x, y, width, height;
     int margin;
-    ALLEGRO_COLOR bd_color;
-    ALLEGRO_COLOR bg_color; // set to something if no background bitmap
-    int bd;
+    ALLEGRO_COLOR border_color;
+    ALLEGRO_COLOR background_color; // set to something if no background bitmap
+    int draw_border;
     int number_of_subblocks;
     std::vector<TiledBlock *> sub;
     TiledBlock *parent;

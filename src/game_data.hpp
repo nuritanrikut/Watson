@@ -78,7 +78,7 @@ int check_solution( GameData *game_data );
 int check_panel_consistency( GameData *game_data );
 int check_panel_correctness( GameData *game_data );
 void shuffle( int p[], int n );
-void guess_tile( GameData *game_data, int i, int j, int k );
+void guess_tile( GameData *game_data, int column, int row, int cell );
 void hide_tile_and_check( GameData *game_data, int i, int j, int k );
 void unguess_tile( GameData *game_data, int i, int j );
 int is_guessed( GameData *game_data, int j, int k ); // is the value k on row j guessed?

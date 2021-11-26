@@ -512,35 +512,35 @@ void switch_game( GameData *game_data, int type )
 // where i,j,k is a tile that can be ruled out with this clue
 int get_hint( GameData *game_data )
 { // still not working properly
-    int i, ret = 0, tro = 0;
+    int ret = 0, tile_to_rule_out = 0;
 
     switch_game( game_data, 0 ); // store game_data
-    for( i = 0; i < game_data->clue_n; i++ )
+    for( int i = 0; i < game_data->clue_n; i++ )
     {
         if( ( tro = check_this_clue( game_data, &game_data->clue[i] ) ) )
+        if( ( tile_to_rule_out = check_this_clue( game_data, &game_data->clue[i] ) ) )
         {
             ret = i;
             break;
         }
     }
     switch_game( game_data, 1 ); // restore game
-    return ret | tro << 8;
+    return ret | tile_to_rule_out << 8;
 }
 int advanced_check_clues( GameData *game_data )
 {
     int info, m;
-    int i, j, k;
 
-    for( i = 0; i < game_data->number_of_columns; i++ )
+    for( int column = 0; column < game_data->number_of_columns; column++ )
     {
-        for( j = 0; j < game_data->column_height; j++ )
+        for( int row = 0; row < game_data->column_height; row++ )
         {
-            for( k = 0; k < game_data->number_of_columns; k++ )
+            for( int cell = 0; cell < game_data->number_of_columns; cell++ )
             {
-                if( game_data->tile[i][j][k] )
+                if( game_data->tile[column][row][cell] )
                 {
                     switch_game( game_data, 0 ); // save state
-                    guess_tile( game_data, i, j, k );
+                    guess_tile( game_data, column, row, cell );
                     do
                     { // repeat until no more information remains in clues
                         info = 0;
@@ -555,7 +555,7 @@ int advanced_check_clues( GameData *game_data )
                     if( !check_panel_consistency( game_data ) )
                     {
                         switch_game( game_data, 1 ); // restore
-                        hide_tile_and_check( game_data, i, j, k );
+                        hide_tile_and_check( game_data, column, row, cell );
                         return 1;
                     }
                     else
@@ -1435,23 +1435,23 @@ void hide_tile_and_check( GameData *game_data, int i, int j, int k )
     check_row( game_data, j );
 };
 
-void guess_tile( GameData *game_data, int i, int j, int k )
+void guess_tile( GameData *game_data, int column, int row, int cell )
 {
     int m;
 
-    game_data->guess[i][j] = k;
+    game_data->guess[column][row] = cell;
     game_data->guessed++;
     for( m = 0; m < game_data->number_of_columns; m++ )
-        if( m != k )
-            game_data->tile[i][j][m] = 0; // hide all tiles from this block
+        if( m != cell )
+            game_data->tile[column][row][m] = 0; // hide all tiles from this block
 
     for( m = 0; m < game_data->number_of_columns; m++ )
     {
-        if( m != i )
-            game_data->tile[m][j][k] = 0; // hide this tile in all blocks
+        if( m != column )
+            game_data->tile[m][row][cell] = 0; // hide this tile in all blocks
     }
 
-    check_row( game_data, j );
+    check_row( game_data, row );
 };
 
 int is_guessed( GameData *game_data, int j, int k )
@@ -1552,7 +1552,7 @@ int is_clue_valid( GameData *game_data, Clue *clue )
             break;
 
         case CONSECUTIVE:
-            if( !( ( i1 == i0 + 1 ) && ( i2 == i0 + 2 ) ) && !( ( i1 == i2 + 1 ) && ( i0 = i2 + 2 ) ) )
+            if( !( ( i1 == i0 + 1 ) && ( i2 == i0 + 2 ) ) && !( ( i1 == i2 + 1 ) && ( i0 == i2 + 2 ) ) )
                 ret = 0;
             break;
 

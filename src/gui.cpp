@@ -218,7 +218,7 @@ void Gui::init_theme( void )
 
     gui_font = load_font_mem( text_font_mem, TEXT_FONT_FILE, -gui_font_h );
     skin_theme->font = gui_font;
-    skin_theme->color1 = GUI_BG_COLOR;
+    skin_theme->color1 = GUI_BACKGROUND_COLOR;
     skin_theme->color2 = GUI_TEXT_COLOR;
     skin_theme->button_up_bitmap = al_load_bitmap( "data/button_up.png" );
     skin_theme->button_down_bitmap = al_load_bitmap( "data/button_down.png" );
