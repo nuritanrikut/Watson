@@ -544,9 +544,9 @@ void Game::show_hint()
 
     auto &clue = game_data.clue[hint.clue_number];
 
-    char *b0 = symbol_char[clue.j[0]][clue.k[0]];
-    char *b1 = symbol_char[clue.j[1]][clue.k[1]];
-    char *b2 = symbol_char[clue.j[2]][clue.k[2]];
+    char *b0 = symbol_char[clue.row[0]][clue.cell[0]];
+    char *b1 = symbol_char[clue.row[1]][clue.cell[1]];
+    char *b2 = symbol_char[clue.row[2]][clue.cell[2]];
     char *b3 = symbol_char[hint.tile.row][hint.tile.cell];
 
     show_info_text( &board, get_hint_info_text( clue.rel, b0, b1, b2, b3 ) );
@@ -760,9 +760,9 @@ ALLEGRO_USTR *Game::get_hint_info_text( RELATION relation, char *b0, char *b1, c
 }
 void Game::explain_clue( Clue *clue )
 {
-    char *b0 = symbol_char[clue->j[0]][clue->k[0]];
-    char *b1 = symbol_char[clue->j[1]][clue->k[1]];
-    char *b2 = symbol_char[clue->j[2]][clue->k[2]];
+    char *b0 = symbol_char[clue->row[0]][clue->cell[0]];
+    char *b1 = symbol_char[clue->row[1]][clue->cell[1]];
+    char *b2 = symbol_char[clue->row[2]][clue->cell[2]];
 
     ALLEGRO_USTR *clue_explanation = nullptr;
     const char *fmt = nullptr;

@@ -623,12 +623,12 @@ int make_clue_bitmaps( GameData *game_data, Board *board )
             case CONSECUTIVE:
             case NOT_NEXT_TO:
             case NOT_MIDDLE:
-                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[0]][game_data->clue[i].k[0]], 0, 0, 0 );
-                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[1]][game_data->clue[i].k[1]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].row[0]][game_data->clue[i].cell[0]], 0, 0, 0 );
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].row[1]][game_data->clue[i].cell[1]],
                                 board->clue_unit_size + board->clue_unit_space,
                                 0,
                                 0 );
-                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[2]][game_data->clue[i].k[2]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].row[2]][game_data->clue[i].cell[2]],
                                 2 * ( board->clue_unit_size + board->clue_unit_space ),
                                 0,
                                 0 );
@@ -651,9 +651,9 @@ int make_clue_bitmaps( GameData *game_data, Board *board )
 
                 break;
             case ONE_SIDE:
-                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[0]][game_data->clue[i].k[0]], 0, 0, 0 );
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].row[0]][game_data->clue[i].cell[0]], 0, 0, 0 );
                 al_draw_bitmap( board->symbol_bmp[SYM_ONE_SIDE], board->clue_unit_size + board->clue_unit_space, 0, 0 );
-                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[1]][game_data->clue[i].k[1]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].row[1]][game_data->clue[i].cell[1]],
                                 2 * ( board->clue_unit_size + board->clue_unit_space ),
                                 0,
                                 0 );
@@ -661,14 +661,14 @@ int make_clue_bitmaps( GameData *game_data, Board *board )
             case TOGETHER_3:
             case TOGETHER_NOT_MIDDLE:
             case TOGETHER_FIRST_WITH_ONLY_ONE:
-                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[2]][game_data->clue[i].k[2]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].row[2]][game_data->clue[i].cell[2]],
                                 0,
                                 2 * ( board->clue_unit_size + board->clue_unit_space ),
                                 0 );
             case TOGETHER_2:
             case NOT_TOGETHER:
-                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[0]][game_data->clue[i].k[0]], 0, 0, 0 );
-                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].j[1]][game_data->clue[i].k[1]],
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].row[0]][game_data->clue[i].cell[0]], 0, 0, 0 );
+                al_draw_bitmap( board->clue_unit_bmp[game_data->clue[i].row[1]][game_data->clue[i].cell[1]],
                                 0,
                                 board->clue_unit_size + board->clue_unit_space,
                                 0 );
@@ -974,10 +974,10 @@ ALLEGRO_BITMAP *get_clue_bitmap( Board *board, Clue *clue )
         case CONSECUTIVE:
         case NOT_NEXT_TO:
         case NOT_MIDDLE:
-            al_draw_bitmap( board->clue_unit_bmp[clue->j[0]][clue->k[0]], 0, 0, 0 );
+            al_draw_bitmap( board->clue_unit_bmp[clue->row[0]][clue->cell[0]], 0, 0, 0 );
             al_draw_bitmap(
-                board->clue_unit_bmp[clue->j[1]][clue->k[1]], board->clue_unit_size + board->clue_unit_space, 0, 0 );
-            al_draw_bitmap( board->clue_unit_bmp[clue->j[2]][clue->k[2]],
+                board->clue_unit_bmp[clue->row[1]][clue->cell[1]], board->clue_unit_size + board->clue_unit_space, 0, 0 );
+            al_draw_bitmap( board->clue_unit_bmp[clue->row[2]][clue->cell[2]],
                             2 * ( board->clue_unit_size + board->clue_unit_space ),
                             0,
                             0 );
@@ -998,24 +998,24 @@ ALLEGRO_BITMAP *get_clue_bitmap( Board *board, Clue *clue )
 
             break;
         case ONE_SIDE:
-            al_draw_bitmap( board->clue_unit_bmp[clue->j[0]][clue->k[0]], 0, 0, 0 );
+            al_draw_bitmap( board->clue_unit_bmp[clue->row[0]][clue->cell[0]], 0, 0, 0 );
             al_draw_bitmap( board->symbol_bmp[SYM_ONE_SIDE], board->clue_unit_size + board->clue_unit_space, 0, 0 );
-            al_draw_bitmap( board->clue_unit_bmp[clue->j[1]][clue->k[1]],
+            al_draw_bitmap( board->clue_unit_bmp[clue->row[1]][clue->cell[1]],
                             2 * ( board->clue_unit_size + board->clue_unit_space ),
                             0,
                             0 );
             break;
         case TOGETHER_3:
         case TOGETHER_NOT_MIDDLE:
-            al_draw_bitmap( board->clue_unit_bmp[clue->j[2]][clue->k[2]],
+            al_draw_bitmap( board->clue_unit_bmp[clue->row[2]][clue->cell[2]],
                             0,
                             2 * ( board->clue_unit_size + board->clue_unit_space ),
                             0 );
         case TOGETHER_2:
         case NOT_TOGETHER:
-            al_draw_bitmap( board->clue_unit_bmp[clue->j[0]][clue->k[0]], 0, 0, 0 );
+            al_draw_bitmap( board->clue_unit_bmp[clue->row[0]][clue->cell[0]], 0, 0, 0 );
             al_draw_bitmap(
-                board->clue_unit_bmp[clue->j[1]][clue->k[1]], 0, board->clue_unit_size + board->clue_unit_space, 0 );
+                board->clue_unit_bmp[clue->row[1]][clue->cell[1]], 0, board->clue_unit_size + board->clue_unit_space, 0 );
             if( ( clue->rel == NOT_TOGETHER ) || ( clue->rel == TOGETHER_NOT_MIDDLE ) )
                 al_draw_bitmap(
                     board->symbol_bmp[SYM_FORBIDDEN], 0, board->clue_unit_size + board->clue_unit_space, 0 );

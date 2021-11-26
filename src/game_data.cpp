@@ -101,13 +101,13 @@ void remove_clue( GameData *game_data, int i )
 TileAddress check_this_clue_reveal( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    if( game_data->guess[clue->i[0]][j0] < 0 )
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    if( game_data->guess[clue->column[0]][j0] < 0 )
     {
-        guess_tile( game_data, clue->i[0], j0, k0 );
+        guess_tile( game_data, clue->column[0], j0, k0 );
         tile.valid = true;
-        tile.column = clue->i[0];
+        tile.column = clue->column[0];
         tile.row = j0;
         tile.cell = k0;
     }
@@ -117,10 +117,10 @@ TileAddress check_this_clue_reveal( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_one_side( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
     for( int i = 0; i < game_data->number_of_columns; i++ )
     {
         if( game_data->tile[i][j1][k1] )
@@ -147,10 +147,10 @@ TileAddress check_this_clue_one_side( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_together_2( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
     for( int i = 0; i < game_data->number_of_columns; i++ )
     {
         if( !game_data->tile[i][j0][k0] || !game_data->tile[i][j1][k1] )
@@ -173,12 +173,12 @@ TileAddress check_this_clue_together_2( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_together_3( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
-    int j2 = clue->j[2];
-    int k2 = clue->k[2];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
+    int j2 = clue->row[2];
+    int k2 = clue->cell[2];
     for( int i = 0; i < game_data->number_of_columns; i++ )
     {
         if( !game_data->tile[i][j0][k0] || !game_data->tile[i][j1][k1] || !game_data->tile[i][j2][k2] )
@@ -206,12 +206,12 @@ TileAddress check_this_clue_together_3( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_together_not_middle( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
-    int j2 = clue->j[2];
-    int k2 = clue->k[2];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
+    int j2 = clue->row[2];
+    int k2 = clue->cell[2];
     for( int i = 0; i < game_data->number_of_columns; i++ )
     {
         if( ( game_data->guess[i][j0] == k0 ) || ( game_data->guess[i][j2] == k2 ) )
@@ -242,10 +242,10 @@ TileAddress check_this_clue_together_not_middle( GameData *game_data, Clue *clue
 TileAddress check_this_clue_not_together( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
     for( int i = 0; i < game_data->number_of_columns; i++ )
     {
         if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i][j1][k1] )
@@ -265,10 +265,10 @@ TileAddress check_this_clue_not_together( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_next_to( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
     if( !game_data->tile[1][j0][k0] && game_data->tile[0][j1][k1] )
     {
         hide_tile_and_check( game_data, 0, j1, k1 );
@@ -317,10 +317,10 @@ TileAddress check_this_clue_next_to( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_not_next_to( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
     for( int i = 0; i < game_data->number_of_columns; i++ )
     {
         if( i < game_data->number_of_columns - 1 )
@@ -358,12 +358,12 @@ TileAddress check_this_clue_not_next_to( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_consecutive( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
-    int j2 = clue->j[2];
-    int k2 = clue->k[2];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
+    int j2 = clue->row[2];
+    int k2 = clue->cell[2];
     int hide_first = 0;
     for( int i = 0; i < game_data->number_of_columns; i++ )
     {
@@ -433,12 +433,12 @@ TileAddress check_this_clue_consecutive( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_not_middle( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
-    int j2 = clue->j[2];
-    int k2 = clue->k[2];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
+    int j2 = clue->row[2];
+    int k2 = clue->cell[2];
     int hide_first = 0;
     for( int i = 0; i < game_data->number_of_columns; i++ )
     { // apply mask
@@ -498,12 +498,12 @@ TileAddress check_this_clue_not_middle( GameData *game_data, Clue *clue )
 TileAddress check_this_clue_together_first_with_only_one( GameData *game_data, Clue *clue )
 {
     TileAddress tile;
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
-    int j2 = clue->j[2];
-    int k2 = clue->k[2];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
+    int j2 = clue->row[2];
+    int k2 = clue->cell[2];
     // xxx todo: check this
     for( int i = 0; i < game_data->number_of_columns; i++ )
     {
@@ -755,7 +755,7 @@ void create_game_with_clues( GameData *game_data )
     {
         if( game_data->clue[i].rel == REVEAL )
         {
-            guess_tile( game_data, game_data->clue[i].i[0], game_data->clue[i].j[0], game_data->clue[i].k[0] );
+            guess_tile( game_data, game_data->clue[i].column[0], game_data->clue[i].row[0], game_data->clue[i].cell[0] );
             remove_clue( game_data, i );
             i--;
         }
@@ -773,19 +773,19 @@ int is_clue_compatible( GameData *game_data, Clue *clue )
     int i, j, ret = 0;
     int j0, k0, j1, k1, j2, k2;
 
-    j0 = clue->j[0];
-    k0 = clue->k[0];
-    j1 = clue->j[1];
-    k1 = clue->k[1];
-    j2 = clue->j[2];
-    k2 = clue->k[2];
+    j0 = clue->row[0];
+    k0 = clue->cell[0];
+    j1 = clue->row[1];
+    k1 = clue->cell[1];
+    j2 = clue->row[2];
+    k2 = clue->cell[2];
 
     ret = 0;
 
     switch( clue->rel )
     {
         case REVEAL:
-            if( game_data->tile[clue->i[0]][j0][k0] )
+            if( game_data->tile[clue->column[0]][j0][k0] )
                 ret = 1;
             break;
         case ONE_SIDE:
@@ -1011,13 +1011,13 @@ int filter_clues( GameData *game_data )
                 if( ( game_data->clue[j].rel == TOGETHER_2 || game_data->clue[j].rel == NOT_TOGETHER )
                     && game_data->clue[i].rel == TOGETHER_2 )
                 {
-                    if( ( ( game_data->clue[j].j[0] == game_data->clue[i].j[0] )
-                          && ( game_data->clue[j].k[0] == game_data->clue[i].k[0] ) )
-                        || ( ( game_data->clue[j].j[1] == game_data->clue[i].j[0] )
-                             && ( game_data->clue[j].k[1] == game_data->clue[i].k[0] ) ) )
+                    if( ( ( game_data->clue[j].row[0] == game_data->clue[i].row[0] )
+                          && ( game_data->clue[j].cell[0] == game_data->clue[i].cell[0] ) )
+                        || ( ( game_data->clue[j].row[1] == game_data->clue[i].row[0] )
+                             && ( game_data->clue[j].cell[1] == game_data->clue[i].cell[0] ) ) )
                     {
-                        game_data->clue[j].j[2] = game_data->clue[i].j[1];
-                        game_data->clue[j].k[2] = game_data->clue[i].k[1];
+                        game_data->clue[j].row[2] = game_data->clue[i].row[1];
+                        game_data->clue[j].cell[2] = game_data->clue[i].cell[1];
                         game_data->clue[j].rel =
                             game_data->clue[j].rel == TOGETHER_2 ? TOGETHER_3 : TOGETHER_NOT_MIDDLE;
                         remove_clue( game_data, i );
@@ -1025,13 +1025,13 @@ int filter_clues( GameData *game_data )
                     }
                     else if( game_data->clue[j].rel == TOGETHER_2 )
                     {
-                        if( ( ( game_data->clue[j].j[0] == game_data->clue[i].j[1] )
-                              && ( game_data->clue[j].k[0] == game_data->clue[i].k[1] ) )
-                            || ( ( game_data->clue[j].j[1] == game_data->clue[i].j[1] )
-                                 && ( game_data->clue[j].k[1] == game_data->clue[i].k[1] ) ) )
+                        if( ( ( game_data->clue[j].row[0] == game_data->clue[i].row[1] )
+                              && ( game_data->clue[j].cell[0] == game_data->clue[i].cell[1] ) )
+                            || ( ( game_data->clue[j].row[1] == game_data->clue[i].row[1] )
+                                 && ( game_data->clue[j].cell[1] == game_data->clue[i].cell[1] ) ) )
                         {
-                            game_data->clue[j].j[2] = game_data->clue[i].j[0];
-                            game_data->clue[j].k[2] = game_data->clue[i].k[0];
+                            game_data->clue[j].row[2] = game_data->clue[i].row[0];
+                            game_data->clue[j].cell[2] = game_data->clue[i].cell[0];
                             game_data->clue[j].rel = TOGETHER_3;
                             remove_clue( game_data, i );
                             break;
@@ -1040,21 +1040,21 @@ int filter_clues( GameData *game_data )
                 }
                 else if( game_data->clue[j].rel == TOGETHER_2 && game_data->clue[i].rel == NOT_TOGETHER )
                 {
-                    if( ( game_data->clue[j].j[0] == game_data->clue[i].j[0] )
-                        && ( game_data->clue[j].k[0] == game_data->clue[i].k[0] ) )
+                    if( ( game_data->clue[j].row[0] == game_data->clue[i].row[0] )
+                        && ( game_data->clue[j].cell[0] == game_data->clue[i].cell[0] ) )
                     {
-                        game_data->clue[i].j[2] = game_data->clue[j].j[1];
-                        game_data->clue[i].k[2] = game_data->clue[j].k[1];
+                        game_data->clue[i].row[2] = game_data->clue[j].row[1];
+                        game_data->clue[i].cell[2] = game_data->clue[j].cell[1];
                         game_data->clue[i].rel = TOGETHER_NOT_MIDDLE;
                         game_data->clue[j] = game_data->clue[i];
                         remove_clue( game_data, i );
                         break;
                     }
-                    else if( ( game_data->clue[j].j[1] == game_data->clue[i].j[0] )
-                             && ( game_data->clue[j].k[1] == game_data->clue[i].k[0] ) )
+                    else if( ( game_data->clue[j].row[1] == game_data->clue[i].row[0] )
+                             && ( game_data->clue[j].cell[1] == game_data->clue[i].cell[0] ) )
                     {
-                        game_data->clue[i].j[2] = game_data->clue[j].j[0];
-                        game_data->clue[i].k[2] = game_data->clue[j].k[0];
+                        game_data->clue[i].row[2] = game_data->clue[j].row[0];
+                        game_data->clue[i].cell[2] = game_data->clue[j].cell[0];
                         game_data->clue[i].rel = TOGETHER_NOT_MIDDLE;
                         game_data->clue[j] = game_data->clue[i];
                         remove_clue( game_data, i );
@@ -1071,40 +1071,40 @@ int filter_clues( GameData *game_data )
         switch( game_data->clue[i].rel )
         {
             case TOGETHER_2:
-                if( game_data->clue[i].j[0] > game_data->clue[i].j[1] )
+                if( game_data->clue[i].row[0] > game_data->clue[i].row[1] )
                 {
-                    std::swap( game_data->clue[i].i[0], game_data->clue[i].i[1] );
-                    std::swap( game_data->clue[i].j[0], game_data->clue[i].j[1] );
-                    std::swap( game_data->clue[i].k[0], game_data->clue[i].k[1] );
+                    std::swap( game_data->clue[i].column[0], game_data->clue[i].column[1] );
+                    std::swap( game_data->clue[i].row[0], game_data->clue[i].row[1] );
+                    std::swap( game_data->clue[i].cell[0], game_data->clue[i].cell[1] );
                 }
                 break;
             case TOGETHER_3:
-                if( game_data->clue[i].j[0] > game_data->clue[i].j[2] )
+                if( game_data->clue[i].row[0] > game_data->clue[i].row[2] )
                 {
-                    std::swap( game_data->clue[i].i[0], game_data->clue[i].i[2] );
-                    std::swap( game_data->clue[i].j[0], game_data->clue[i].j[2] );
-                    std::swap( game_data->clue[i].k[0], game_data->clue[i].k[2] );
+                    std::swap( game_data->clue[i].column[0], game_data->clue[i].column[2] );
+                    std::swap( game_data->clue[i].row[0], game_data->clue[i].row[2] );
+                    std::swap( game_data->clue[i].cell[0], game_data->clue[i].cell[2] );
                 }
-                if( game_data->clue[i].j[0] > game_data->clue[i].j[1] )
+                if( game_data->clue[i].row[0] > game_data->clue[i].row[1] )
                 {
-                    std::swap( game_data->clue[i].i[0], game_data->clue[i].i[1] );
-                    std::swap( game_data->clue[i].j[0], game_data->clue[i].j[1] );
-                    std::swap( game_data->clue[i].k[0], game_data->clue[i].k[1] );
+                    std::swap( game_data->clue[i].column[0], game_data->clue[i].column[1] );
+                    std::swap( game_data->clue[i].row[0], game_data->clue[i].row[1] );
+                    std::swap( game_data->clue[i].cell[0], game_data->clue[i].cell[1] );
                 }
-                if( game_data->clue[i].j[1] > game_data->clue[i].j[2] )
+                if( game_data->clue[i].row[1] > game_data->clue[i].row[2] )
                 {
-                    std::swap( game_data->clue[i].i[1], game_data->clue[i].i[2] );
-                    std::swap( game_data->clue[i].j[1], game_data->clue[i].j[2] );
-                    std::swap( game_data->clue[i].k[1], game_data->clue[i].k[2] );
+                    std::swap( game_data->clue[i].column[1], game_data->clue[i].column[2] );
+                    std::swap( game_data->clue[i].row[1], game_data->clue[i].row[2] );
+                    std::swap( game_data->clue[i].cell[1], game_data->clue[i].cell[2] );
                 }
 
                 break;
             case TOGETHER_NOT_MIDDLE:
-                if( game_data->clue[i].j[0] > game_data->clue[i].j[2] )
+                if( game_data->clue[i].row[0] > game_data->clue[i].row[2] )
                 {
-                    std::swap( game_data->clue[i].i[0], game_data->clue[i].i[2] );
-                    std::swap( game_data->clue[i].j[0], game_data->clue[i].j[2] );
-                    std::swap( game_data->clue[i].k[0], game_data->clue[i].k[2] );
+                    std::swap( game_data->clue[i].column[0], game_data->clue[i].column[2] );
+                    std::swap( game_data->clue[i].row[0], game_data->clue[i].row[2] );
+                    std::swap( game_data->clue[i].cell[0], game_data->clue[i].cell[2] );
                 }
                 break;
             default:
@@ -1228,15 +1228,15 @@ void get_clue( GameData *game_data, int i, int j, int rel, Clue *clue )
                     jj = j;
                     kk = k;
                 }
-                clue->i[m] = ii;
-                clue->j[m] = jj;
-                clue->k[m] = kk;
+                clue->column[m] = ii;
+                clue->row[m] = jj;
+                clue->cell[m] = kk;
             }
             if( rand_int( 2 ) )
             { // random swap of outer elements
-                std::swap( clue->i[0], clue->i[2] );
-                std::swap( clue->j[0], clue->j[2] );
-                std::swap( clue->k[0], clue->k[2] );
+                std::swap( clue->column[0], clue->column[2] );
+                std::swap( clue->row[0], clue->row[2] );
+                std::swap( clue->cell[0], clue->cell[2] );
             }
             break;
         case ONE_SIDE:
@@ -1249,15 +1249,15 @@ void get_clue( GameData *game_data, int i, int j, int rel, Clue *clue )
                 std::swap( j, jj );
                 std::swap( k, kk );
             }
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = ii;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = ii;
-            clue->j[2] = jj;
-            clue->k[2] = kk; // filler
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
+            clue->column[1] = ii;
+            clue->row[1] = jj;
+            clue->cell[1] = kk;
+            clue->column[2] = ii;
+            clue->row[2] = jj;
+            clue->cell[2] = kk; // filler
             break;
         case NEXT_TO:
             ii = i + rand_sign();
@@ -1272,15 +1272,15 @@ void get_clue( GameData *game_data, int i, int j, int rel, Clue *clue )
                 std::swap( j, jj );
                 std::swap( k, kk );
             }
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = ii;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = i;
-            clue->j[2] = j;
-            clue->k[2] = k;
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
+            clue->column[1] = ii;
+            clue->row[1] = jj;
+            clue->cell[1] = kk;
+            clue->column[2] = i;
+            clue->row[2] = j;
+            clue->cell[2] = k;
             break;
         case NOT_NEXT_TO:
             if( i >= game_data->number_of_columns - 1 )
@@ -1305,15 +1305,15 @@ void get_clue( GameData *game_data, int i, int j, int rel, Clue *clue )
                 std::swap( j, jj );
                 std::swap( k, kk );
             }
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = ii;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = i;
-            clue->j[2] = j;
-            clue->k[2] = k;
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
+            clue->column[1] = ii;
+            clue->row[1] = jj;
+            clue->cell[1] = kk;
+            clue->column[2] = i;
+            clue->row[2] = j;
+            clue->cell[2] = k;
             break;
         case NOT_MIDDLE:
             if( i > game_data->number_of_columns - 3 )
@@ -1322,112 +1322,112 @@ void get_clue( GameData *game_data, int i, int j, int rel, Clue *clue )
                 s = 1;
             else
                 s = rand_sign();
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
             ii = i + s;
             get_random_item_col( game_data, ii, &jj, &kk );
-            clue->i[1] = ii;
-            clue->j[1] = jj;
-            clue->k[1] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
+            clue->column[1] = ii;
+            clue->row[1] = jj;
+            clue->cell[1] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
             ii = i + 2 * s;
             get_random_item_col( game_data, ii, &jj, &kk );
-            clue->i[2] = ii;
-            clue->j[2] = jj;
-            clue->k[2] = kk;
+            clue->column[2] = ii;
+            clue->row[2] = jj;
+            clue->cell[2] = kk;
             if( rand_int( 2 ) )
             { // random swap of outer elements
-                std::swap( clue->i[0], clue->i[2] );
-                std::swap( clue->j[0], clue->j[2] );
-                std::swap( clue->k[0], clue->k[2] );
+                std::swap( clue->column[0], clue->column[2] );
+                std::swap( clue->row[0], clue->row[2] );
+                std::swap( clue->cell[0], clue->cell[2] );
             }
             break;
         case TOGETHER_2:
             get_random_item_col_except( game_data, i, &jj, &kk, j, j ); // except row j (and j)
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = i;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = i;
-            clue->j[2] = jj;
-            clue->k[2] = kk; // filler
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
+            clue->column[1] = i;
+            clue->row[1] = jj;
+            clue->cell[1] = kk;
+            clue->column[2] = i;
+            clue->row[2] = jj;
+            clue->cell[2] = kk; // filler
             break;
         case TOGETHER_3:
             get_random_item_col_except( game_data, i, &jj, &kk, j, j );    // except row j (and j)
             get_random_item_col_except( game_data, i, &jjj, &kkk, j, jj ); // except row j and jj
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = i;
-            clue->j[1] = jj;
-            clue->k[1] = kk;
-            clue->i[2] = i;
-            clue->j[2] = jjj;
-            clue->k[2] = kkk;
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
+            clue->column[1] = i;
+            clue->row[1] = jj;
+            clue->cell[1] = kk;
+            clue->column[2] = i;
+            clue->row[2] = jjj;
+            clue->cell[2] = kkk;
             break;
         case NOT_TOGETHER:
             get_random_item_col_except( game_data, i, &jj, &kk, j, j ); // except row j (and j)
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = i;
-            clue->j[1] = jj;
-            clue->k[1] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
-            clue->i[2] = i;
-            clue->j[2] = j;
-            clue->k[2] = k; // filler
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
+            clue->column[1] = i;
+            clue->row[1] = jj;
+            clue->cell[1] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
+            clue->column[2] = i;
+            clue->row[2] = j;
+            clue->cell[2] = k; // filler
             break;
         case TOGETHER_NOT_MIDDLE:
             get_random_item_col_except( game_data, i, &jj, &kk, j, j );    // except row j (and j)
             get_random_item_col_except( game_data, i, &jjj, &kkk, j, jj ); // except row j and jj
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
-            clue->i[1] = i;
-            clue->j[1] = jj;
-            clue->k[1] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
-            clue->i[2] = i;
-            clue->j[2] = jjj;
-            clue->k[2] = kkk;
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
+            clue->column[1] = i;
+            clue->row[1] = jj;
+            clue->cell[1] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
+            clue->column[2] = i;
+            clue->row[2] = jjj;
+            clue->cell[2] = kkk;
             break;
         case REVEAL:
             ii = rand_int( game_data->number_of_columns );
             get_random_item_col( game_data, ii, &jj, &kk );
             for( m = 0; m < 3; m++ )
             {
-                clue->i[m] = ii;
-                clue->j[m] = jj;
-                clue->k[m] = kk;
+                clue->column[m] = ii;
+                clue->row[m] = jj;
+                clue->cell[m] = kk;
             }
             break;
         case TOGETHER_FIRST_WITH_ONLY_ONE:
             // xxx todo: check this
             get_random_item_col_except( game_data, i, &jj, &kk, j, j );    // except row j (and j)
             get_random_item_col_except( game_data, i, &jjj, &kkk, j, jj ); // except row j and jj
-            clue->i[0] = i;
-            clue->j[0] = j;
-            clue->k[0] = k;
+            clue->column[0] = i;
+            clue->row[0] = j;
+            clue->cell[0] = k;
             // same as together_not_middle but sorted (so we don't know which is
             // middle)
             if( jj < jjj )
             {
-                clue->i[1] = i;
-                clue->j[1] = jj;
-                clue->k[1] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
-                clue->i[2] = i;
-                clue->j[2] = jjj;
-                clue->k[2] = kkk;
+                clue->column[1] = i;
+                clue->row[1] = jj;
+                clue->cell[1] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
+                clue->column[2] = i;
+                clue->row[2] = jjj;
+                clue->cell[2] = kkk;
             }
             else
             {
-                clue->i[1] = i;
-                clue->j[1] = jjj;
-                clue->k[1] = kkk;
-                clue->i[2] = i;
-                clue->j[2] = jj;
-                clue->k[2] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
+                clue->column[1] = i;
+                clue->row[1] = jjj;
+                clue->cell[1] = kkk;
+                clue->column[2] = i;
+                clue->row[2] = jj;
+                clue->cell[2] = ( kk + 1 + rand_int( game_data->number_of_columns - 1 ) ) % game_data->number_of_columns;
             }
             break;
     }
@@ -1607,12 +1607,12 @@ int is_clue_valid( GameData *game_data, Clue *clue )
 {
     int ret = 0;
 
-    int j0 = clue->j[0];
-    int k0 = clue->k[0];
-    int j1 = clue->j[1];
-    int k1 = clue->k[1];
-    int j2 = clue->j[2];
-    int k2 = clue->k[2];
+    int j0 = clue->row[0];
+    int k0 = clue->cell[0];
+    int j1 = clue->row[1];
+    int k1 = clue->cell[1];
+    int j2 = clue->row[2];
+    int k2 = clue->cell[2];
     int i0 = game_data->where[j0][k0];
     int i1 = game_data->where[j1][k1];
     int i2 = game_data->where[j2][k2];

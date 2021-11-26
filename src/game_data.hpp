@@ -75,7 +75,7 @@ struct Clue
     // the three tiles from the clue are j[m], k[m] for m=0,1,2
     // if clue uses only 1 or 2 tiles, use the first and repeat them arbitrarily
     // i coordinate points to the column in the solution where the item appears (not shown to user)
-    int i[3], j[3], k[3];
+    int column[3], row[3], cell[3];
     RELATION rel; // how they relate
     int index;
     bool hidden;
