@@ -273,6 +273,12 @@ int WZ_BUTTON::proc( const ALLEGRO_EVENT *event )
     return ret;
 }
 
+int WZ_BUTTON::handle_draw()
+{
+    int ret = 1;
+    return ret;
+}
+
 /*
 Section: Public
 

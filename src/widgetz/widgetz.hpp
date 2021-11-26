@@ -239,6 +239,17 @@ struct WZ_WIDGET
     void set_theme( WZ_THEME *theme );
 
     virtual int proc( const ALLEGRO_EVENT *event );
+    int handle_hide();
+    int handle_show();
+    int handle_disable();
+    int handle_enable();
+    int handle_update_position();
+    int handle_destroy();
+    int handle_lose_focus();
+    int handle_take_focus();
+    int handle_want_focus( const ALLEGRO_EVENT *event );
+    int handle_resize( const ALLEGRO_EVENT *event );
+    int handle_key_char( const ALLEGRO_EVENT *event );
 
     /*
 	Variable: x
@@ -314,6 +325,8 @@ struct WZ_BUTTON : WZ_BOX
     WZ_BUTTON( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id );
 
     virtual int proc( const ALLEGRO_EVENT *event );
+
+    int handle_draw();
 
     ALLEGRO_USTR *text;
     int own;

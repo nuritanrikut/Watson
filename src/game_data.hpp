@@ -47,7 +47,7 @@ struct Clue
 
 struct GameData
 {
-    int guess[8][8];   // guessed value for [col][block]
+    int guess[8][8];   // guessed value for guess[column][row] = cell;
     int puzzle[8][8];  // [col][block] = [tile]
     int tile[8][8][8]; // [col][block][tile]
     Clue clue[MAX_CLUES];

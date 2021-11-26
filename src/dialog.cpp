@@ -19,8 +19,9 @@ int yes_no_dialog( const char *text )
     al_register_event_source( queue, al_get_mouse_event_source() );
 
     al_clear_to_color( NULL_COLOR );
-    al_draw_filled_rectangle( ( dw - bw ) / 2, ( dh - bh ) / 2, ( dw + bw ) / 2, ( dh + bh ) / 2, WINDOW_BG_COLOR );
-    al_draw_rectangle( ( dw - bw ) / 2, ( dh - bh ) / 2, ( dw + bw ) / 2, ( dh + bh ) / 2, WINDOW_BD_COLOR, 3 );
+    al_draw_filled_rectangle(
+        ( dw - bw ) / 2, ( dh - bh ) / 2, ( dw + bw ) / 2, ( dh + bh ) / 2, WINDOW_BACKGROUND_COLOR );
+    al_draw_rectangle( ( dw - bw ) / 2, ( dh - bh ) / 2, ( dw + bw ) / 2, ( dh + bh ) / 2, WINDOW_BORDER_COLOR, 3 );
 
     al_draw_multiline_text(
         default_font, al_map_rgb_f( 1, 1, 1 ), dw / 2, ( dh - bh ) / 2 + 20, 360, 18, ALLEGRO_ALIGN_CENTER, text );

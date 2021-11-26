@@ -50,203 +50,207 @@ int WZ_WIDGET::proc( const ALLEGRO_EVENT *event )
     switch( event->type )
     {
         case WZ_HIDE:
-        {
-            this->flags |= WZ_STATE_HIDDEN;
+            ret = handle_hide();
             break;
-        }
         case WZ_SHOW:
-        {
-            this->flags &= ~WZ_STATE_HIDDEN;
+            ret = handle_show();
             break;
-        }
         case WZ_DISABLE:
-        {
-            this->flags |= WZ_STATE_DISABLED;
+            ret = handle_disable();
             break;
-        }
         case WZ_ENABLE:
-        {
-            this->flags &= ~WZ_STATE_DISABLED;
+            ret = handle_enable();
             break;
-        }
         case WZ_UPDATE_POSITION:
-        {
-            if( this->parent )
-            {
-                this->local_x = this->parent->local_x + this->x;
-                this->local_y = this->parent->local_y + this->y;
-            }
-            else
-            {
-                this->local_x = this->x;
-                this->local_y = this->y;
-            }
-
+            ret = handle_update_position();
             break;
-        }
         case WZ_DESTROY:
-        {
-            al_destroy_user_event_source( this->source );
-            delete this->source;
-            delete this;
+            ret = handle_destroy();
             break;
-        }
         case WZ_LOSE_FOCUS:
-        {
-            this->flags &= ~WZ_STATE_HAS_FOCUS;
+            ret = handle_lose_focus();
             break;
-        }
         case WZ_TAKE_FOCUS:
-        {
-            this->focus( 0 );
-            this->flags |= WZ_STATE_HAS_FOCUS;
-
-            if( this->first_child )
-                this->first_child->focus( 1 );
-
+            ret = handle_take_focus();
             break;
-        }
         case WZ_WANT_FOCUS:
-        {
-            WZ_WIDGET *child = this->first_child;
-            ALLEGRO_EVENT ev;
-            int all_unfocused = 1;
-
-            while( child )
-            {
-                if( child->hold_focus )
-                {
-                    all_unfocused = 0;
-                    break;
-                }
-
-                child->focus( 0 );
-                child = child->next_sib;
-            }
-
-            if( all_unfocused )
-            {
-                wz_craft_event( &ev, WZ_TAKE_FOCUS, this, 0 );
-                WZ_WIDGET *wgt = (WZ_WIDGET *)event->user.data2;
-                wgt->send_event( &ev );
-            }
-
+            ret = handle_want_focus( event );
             break;
-        }
         case WZ_RESIZE:
-        {
-            float factor = *(float *)&event->user.data3;
-            this->x *= factor;
-            this->y *= factor;
-            this->width *= factor;
-            this->height *= factor;
-            this->local_x *= factor;
-            this->local_y *= factor;
+            ret = handle_resize( event );
             break;
-        }
-
         case ALLEGRO_EVENT_KEY_CHAR:
-        {
-            if( event->keyboard.keycode == this->shortcut.keycode
-                && ( ( event->keyboard.modifiers & this->shortcut.modifiers ) || this->shortcut.modifiers == 0 ) )
-            {
-                ALLEGRO_EVENT ev;
-                wz_craft_event( &ev, WZ_HANDLE_SHORTCUT, this, 0 );
-                this->send_event( &ev );
-            }
-            else
-            {
-                switch( event->keyboard.keycode )
-                {
-                    case ALLEGRO_KEY_TAB:
-                    {
-                        if( this->first_child != 0 )
-                        {
-                            ret = 0;
-                        }
-                        else if( event->keyboard.modifiers & 1 )
-                        {
-                            this->ask_parent_to_focus_prev();
-                        }
-                        else
-                        {
-                            this->ask_parent_to_focus_next();
-                        }
-
-                        break;
-                    }
-                    case ALLEGRO_KEY_UP:
-                    {
-                        if( this->first_child != 0 )
-                        {
-                            ret = 0;
-                        }
-                        else if( this->parent != 0 )
-                        {
-                            this->get_widget_dir( 0 )->ask_parent_for_focus();
-                        }
-                        else
-                            ret = 0;
-
-                        break;
-                    }
-                    case ALLEGRO_KEY_RIGHT:
-                    {
-                        if( this->first_child != 0 )
-                        {
-                            ret = 0;
-                        }
-                        else if( this->parent != 0 )
-                        {
-                            this->get_widget_dir( 1 )->ask_parent_for_focus();
-                        }
-                        else
-                            ret = 0;
-
-                        break;
-                    }
-                    case ALLEGRO_KEY_DOWN:
-                    {
-                        if( this->first_child != 0 )
-                        {
-                            ret = 0;
-                        }
-                        else if( this->parent != 0 )
-                        {
-                            this->get_widget_dir( 2 )->ask_parent_for_focus();
-                        }
-                        else
-                            ret = 0;
-
-                        break;
-                    }
-                    case ALLEGRO_KEY_LEFT:
-                    {
-                        if( this->first_child != 0 )
-                        {
-                            ret = 0;
-                        }
-                        else if( this->parent != 0 )
-                        {
-                            this->get_widget_dir( 3 )->ask_parent_for_focus();
-                        }
-                        else
-                            ret = 0;
-
-                        break;
-                    }
-                    default:
-                        ret = 0;
-                }
-            }
-
+            ret = handle_key_char( event );
             break;
-        }
         default:
             ret = 0;
     }
 
     return ret;
+}
+
+int WZ_WIDGET::handle_hide()
+{
+    int ret = 1;
+    this->flags |= WZ_STATE_HIDDEN;
+    return ret;
+}
+
+int WZ_WIDGET::handle_show()
+{
+    int ret = 1;
+    this->flags &= ~WZ_STATE_HIDDEN;
+    return ret;
+}
+
+int WZ_WIDGET::handle_disable()
+{
+    int ret = 1;
+    this->flags |= WZ_STATE_DISABLED;
+    return ret;
+}
+
+int WZ_WIDGET::handle_enable()
+{
+    int ret = 1;
+    this->flags &= ~WZ_STATE_DISABLED;
+    return ret;
+}
+
+int WZ_WIDGET::handle_update_position()
+{
+    int ret = 1;
+    if( this->parent )
+    {
+        this->local_x = this->parent->local_x + this->x;
+        this->local_y = this->parent->local_y + this->y;
+    }
+    else
+    {
+        this->local_x = this->x;
+        this->local_y = this->y;
+    }
+    return ret;
+}
+
+int WZ_WIDGET::handle_destroy()
+{
+    int ret = 1;
+    al_destroy_user_event_source( this->source );
+    delete this->source;
+    delete this;
+    return ret;
+}
+
+int WZ_WIDGET::handle_lose_focus()
+{
+    int ret = 1;
+    this->flags &= ~WZ_STATE_HAS_FOCUS;
+    return ret;
+}
+
+int WZ_WIDGET::handle_take_focus()
+{
+    int ret = 1;
+    this->focus( 0 );
+    this->flags |= WZ_STATE_HAS_FOCUS;
+
+    if( this->first_child )
+        this->first_child->focus( 1 );
+    return ret;
+}
+
+int WZ_WIDGET::handle_want_focus( const ALLEGRO_EVENT *event )
+{
+    int ret = 1;
+    WZ_WIDGET *child = this->first_child;
+    ALLEGRO_EVENT ev;
+    int all_unfocused = 1;
+
+    while( child )
+    {
+        if( child->hold_focus )
+        {
+            all_unfocused = 0;
+            break;
+        }
+
+        child->focus( 0 );
+        child = child->next_sib;
+    }
+
+    if( all_unfocused )
+    {
+        wz_craft_event( &ev, WZ_TAKE_FOCUS, this, 0 );
+        WZ_WIDGET *wgt = (WZ_WIDGET *)event->user.data2;
+        wgt->send_event( &ev );
+    }
+    return ret;
+}
+
+int WZ_WIDGET::handle_resize( const ALLEGRO_EVENT *event )
+{
+    int ret = 1;
+    float factor = *(float *)&event->user.data3;
+    this->x *= factor;
+    this->y *= factor;
+    this->width *= factor;
+    this->height *= factor;
+    this->local_x *= factor;
+    this->local_y *= factor;
+    return ret;
+}
+
+int WZ_WIDGET::handle_key_char( const ALLEGRO_EVENT *event )
+{
+    if( event->keyboard.keycode == this->shortcut.keycode
+        && ( ( event->keyboard.modifiers & this->shortcut.modifiers ) || this->shortcut.modifiers == 0 ) )
+    {
+        ALLEGRO_EVENT ev;
+        wz_craft_event( &ev, WZ_HANDLE_SHORTCUT, this, 0 );
+        this->send_event( &ev );
+        return 1;
+    }
+
+    if( !( ( event->keyboard.keycode == ALLEGRO_KEY_TAB ) || ( event->keyboard.keycode == ALLEGRO_KEY_UP )
+           || ( event->keyboard.keycode == ALLEGRO_KEY_RIGHT ) || ( event->keyboard.keycode == ALLEGRO_KEY_DOWN )
+           || ( event->keyboard.keycode == ALLEGRO_KEY_LEFT ) ) )
+        return 0;
+
+    if( this->first_child != 0 || !this->parent )
+    {
+        return 0;
+    }
+
+    if( event->keyboard.keycode == ALLEGRO_KEY_TAB )
+    {
+        if( event->keyboard.modifiers & 1 )
+        {
+            this->ask_parent_to_focus_prev();
+        }
+        else
+        {
+            this->ask_parent_to_focus_next();
+        }
+    }
+    else if( event->keyboard.keycode == ALLEGRO_KEY_UP )
+    {
+        this->get_widget_dir( 0 )->ask_parent_for_focus();
+    }
+    else if( event->keyboard.keycode == ALLEGRO_KEY_RIGHT )
+    {
+        this->get_widget_dir( 1 )->ask_parent_for_focus();
+    }
+    else if( event->keyboard.keycode == ALLEGRO_KEY_DOWN )
+    {
+        this->get_widget_dir( 2 )->ask_parent_for_focus();
+    }
+    else if( event->keyboard.keycode == ALLEGRO_KEY_LEFT )
+    {
+        this->get_widget_dir( 3 )->ask_parent_for_focus();
+    }
+
+    return 1;
 }
 
 /*

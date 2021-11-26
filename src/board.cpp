@@ -39,12 +39,16 @@ Board::Board()
       height( 0 ),
       max_width( 0 ),
       max_height( 0 ),
-      panel(),
-      vclue(),
-      hclue(),
-      info_panel(),
-      time_panel(),
-      all(),
+      panel( TiledBlock::BLOCK_TYPE::TB_PANEL,
+             &all,
+             PANEL_BACKGROUND_COLOR,
+             PANEL_BORDER_COLOR,
+             TiledBlock::Visibility::Visible ),
+      vclue( TiledBlock::BLOCK_TYPE::TB_ALL, &all, NULL_COLOR, NULL_COLOR, TiledBlock::Visibility::Visible ),
+      hclue( TiledBlock::BLOCK_TYPE::TB_ALL, &all, NULL_COLOR, NULL_COLOR, TiledBlock::Visibility::Visible ),
+      info_panel( TiledBlock::BLOCK_TYPE::TB_ALL, &all, NULL_COLOR, NULL_COLOR, TiledBlock::Visibility::Visible ),
+      time_panel( TiledBlock::BLOCK_TYPE::TB_ALL, &all, NULL_COLOR, NULL_COLOR, TiledBlock::Visibility::Visible ),
+      all( TiledBlock::BLOCK_TYPE::TB_ALL, nullptr, NULL_COLOR, NULL_COLOR, TiledBlock::Visibility::Visible ),
       dragging( nullptr ),
       highlight( nullptr ),
       rule_out( nullptr ),
@@ -79,14 +83,21 @@ void Board::destroy_board()
     {
         for( j = 0; j < column_height; j++ )
         {
+            for( int k = 0; k < number_of_columns; k++ )
+            {
+                delete panel.sub[i]->sub[j]->sub[k];
+            }
             panel.sub[i]->sub[j]->sub.clear();
+            delete panel.sub[i]->sub[j];
         }
         panel.sub[i]->sub.clear();
+        delete panel.sub[i];
     }
     panel.sub.clear();
 
     for( i = 0; i < time_panel.number_of_subblocks; i++ )
         delete time_panel.sub[i];
+    time_panel.sub.clear();
 
     destroy_board_clue_blocks();
     destroy_all_bitmaps( this );
@@ -127,7 +138,6 @@ void Board::clear_info_panel()
 // mode: 1 = create, 0 = update, 2 = create fullscreen
 int Board::create_board( GameData *game_data, CreateMode mode )
 {
-    int i, j, k;
     int column_w, column_h, block_w, block_h, block_space;
     int hclue_tile_w, hclue_tile_h, vclue_tile_w, vclue_tile_h;
     int panel_tile_w, panel_tile_h;
@@ -137,8 +147,8 @@ int Board::create_board( GameData *game_data, CreateMode mode )
 
     if( mode != CreateMode::Update )
     {
-        clue_bmp.resize( game_data->clue_n );
-        clue_tiledblock.resize( game_data->clue_n );
+        clue_bmp.resize( game_data->clue_n, nullptr );
+        clue_tiledblock.resize( game_data->clue_n, nullptr );
     }
 
     if( max_height * INFO_PANEL_PORTION - 2 * INFO_PANEL_MARGIN < 32 ) // guarantee height of 32 pixels in info panel
@@ -158,14 +168,9 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     panel.width = ( width - 2 * PANEL_MARGIN - width * HCLUEBOX_PORTION - 2 * HCLUEBOX_MARGIN );
     panel.height = ( height - 2 * PANEL_MARGIN - height * VCLUEBOX_PORTION - 2 * VCLUEBOX_MARGIN );
     panel.margin = PANEL_MARGIN;
-    panel.bd_color = PANEL_BD_COLOR;
-    panel.bg_color = PANEL_BG_COLOR;
-    panel.bd = 1;
+    panel.draw_border = 1;
     panel.number_of_subblocks = number_of_columns; // number_of_columns subpanels
-    panel.parent = &all;
-    panel.type = TB_PANEL;
     panel.index = 0;
-    panel.hidden = TiledBlock::Visibility::Visible;
     panel.bmp = nullptr;
 
     // for nons-square panel tiles:
@@ -196,22 +201,24 @@ int Board::create_board( GameData *game_data, CreateMode mode )
 
     // panel columns
     if( mode != CreateMode::Update )
-        panel.sub.resize( number_of_columns );
+        panel.sub.resize( number_of_columns, nullptr );
 
-    for( i = 0; i < number_of_columns; i++ )
+    for( int i = 0; i < number_of_columns; i++ )
     {
         if( mode != CreateMode::Update )
         {
-            panel.sub[i] = new TiledBlock();
-            panel.sub[i]->bg_color = PANEL_COLUMN_BG_COLOR;
-            panel.sub[i]->bd_color = PANEL_COLUMN_BD_COLOR;
-            panel.sub[i]->parent = &panel;
-            panel.sub[i]->bd = 1; // draw boundary
+            if( !panel.sub[i] )
+            {
+                panel.sub[i] = new TiledBlock( TiledBlock::BLOCK_TYPE::TB_PANEL_COLUMN,
+                                               &panel,
+                                               PANEL_COLUMN_BACKGROUND_COLOR,
+                                               PANEL_COLUMN_BORDER_COLOR,
+                                               TiledBlock::Visibility::Visible );
+            }
+            panel.sub[i]->draw_border = 1; // draw boundary
             panel.sub[i]->number_of_subblocks = column_height;
-            panel.sub[i]->sub.resize( column_height );
-            panel.sub[i]->type = TB_PANEL_COLUMN;
+            panel.sub[i]->sub.resize( column_height, nullptr );
             panel.sub[i]->index = i;
-            panel.sub[i]->hidden = TiledBlock::Visibility::Visible;
             panel.sub[i]->bmp = nullptr; // no background image
         }
 
@@ -222,20 +229,22 @@ int Board::create_board( GameData *game_data, CreateMode mode )
         panel.sub[i]->y = 0;
 
         // panel blocks
-        for( j = 0; j < column_height; j++ )
+        for( int j = 0; j < column_height; j++ )
         {
             if( mode != CreateMode::Update )
             {
-                panel.sub[i]->sub[j] = new TiledBlock();
-                panel.sub[i]->sub[j]->bd_color = NULL_COLOR;
-                panel.sub[i]->sub[j]->bg_color = NULL_COLOR;
-                panel.sub[i]->sub[j]->bd = 0;
+                if( !panel.sub[i]->sub[j] )
+                {
+                    panel.sub[i]->sub[j] = new TiledBlock( TiledBlock::BLOCK_TYPE::TB_PANEL_BLOCK,
+                                                           panel.sub[i],
+                                                           NULL_COLOR,
+                                                           NULL_COLOR,
+                                                           TiledBlock::Visibility::Visible );
+                }
+                panel.sub[i]->sub[j]->draw_border = 0;
                 panel.sub[i]->sub[j]->number_of_subblocks = number_of_columns;
-                panel.sub[i]->sub[j]->sub.resize( number_of_columns );
-                panel.sub[i]->sub[j]->parent = panel.sub[i];
-                panel.sub[i]->sub[j]->type = TB_PANEL_BLOCK;
+                panel.sub[i]->sub[j]->sub.resize( number_of_columns, nullptr );
                 panel.sub[i]->sub[j]->index = j;
-                panel.sub[i]->sub[j]->hidden = TiledBlock::Visibility::Visible;
                 panel.sub[i]->sub[j]->bmp = nullptr;
             }
             panel.sub[i]->sub[j]->margin = PANEL_BLOCK_MARGIN;
@@ -247,20 +256,22 @@ int Board::create_board( GameData *game_data, CreateMode mode )
                 j * ( panel.sub[i]->sub[j]->height + block_space + 2 * PANEL_BLOCK_MARGIN ) + PANEL_BLOCK_MARGIN;
 
             // panel tiles
-            for( k = 0; k < number_of_columns; k++ )
+            for( int k = 0; k < number_of_columns; k++ )
             {
                 if( mode != CreateMode::Update )
                 {
-                    panel.sub[i]->sub[j]->sub[k] = new TiledBlock();
-                    panel.sub[i]->sub[j]->sub[k]->bd_color = PANEL_TILE_BD_COLOR;
-                    panel.sub[i]->sub[j]->sub[k]->bg_color = NULL_COLOR;
-                    panel.sub[i]->sub[j]->sub[k]->bd = 1;
+                    if( !panel.sub[i]->sub[j]->sub[k] )
+                    {
+                        panel.sub[i]->sub[j]->sub[k] = new TiledBlock( TiledBlock::BLOCK_TYPE::TB_PANEL_TILE,
+                                                                       panel.sub[i]->sub[j],
+                                                                       NULL_COLOR,
+                                                                       PANEL_TILE_BORDER_COLOR,
+                                                                       TiledBlock::Visibility::Visible );
+                    }
+                    panel.sub[i]->sub[j]->sub[k]->draw_border = 1;
                     panel.sub[i]->sub[j]->sub[k]->number_of_subblocks = 0;
                     panel.sub[i]->sub[j]->sub[k]->sub.clear();
-                    panel.sub[i]->sub[j]->sub[k]->parent = panel.sub[i]->sub[j];
-                    panel.sub[i]->sub[j]->sub[k]->type = TB_PANEL_TILE;
                     panel.sub[i]->sub[j]->sub[k]->index = k;
-                    panel.sub[i]->sub[j]->sub[k]->hidden = TiledBlock::Visibility::Visible;
                 }
                 panel.sub[i]->sub[j]->sub[k]->margin = 0;
                 panel.sub[i]->sub[j]->sub[k]->width = panel_tile_w;
@@ -306,7 +317,7 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     {
         number_of_vclues = 0;
         number_of_hclues = 0;
-        for( i = 0; i < game_data->clue_n; i++ )
+        for( int i = 0; i < game_data->clue_n; i++ )
         {
             if( is_vclue( game_data->clue[i].rel ) )
                 number_of_vclues++;
@@ -343,72 +354,77 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     vclue.width = vclue.number_of_subblocks * ( vclue_tile_w + 2 * CLUE_TILE_MARGIN );
 
     //create Vclue tiles
-    vclue.sub.resize( vclue.number_of_subblocks );
-    for( i = 0; i < vclue.number_of_subblocks; i++ )
+    vclue.sub.resize( vclue.number_of_subblocks, nullptr );
+    for( int i = 0; i < vclue.number_of_subblocks; i++ )
     {
-        vclue.sub[i] = new TiledBlock();
+        if( !vclue.sub[i] )
+        {
+            vclue.sub[i] = new TiledBlock( TiledBlock::BLOCK_TYPE::TB_VCLUE_TILE,
+                                           &( vclue ),
+                                           CLUE_TILE_BACKGROUND_COLOR,
+                                           CLUE_TILE_BORDER_COLOR,
+                                           TiledBlock::Visibility::Visible );
+        }
         vclue.sub[i]->width = vclue_tile_w;
         vclue.sub[i]->height = vclue_tile_h;
         vclue.sub[i]->margin = CLUE_TILE_MARGIN;
         vclue.sub[i]->x = vclue.sub[i]->margin + i * ( vclue.sub[i]->width + 2 * vclue.sub[i]->margin );
         vclue.sub[i]->y = vclue.sub[i]->margin;
-        vclue.sub[i]->bd_color = CLUE_TILE_BD_COLOR;
-        vclue.sub[i]->bg_color = CLUE_TILE_BG_COLOR;
-        vclue.sub[i]->bd = 1;
+        vclue.sub[i]->draw_border = 1;
         vclue.sub[i]->number_of_subblocks = 0;
         vclue.sub[i]->sub.clear();
-        vclue.sub[i]->parent = &( vclue );
-        vclue.sub[i]->type = TB_VCLUE_TILE;
         vclue.sub[i]->index = -1;
-        vclue.sub[i]->hidden = TiledBlock::Visibility::Visible;
         vclue.sub[i]->bmp = nullptr;
     }
 
     //create Hclue tiles
-    hclue.sub.resize( hclue.number_of_subblocks );
-    for( i = 0; i < hclue.number_of_subblocks; i++ )
+    hclue.sub.resize( hclue.number_of_subblocks, nullptr );
+    for( int i = 0; i < hclue.number_of_subblocks; i++ )
     {
-        hclue.sub[i] = new TiledBlock();
+        if( !hclue.sub[i] )
+        {
+            hclue.sub[i] = new TiledBlock( TiledBlock::BLOCK_TYPE::TB_HCLUE_TILE,
+                                           &( hclue ),
+                                           CLUE_TILE_BACKGROUND_COLOR,
+                                           CLUE_TILE_BORDER_COLOR,
+                                           TiledBlock::Visibility::Visible );
+        }
         hclue.sub[i]->width = hclue_tile_w;
         hclue.sub[i]->height = hclue_tile_h;
         hclue.sub[i]->margin = CLUE_TILE_MARGIN;
         hclue.sub[i]->x = hclue.sub[i]->margin;
         hclue.sub[i]->y = hclue.sub[i]->margin + i * ( hclue.sub[i]->height + 2 * hclue.sub[i]->margin );
-        ;
-        hclue.sub[i]->bd_color = CLUE_TILE_BD_COLOR;
-        hclue.sub[i]->bg_color = CLUE_TILE_BG_COLOR;
-        hclue.sub[i]->bd = 1;
+        hclue.sub[i]->draw_border = 1;
         hclue.sub[i]->number_of_subblocks = 0;
         hclue.sub[i]->sub.clear();
-        hclue.sub[i]->parent = &( hclue );
-        hclue.sub[i]->type = TB_HCLUE_TILE;
         hclue.sub[i]->index = -1;
-        hclue.sub[i]->hidden = TiledBlock::Visibility::Visible;
         hclue.sub[i]->bmp = nullptr;
     }
 
     //load Hclues
-    j = 0;
-    k = 0;
-    for( i = 0; i < game_data->clue_n; i++ )
     {
-        if( is_vclue( game_data->clue[i].rel ) )
+        int j = 0;
+        int k = 0;
+        for( int i = 0; i < game_data->clue_n; i++ )
         {
-            vclue.sub[j]->index = i;
-            vclue.sub[j]->hidden =
-                game_data->clue[i].hidden ? TiledBlock::Visibility::PartiallyHidden : TiledBlock::Visibility::Visible;
-            vclue.sub[j]->bmp = &( clue_bmp[i] );
-            clue_tiledblock[i] = vclue.sub[j];
-            j++;
-        }
-        else
-        {
-            hclue.sub[k]->index = i;
-            hclue.sub[k]->hidden =
-                game_data->clue[i].hidden ? TiledBlock::Visibility::PartiallyHidden : TiledBlock::Visibility::Visible;
-            hclue.sub[k]->bmp = &( clue_bmp[i] );
-            clue_tiledblock[i] = hclue.sub[k];
-            k++;
+            if( is_vclue( game_data->clue[i].rel ) )
+            {
+                vclue.sub[j]->index = i;
+                vclue.sub[j]->hidden = game_data->clue[i].hidden ? TiledBlock::Visibility::PartiallyHidden
+                                                                 : TiledBlock::Visibility::Visible;
+                vclue.sub[j]->bmp = &( clue_bmp[i] );
+                clue_tiledblock[i] = vclue.sub[j];
+                j++;
+            }
+            else
+            {
+                hclue.sub[k]->index = i;
+                hclue.sub[k]->hidden = game_data->clue[i].hidden ? TiledBlock::Visibility::PartiallyHidden
+                                                                 : TiledBlock::Visibility::Visible;
+                hclue.sub[k]->bmp = &( clue_bmp[i] );
+                clue_tiledblock[i] = hclue.sub[k];
+                k++;
+            }
         }
     }
 
@@ -416,7 +432,7 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     width = hclue.x + hclue.width + hclue.margin;
     height = std::max( hclue.height + 2 * hclue.margin, vclue.y + vclue.height + vclue.margin );
 
-    for( i = 1; i < number_of_columns; i++ )
+    for( int i = 1; i < number_of_columns; i++ )
         panel.sub[i]->x += i * std::min( int( max_width * H_FLEX_FACTOR ), ( max_width - width ) / number_of_columns );
     hclue.x +=
         number_of_columns * std::min( int( max_width * H_FLEX_FACTOR ), ( max_width - width ) / number_of_columns );
@@ -442,7 +458,7 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     info_panel.number_of_subblocks = 0;
     info_panel.sub.clear();
     info_panel.parent = &all;
-    info_panel.type = TB_INFO_PANEL;
+    info_panel.type = TiledBlock::BLOCK_TYPE::TB_INFO_PANEL;
     info_panel.index = 0;
     info_panel.hidden = TiledBlock::Visibility::Visible;
     info_panel.bmp = nullptr;
@@ -453,42 +469,55 @@ int Board::create_board( GameData *game_data, CreateMode mode )
     time_panel.width = hclue.width;
     time_panel.height = info_panel.height;
     time_panel.margin = info_panel.margin;
-    time_panel.bg_color = TIME_PANEL_BG_COLOR;
-    time_panel.bd_color = TIME_PANEL_BD_COLOR;
-    time_panel.bd = 1;
+    time_panel.background_color = TIME_PANEL_BACKGROUND_COLOR;
+    time_panel.border_color = TIME_PANEL_BORDER_COLOR;
+    time_panel.draw_border = 1;
     time_panel.number_of_subblocks = 1 + TIME_PANEL_BUTTONS;
     time_panel.parent = &all;
-    time_panel.type = TB_TIME_PANEL;
+    time_panel.type = TiledBlock::BLOCK_TYPE::TB_TIME_PANEL;
     time_panel.index = 0;
     time_panel.hidden = TiledBlock::Visibility::Visible;
     time_panel.bmp = nullptr;
 
     if( mode != CreateMode::Update )
-    { // if board is being created
-        time_panel.sub.resize( 6 );
-        for( i = 0; i < 5; i++ )
-            time_panel.sub[i] = new TiledBlock();
+    {
+        // if board is being created
+        time_panel.sub.resize( 6, nullptr );
     }
 
     // timer
+    if( !time_panel.sub[0] )
+    {
+        time_panel.sub[0] = new TiledBlock( TiledBlock::BLOCK_TYPE::TB_TIMER,
+                                            &time_panel,
+                                            TIME_PANEL_BACKGROUND_COLOR,
+                                            NULL_COLOR,
+                                            TiledBlock::Visibility::Visible );
+    }
     time_panel.sub[0]->x = 2;
     time_panel.sub[0]->y = 4;
     time_panel.sub[0]->height = 16;
     time_panel.sub[0]->width = time_panel.width - 4;
     time_panel.sub[0]->margin = 0;
-    time_panel.sub[0]->bd_color = NULL_COLOR;
-    time_panel.sub[0]->bg_color = TIME_PANEL_BG_COLOR;
-    time_panel.sub[0]->bd = 0;
+    time_panel.sub[0]->draw_border = 0;
     time_panel.sub[0]->number_of_subblocks = 0;
     time_panel.sub[0]->sub.clear();
-    time_panel.sub[0]->parent = &time_panel;
-    time_panel.sub[0]->type = TB_TIMER;
     time_panel.sub[0]->index = 0;
-    time_panel.sub[0]->hidden = TiledBlock::Visibility::Visible;
     time_panel.sub[0]->bmp = &time_bmp;
 
-    for( i = 0; i < TIME_PANEL_BUTTONS; i++ )
+    static constexpr std::array types = { TiledBlock::BLOCK_TYPE::TB_TIMER,
+                                          TiledBlock::BLOCK_TYPE::TB_BUTTON_CLUE,
+                                          TiledBlock::BLOCK_TYPE::TB_BUTTON_HELP,
+                                          TiledBlock::BLOCK_TYPE::TB_BUTTON_SETTINGS,
+                                          TiledBlock::BLOCK_TYPE::TB_BUTTON_UNDO };
+
+    for( int i = 0; i < TIME_PANEL_BUTTONS; i++ )
     { // buttons
+        if( !time_panel.sub[i + 1] )
+        {
+            time_panel.sub[i + 1] =
+                new TiledBlock( types[i + 1], &time_panel, NULL_COLOR, WHITE_COLOR, TiledBlock::Visibility::Visible );
+        }
         time_panel.sub[i + 1]->height = std::min( ( time_panel.height - 24 ), time_panel.width / 5 );
         time_panel.sub[i + 1]->width = time_panel.sub[i + 1]->height;
         time_panel.sub[i + 1]->y = ( ( time_panel.height + ( time_panel.sub[0]->y + time_panel.sub[0]->height ) )
@@ -498,21 +527,12 @@ int Board::create_board( GameData *game_data, CreateMode mode )
             ( ( i + 1 ) * time_panel.width + ( i - TIME_PANEL_BUTTONS ) * time_panel.sub[i + 1]->width )
             / ( TIME_PANEL_BUTTONS + 1 );
         time_panel.sub[i + 1]->margin = 0;
-        time_panel.sub[i + 1]->bg_color = NULL_COLOR;
-        time_panel.sub[i + 1]->bd_color = WHITE_COLOR;
-        time_panel.sub[i + 1]->bd = 0;
+        time_panel.sub[i + 1]->draw_border = 0;
         time_panel.sub[i + 1]->number_of_subblocks = 0;
         time_panel.sub[i + 1]->sub.clear();
-        time_panel.sub[i + 1]->parent = &time_panel;
         time_panel.sub[i + 1]->bmp = &button_bmp_scaled[i];
         time_panel.sub[i + 1]->index = 0;
-        time_panel.sub[i + 1]->hidden = TiledBlock::Visibility::Visible;
     }
-
-    time_panel.sub[1]->type = TB_BUTTON_CLUE;
-    time_panel.sub[2]->type = TB_BUTTON_HELP;
-    time_panel.sub[3]->type = TB_BUTTON_SETTINGS;
-    time_panel.sub[4]->type = TB_BUTTON_UNDO;
 
     // collect TiledBlocks into an array for convenience
     // and create settings block
@@ -526,8 +546,8 @@ int Board::create_board( GameData *game_data, CreateMode mode )
         all.draw_border = 0;
         all.parent = nullptr;
         all.number_of_subblocks = 5;
-        all.sub.resize( all.number_of_subblocks );
-        all.type = TB_ALL;
+        all.sub.resize( all.number_of_subblocks, nullptr );
+        all.type = TiledBlock::BLOCK_TYPE::TB_ALL;
         all.index = 0;
         all.hidden = TiledBlock::Visibility::Visible;
         all.bmp = nullptr;

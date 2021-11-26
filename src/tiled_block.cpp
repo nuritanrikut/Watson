@@ -2,6 +2,28 @@
 
 #include <allegro5/allegro_primitives.h>
 
+TiledBlock::TiledBlock( TiledBlock::BLOCK_TYPE type_,
+                        TiledBlock *parent_,
+                        ALLEGRO_COLOR background,
+                        ALLEGRO_COLOR border,
+                        TiledBlock::Visibility visibility )
+    : x( 0 ),
+      y( 0 ),
+      width( 0 ),
+      height( 0 ),
+      margin( 0 ),
+      border_color( border ),
+      background_color( background ),
+      draw_border( 0 ),
+      number_of_subblocks( 0 ),
+      parent( parent_ ),
+      type( type_ ),
+      index( 0 ),
+      hidden( visibility ),
+      bmp( nullptr )
+{
+}
+
 // find the tile at x,y. Returns in path[] an array of integers starting at path[0] representing the
 // nested sequence of subblocks that leads to it (depth=0 means the main tile doesn't match)
 

@@ -98,380 +98,498 @@ void remove_clue( GameData *game_data, int i )
     game_data->clue[i] = game_data->clue[game_data->clue_n];
 };
 
+int check_this_clue_reveal( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    if( game_data->guess[clue->i[0]][j0] < 0 )
+    {
+        guess_tile( game_data, clue->i[0], j0, k0 );
+        ret = 1 | k0 << 1 | j0 << 4 | clue->i[0] << 7 | 1 << 10;
+    }
+    return ret;
+}
+
+int check_this_clue_one_side( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    {
+        if( game_data->tile[i][j1][k1] )
+        {
+            hide_tile_and_check( game_data, i, j1, k1 );
+            ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+        }
+        if( game_data->tile[i][j0][k0] )
+            break;
+    }
+    for( int i = game_data->number_of_columns - 1; i >= 0; i-- )
+    {
+        if( game_data->tile[i][j0][k0] )
+        {
+            hide_tile_and_check( game_data, i, j0, k0 );
+            ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+        }
+        if( game_data->tile[i][j1][k1] )
+            break;
+    }
+    return ret;
+}
+
+int check_this_clue_together_2( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    {
+        if( !game_data->tile[i][j0][k0] || !game_data->tile[i][j1][k1] )
+        {
+            if( game_data->tile[i][j0][k0] )
+            {
+                hide_tile_and_check( game_data, i, j0, k0 );
+                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+            }
+            if( game_data->tile[i][j1][k1] )
+            {
+                hide_tile_and_check( game_data, i, j1, k1 );
+                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+            }
+        }
+    }
+    return ret;
+}
+
+int check_this_clue_together_3( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    int j2 = clue->j[2];
+    int k2 = clue->k[2];
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    {
+        if( !game_data->tile[i][j0][k0] || !game_data->tile[i][j1][k1] || !game_data->tile[i][j2][k2] )
+        { // if one exists but one doesn't
+            if( game_data->tile[i][j0][k0] )
+            {
+                hide_tile_and_check( game_data, i, j0, k0 );
+                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+            }
+            if( game_data->tile[i][j1][k1] )
+            {
+                hide_tile_and_check( game_data, i, j1, k1 );
+                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+                ;
+            }
+            if( game_data->tile[i][j2][k2] )
+            {
+                hide_tile_and_check( game_data, i, j2, k2 );
+                ret = 1 | k2 << 1 | j2 << 4 | i << 7;
+                ;
+            }
+        }
+    }
+    return ret;
+}
+
+int check_this_clue_together_not_middle( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    int j2 = clue->j[2];
+    int k2 = clue->k[2];
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    {
+        if( ( game_data->guess[i][j0] == k0 ) || ( game_data->guess[i][j2] == k2 ) )
+        {
+            if( game_data->tile[i][j1][k1] )
+            {
+                hide_tile_and_check( game_data, i, j1, k1 );
+                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+            }
+        }
+        if( ( !game_data->tile[i][j0][k0] ) || ( game_data->guess[i][j1] == k1 ) || !game_data->tile[i][j2][k2] )
+        {
+            if( game_data->tile[i][j0][k0] )
+            {
+                hide_tile_and_check( game_data, i, j0, k0 );
+                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+            }
+            if( game_data->tile[i][j2][k2] )
+            {
+                hide_tile_and_check( game_data, i, j2, k2 );
+                ret = 1 | k2 << 1 | j2 << 4 | i << 7;
+                ;
+            }
+        }
+    }
+    return ret;
+}
+
+int check_this_clue_not_together( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    {
+        if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i][j1][k1] )
+        {
+            hide_tile_and_check( game_data, i, j1, k1 );
+            ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+        }
+        if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i][j0][k0] )
+        {
+            hide_tile_and_check( game_data, i, j0, k0 );
+            ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+            ;
+        }
+    }
+    return ret;
+}
+
+int check_this_clue_next_to( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    if( !game_data->tile[1][j0][k0] && game_data->tile[0][j1][k1] )
+    {
+        hide_tile_and_check( game_data, 0, j1, k1 );
+        ret = 1 | k1 << 1 | j1 << 4 | 0 << 7;
+    }
+    if( !game_data->tile[1][j1][k1] && game_data->tile[0][j0][k0] )
+    {
+        hide_tile_and_check( game_data, 0, j0, k0 );
+        ret = 1 | k0 << 1 | j0 << 4 | 0 << 7;
+    }
+    if( !game_data->tile[game_data->number_of_columns - 2][j0][k0]
+        && game_data->tile[game_data->number_of_columns - 1][j1][k1] )
+    {
+        hide_tile_and_check( game_data, game_data->number_of_columns - 1, j1, k1 );
+        ret = 1 | k1 << 1 | j1 << 4 | ( game_data->number_of_columns - 1 ) << 7;
+    }
+    if( !game_data->tile[game_data->number_of_columns - 2][j1][k1]
+        && game_data->tile[game_data->number_of_columns - 1][j0][k0] )
+    {
+        hide_tile_and_check( game_data, game_data->number_of_columns - 1, j0, k0 );
+        ret = 1 | k0 << 1 | j0 << 4 | ( game_data->number_of_columns - 1 ) << 7;
+        ;
+    }
+
+    for( int i = 1; i < game_data->number_of_columns - 1; i++ )
+    {
+        if( !game_data->tile[i - 1][j0][k0] && !game_data->tile[i + 1][j0][k0] )
+        {
+            if( game_data->tile[i][j1][k1] )
+            {
+                hide_tile_and_check( game_data, i, j1, k1 );
+                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+                ;
+            }
+        }
+        if( !game_data->tile[i - 1][j1][k1] && !game_data->tile[i + 1][j1][k1] )
+        {
+            if( game_data->tile[i][j0][k0] )
+            {
+                hide_tile_and_check( game_data, i, j0, k0 );
+                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+                ;
+            }
+        }
+    }
+    return ret;
+}
+
+int check_this_clue_not_next_to( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    {
+        if( i < game_data->number_of_columns - 1 )
+        {
+            if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i + 1][j1][k1] )
+            {
+                hide_tile_and_check( game_data, i + 1, j1, k1 );
+                ret = 1 | k1 << 1 | j1 << 4 | ( i + 1 ) << 7;
+                ;
+            }
+
+            if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i + 1][j0][k0] )
+            {
+                hide_tile_and_check( game_data, i + 1, j0, k0 );
+                ret = 1 | k0 << 1 | j0 << 4 | ( i + 1 ) << 7;
+                ;
+            }
+        }
+        if( i > 0 )
+        {
+            if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i - 1][j1][k1] )
+            {
+                hide_tile_and_check( game_data, i - 1, j1, k1 );
+                ret = 1 | k1 << 1 | j1 << 4 | ( i - 1 ) << 7;
+                ;
+            }
+
+            if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i - 1][j0][k0] )
+            {
+                hide_tile_and_check( game_data, i - 1, j0, k0 );
+                ret = 1 | k0 << 1 | j0 << 4 | ( i - 1 ) << 7;
+                ;
+            }
+        }
+    }
+    return ret;
+}
+
+int check_this_clue_consecutive( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    int j2 = clue->j[2];
+    int k2 = clue->k[2];
+    int hide_first = 0;
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    {
+        for( int m = 0; m < 2; m++ )
+        {
+            if( game_data->tile[i][j0][k0] )
+            {
+                if( ( i < game_data->number_of_columns - 2 ) && ( i < 2 ) )
+                {
+                    if( ( !game_data->tile[i + 1][j1][k1] ) || ( !game_data->tile[i + 2][j2][k2] ) )
+                    {
+                        hide_first = 1;
+                    }
+                }
+                if( ( i >= 2 ) && ( i >= game_data->number_of_columns - 2 ) )
+                {
+                    if( ( !game_data->tile[i - 2][j2][k2] ) || ( !game_data->tile[i - 1][j1][k1] ) )
+                    {
+                        hide_first = 1;
+                    }
+                }
+
+                if( ( i >= 2 ) && ( i < game_data->number_of_columns - 2 ) )
+                {
+                    if( ( ( !game_data->tile[i + 1][j1][k1] ) || ( !game_data->tile[i + 2][j2][k2] ) )
+                        && ( ( !game_data->tile[i - 2][j2][k2] ) || ( !game_data->tile[i - 1][j1][k1] ) ) )
+                    {
+                        hide_first = 1;
+                    }
+                }
+                if( hide_first )
+                {
+                    hide_first = 0;
+                    hide_tile_and_check( game_data, i, j0, k0 );
+                    ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+                }
+            }
+            std::swap( j0, j2 );
+            std::swap( k0, k2 );
+        }
+
+        if( game_data->tile[i][j1][k1] )
+        {
+            if( ( i == 0 ) || ( i == game_data->number_of_columns - 1 ) )
+            {
+                hide_first = 1;
+            }
+            else
+            {
+                if( ( ( !game_data->tile[i - 1][j0][k0] ) && !( game_data->tile[i + 1][j0][k0] ) )
+                    || ( ( !game_data->tile[i - 1][j2][k2] ) && !( game_data->tile[i + 1][j2][k2] ) ) )
+                { // error here! incorrect check!
+                    hide_first = 1;
+                }
+            }
+            if( hide_first )
+            {
+                hide_first = 0;
+                hide_tile_and_check( game_data, i, j1, k1 );
+                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+                ;
+            }
+        }
+    }
+    return ret;
+}
+
+int check_this_clue_not_middle( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    int j2 = clue->j[2];
+    int k2 = clue->k[2];
+    int hide_first = 0;
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    { // apply mask
+        for( int m = 0; m < 2; m++ )
+        {
+            if( game_data->tile[i][j0][k0] )
+            {
+                if( ( i < game_data->number_of_columns - 2 ) && ( i < 2 ) )
+                {
+                    if( ( game_data->guess[i + 1][j1] == k1 ) || ( !game_data->tile[i + 2][j2][k2] ) )
+                    {
+                        hide_first = 1;
+                    }
+                }
+                if( ( i >= 2 ) && ( i >= game_data->number_of_columns - 2 ) )
+                {
+                    if( ( game_data->guess[i - 1][j1] == k1 ) || ( !game_data->tile[i - 2][j2][k2] ) )
+                    {
+                        hide_first = 1;
+                    }
+                }
+
+                if( ( i >= 2 ) && ( i < game_data->number_of_columns - 2 ) )
+                {
+                    if( ( ( game_data->guess[i + 1][j1] == k1 ) || ( !game_data->tile[i + 2][j2][k2] ) )
+                        && ( ( !game_data->tile[i - 2][j2][k2] ) || ( game_data->guess[i - 1][j1] == k1 ) ) )
+                    {
+                        hide_first = 1;
+                    }
+                }
+                if( hide_first )
+                {
+                    hide_first = 0;
+                    ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+                    ;
+                    hide_tile_and_check( game_data, i, j0, k0 );
+                }
+            }
+            std::swap( j0, j2 );
+            std::swap( k0, k2 );
+        }
+        if( ( i >= 1 ) && ( i <= game_data->number_of_columns - 2 ) )
+        {
+            if( ( ( game_data->guess[i - 1][j0] == k0 ) && ( game_data->guess[i + 1][j2] == k2 ) )
+                || ( ( game_data->guess[i - 1][j2] == k2 ) && ( game_data->guess[i + 1][j0] == k0 ) ) )
+            {
+                if( game_data->tile[i][j1][k1] )
+                {
+                    hide_tile_and_check( game_data, i, j1, k1 );
+                    ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+int check_this_clue_together_first_with_only_one( GameData *game_data, Clue *clue )
+{
+    int ret = 0;
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    int j2 = clue->j[2];
+    int k2 = clue->k[2];
+    // xxx todo: check this
+    for( int i = 0; i < game_data->number_of_columns; i++ )
+    {
+        if( !game_data->tile[i][j1][k1] && !game_data->tile[i][j2][k2] )
+        {
+            if( game_data->tile[i][j1][k1] )
+            {
+                hide_tile_and_check( game_data, i, j0, k0 );
+                ret = 1 | k0 << 1 | j0 << 4 | i << 7;
+            }
+        }
+        else if( game_data->guess[i][j1] == k1 )
+        {
+            if( game_data->tile[i][j2][k2] )
+            {
+                hide_tile_and_check( game_data, i, j2, k2 );
+                ret = 1 | k2 << 1 | j2 << 4 | i << 7;
+            }
+        }
+        else if( game_data->guess[i][j2] == k2 )
+        {
+            if( game_data->tile[i][j1][k1] )
+            {
+                hide_tile_and_check( game_data, i, j1, k1 );
+                ret = 1 | k1 << 1 | j1 << 4 | i << 7;
+            }
+        }
+    }
+    return ret;
+}
+
 int check_this_clue( GameData *game_data, Clue *clue )
 {
-    int i, m, ret = 0, hide_first;
-    int j0, k0, j1, k1, j2, k2;
-
-    j0 = clue->j[0];
-    k0 = clue->k[0];
-    j1 = clue->j[1];
-    k1 = clue->k[1];
-    j2 = clue->j[2];
-    k2 = clue->k[2];
-
-    ret = 0;
-    hide_first = 0;
+    int ret = 0;
 
     switch( clue->rel )
     {
         case REVEAL:
-            if( game_data->guess[clue->i[0]][j0] < 0 )
-            {
-                guess_tile( game_data, clue->i[0], j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | clue->i[0] << 7 | 1 << 10;
-            }
+            ret = check_this_clue_reveal( game_data, clue );
             break;
         case ONE_SIDE:
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            {
-                if( game_data->tile[i][j1][k1] )
-                {
-                    hide_tile_and_check( game_data, i, j1, k1 );
-                    ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                }
-                if( game_data->tile[i][j0][k0] )
-                    break;
-            }
-            for( i = game_data->number_of_columns - 1; i >= 0; i-- )
-            {
-                if( game_data->tile[i][j0][k0] )
-                {
-                    hide_tile_and_check( game_data, i, j0, k0 );
-                    ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                }
-                if( game_data->tile[i][j1][k1] )
-                    break;
-            }
+            ret = check_this_clue_one_side( game_data, clue );
             break;
 
         case TOGETHER_2:
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            {
-                if( !game_data->tile[i][j0][k0] || !game_data->tile[i][j1][k1] )
-                {
-                    if( game_data->tile[i][j0][k0] )
-                    {
-                        hide_tile_and_check( game_data, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    }
-                    if( game_data->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game_data, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
+            ret = check_this_clue_together_2( game_data, clue );
             break;
         case TOGETHER_3:
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            {
-                if( !game_data->tile[i][j0][k0] || !game_data->tile[i][j1][k1] || !game_data->tile[i][j2][k2] )
-                { // if one exists but one doesn't
-                    if( game_data->tile[i][j0][k0] )
-                    {
-                        hide_tile_and_check( game_data, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    }
-                    if( game_data->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game_data, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        ;
-                    }
-                    if( game_data->tile[i][j2][k2] )
-                    {
-                        hide_tile_and_check( game_data, i, j2, k2 );
-                        ret = 1 | k2 << 1 | j2 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
+            ret = check_this_clue_together_3( game_data, clue );
             break;
 
         case TOGETHER_NOT_MIDDLE:
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            {
-                if( ( game_data->guess[i][j0] == k0 ) || ( game_data->guess[i][j2] == k2 ) )
-                {
-                    if( game_data->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game_data, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                    }
-                }
-                if( ( !game_data->tile[i][j0][k0] ) || ( game_data->guess[i][j1] == k1 )
-                    || !game_data->tile[i][j2][k2] )
-                {
-                    if( game_data->tile[i][j0][k0] )
-                    {
-                        hide_tile_and_check( game_data, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    }
-                    if( game_data->tile[i][j2][k2] )
-                    {
-                        hide_tile_and_check( game_data, i, j2, k2 );
-                        ret = 1 | k2 << 1 | j2 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
+            ret = check_this_clue_together_not_middle( game_data, clue );
             break;
 
         case NOT_TOGETHER:
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            {
-                if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i][j1][k1] )
-                {
-                    hide_tile_and_check( game_data, i, j1, k1 );
-                    ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                }
-                if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i][j0][k0] )
-                {
-                    hide_tile_and_check( game_data, i, j0, k0 );
-                    ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    ;
-                }
-            }
+            ret = check_this_clue_not_together( game_data, clue );
             break;
 
         case NEXT_TO:
-            if( !game_data->tile[1][j0][k0] && game_data->tile[0][j1][k1] )
-            {
-                hide_tile_and_check( game_data, 0, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | 0 << 7;
-            }
-            if( !game_data->tile[1][j1][k1] && game_data->tile[0][j0][k0] )
-            {
-                hide_tile_and_check( game_data, 0, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | 0 << 7;
-            }
-            if( !game_data->tile[game_data->number_of_columns - 2][j0][k0]
-                && game_data->tile[game_data->number_of_columns - 1][j1][k1] )
-            {
-                hide_tile_and_check( game_data, game_data->number_of_columns - 1, j1, k1 );
-                ret = 1 | k1 << 1 | j1 << 4 | ( game_data->number_of_columns - 1 ) << 7;
-            }
-            if( !game_data->tile[game_data->number_of_columns - 2][j1][k1]
-                && game_data->tile[game_data->number_of_columns - 1][j0][k0] )
-            {
-                hide_tile_and_check( game_data, game_data->number_of_columns - 1, j0, k0 );
-                ret = 1 | k0 << 1 | j0 << 4 | ( game_data->number_of_columns - 1 ) << 7;
-                ;
-            }
-
-            for( i = 1; i < game_data->number_of_columns - 1; i++ )
-            {
-                if( !game_data->tile[i - 1][j0][k0] && !game_data->tile[i + 1][j0][k0] )
-                {
-                    if( game_data->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game_data, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        ;
-                    }
-                }
-                if( !game_data->tile[i - 1][j1][k1] && !game_data->tile[i + 1][j1][k1] )
-                {
-                    if( game_data->tile[i][j0][k0] )
-                    {
-                        hide_tile_and_check( game_data, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
+            ret = check_this_clue_next_to( game_data, clue );
             break;
 
         case NOT_NEXT_TO:
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            {
-                if( i < game_data->number_of_columns - 1 )
-                {
-                    if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i + 1][j1][k1] )
-                    {
-                        hide_tile_and_check( game_data, i + 1, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | ( i + 1 ) << 7;
-                        ;
-                    }
-
-                    if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i + 1][j0][k0] )
-                    {
-                        hide_tile_and_check( game_data, i + 1, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | ( i + 1 ) << 7;
-                        ;
-                    }
-                }
-                if( i > 0 )
-                {
-                    if( ( game_data->guess[i][j0] == k0 ) && game_data->tile[i - 1][j1][k1] )
-                    {
-                        hide_tile_and_check( game_data, i - 1, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | ( i - 1 ) << 7;
-                        ;
-                    }
-
-                    if( ( game_data->guess[i][j1] == k1 ) && game_data->tile[i - 1][j0][k0] )
-                    {
-                        hide_tile_and_check( game_data, i - 1, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | ( i - 1 ) << 7;
-                        ;
-                    }
-                }
-            }
+            ret = check_this_clue_not_next_to( game_data, clue );
             break;
 
         case CONSECUTIVE:
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            {
-                for( m = 0; m < 2; m++ )
-                {
-                    if( game_data->tile[i][j0][k0] )
-                    {
-                        if( ( i < game_data->number_of_columns - 2 ) && ( i < 2 ) )
-                        {
-                            if( ( !game_data->tile[i + 1][j1][k1] ) || ( !game_data->tile[i + 2][j2][k2] ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-                        if( ( i >= 2 ) && ( i >= game_data->number_of_columns - 2 ) )
-                        {
-                            if( ( !game_data->tile[i - 2][j2][k2] ) || ( !game_data->tile[i - 1][j1][k1] ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-
-                        if( ( i >= 2 ) && ( i < game_data->number_of_columns - 2 ) )
-                        {
-                            if( ( ( !game_data->tile[i + 1][j1][k1] ) || ( !game_data->tile[i + 2][j2][k2] ) )
-                                && ( ( !game_data->tile[i - 2][j2][k2] ) || ( !game_data->tile[i - 1][j1][k1] ) ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-                        if( hide_first )
-                        {
-                            hide_first = 0;
-                            hide_tile_and_check( game_data, i, j0, k0 );
-                            ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                        }
-                    }
-                    std::swap( j0, j2 );
-                    std::swap( k0, k2 );
-                }
-
-                if( game_data->tile[i][j1][k1] )
-                {
-                    if( ( i == 0 ) || ( i == game_data->number_of_columns - 1 ) )
-                    {
-                        hide_first = 1;
-                    }
-                    else
-                    {
-                        if( ( ( !game_data->tile[i - 1][j0][k0] ) && !( game_data->tile[i + 1][j0][k0] ) )
-                            || ( ( !game_data->tile[i - 1][j2][k2] ) && !( game_data->tile[i + 1][j2][k2] ) ) )
-                        { // error here! incorrect check!
-                            hide_first = 1;
-                        }
-                    }
-                    if( hide_first )
-                    {
-                        hide_first = 0;
-                        hide_tile_and_check( game_data, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        ;
-                    }
-                }
-            }
+            ret = check_this_clue_consecutive( game_data, clue );
             break;
 
         case NOT_MIDDLE:
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            { // apply mask
-                for( m = 0; m < 2; m++ )
-                {
-                    if( game_data->tile[i][j0][k0] )
-                    {
-                        if( ( i < game_data->number_of_columns - 2 ) && ( i < 2 ) )
-                        {
-                            if( ( game_data->guess[i + 1][j1] == k1 ) || ( !game_data->tile[i + 2][j2][k2] ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-                        if( ( i >= 2 ) && ( i >= game_data->number_of_columns - 2 ) )
-                        {
-                            if( ( game_data->guess[i - 1][j1] == k1 ) || ( !game_data->tile[i - 2][j2][k2] ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-
-                        if( ( i >= 2 ) && ( i < game_data->number_of_columns - 2 ) )
-                        {
-                            if( ( ( game_data->guess[i + 1][j1] == k1 ) || ( !game_data->tile[i + 2][j2][k2] ) )
-                                && ( ( !game_data->tile[i - 2][j2][k2] ) || ( game_data->guess[i - 1][j1] == k1 ) ) )
-                            {
-                                hide_first = 1;
-                            }
-                        }
-                        if( hide_first )
-                        {
-                            hide_first = 0;
-                            ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                            ;
-                            hide_tile_and_check( game_data, i, j0, k0 );
-                        }
-                    }
-                    std::swap( j0, j2 );
-                    std::swap( k0, k2 );
-                }
-                if( ( i >= 1 ) && ( i <= game_data->number_of_columns - 2 ) )
-                {
-                    if( ( ( game_data->guess[i - 1][j0] == k0 ) && ( game_data->guess[i + 1][j2] == k2 ) )
-                        || ( ( game_data->guess[i - 1][j2] == k2 ) && ( game_data->guess[i + 1][j0] == k0 ) ) )
-                    {
-                        if( game_data->tile[i][j1][k1] )
-                        {
-                            hide_tile_and_check( game_data, i, j1, k1 );
-                            ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                        }
-                    }
-                }
-            }
+            ret = check_this_clue_not_middle( game_data, clue );
             break;
         case TOGETHER_FIRST_WITH_ONLY_ONE:
-            // xxx todo: check this
-            for( i = 0; i < game_data->number_of_columns; i++ )
-            {
-                if( !game_data->tile[i][j1][k1] && !game_data->tile[i][j2][k2] )
-                {
-                    if( game_data->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game_data, i, j0, k0 );
-                        ret = 1 | k0 << 1 | j0 << 4 | i << 7;
-                    }
-                }
-                else if( game_data->guess[i][j1] == k1 )
-                {
-                    if( game_data->tile[i][j2][k2] )
-                    {
-                        hide_tile_and_check( game_data, i, j2, k2 );
-                        ret = 1 | k2 << 1 | j2 << 4 | i << 7;
-                    }
-                }
-                else if( game_data->guess[i][j2] == k2 )
-                {
-                    if( game_data->tile[i][j1][k1] )
-                    {
-                        hide_tile_and_check( game_data, i, j1, k1 );
-                        ret = 1 | k1 << 1 | j1 << 4 | i << 7;
-                    }
-                }
-            }
+            ret = check_this_clue_together_first_with_only_one( game_data, clue );
             break;
         default:
             break;
@@ -517,7 +635,6 @@ int get_hint( GameData *game_data )
     switch_game( game_data, 0 ); // store game_data
     for( int i = 0; i < game_data->clue_n; i++ )
     {
-        if( ( tro = check_this_clue( game_data, &game_data->clue[i] ) ) )
         if( ( tile_to_rule_out = check_this_clue( game_data, &game_data->clue[i] ) ) )
         {
             ret = i;
@@ -1494,17 +1611,16 @@ int is_vclue( RELATION rel )
 int is_clue_valid( GameData *game_data, Clue *clue )
 {
     int ret = 0;
-    int i0, i1, i2, j0, k0, j1, k1, j2, k2;
 
-    j0 = clue->j[0];
-    k0 = clue->k[0];
-    j1 = clue->j[1];
-    k1 = clue->k[1];
-    j2 = clue->j[2];
-    k2 = clue->k[2];
-    i0 = game_data->where[j0][k0];
-    i1 = game_data->where[j1][k1];
-    i2 = game_data->where[j2][k2];
+    int j0 = clue->j[0];
+    int k0 = clue->k[0];
+    int j1 = clue->j[1];
+    int k1 = clue->k[1];
+    int j2 = clue->j[2];
+    int k2 = clue->k[2];
+    int i0 = game_data->where[j0][k0];
+    int i1 = game_data->where[j1][k1];
+    int i2 = game_data->where[j2][k2];
 
     ret = 1;
 

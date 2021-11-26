@@ -4,8 +4,8 @@ struct Settings
 {
     Settings()
     {
-        number_of_columns = 6;
-        column_height = 6;
+        number_of_columns = 5;
+        column_height = 5;
         advanced = 0;
         sound_mute = 0;
         type_of_tiles = 0;

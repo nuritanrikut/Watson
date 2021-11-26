@@ -445,7 +445,8 @@ WZ_WIDGET *Gui::create_settings_gui( void )
                                   float vspace,
                                   int halign,
                                   int valign,
-                                  int id ) {
+                                  int id )
+    {
         WZ_WIDGET *wgt = new WZ_FILL_LAYOUT( parent, x, y, width, height, hspace, vspace, halign, valign, id );
         wgt->flags |= WZ_STATE_HIDDEN;
 

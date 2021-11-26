@@ -81,25 +81,3 @@ struct Board
 
     ALLEGRO_FONT *text_font;
 };
-
-enum BLOCK_TYPE
-{
-    TB_OTHER = 0, // don't change this
-    TB_PANEL,
-    TB_PANEL_COLUMN,
-    TB_PANEL_BLOCK,
-    TB_PANEL_TILE,
-    TB_HCLUEBOX,
-    TB_HCLUE_TILE,
-    TB_VCLUEBOX,
-    TB_VCLUE_TILE,
-    TB_INFO_PANEL,
-    TB_TIME_PANEL,
-    TB_BUTTON_SETTINGS,
-    TB_BUTTON_HELP,
-    TB_BUTTON_CLUE,
-    TB_TIMER,
-    TB_ALL,
-    TB_BUTTON_UNDO,
-    TB_BUTTON_TILES
-};

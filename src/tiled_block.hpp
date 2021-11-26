@@ -6,6 +6,7 @@
 #include <allegro5/allegro5.h>
 
 #include "macros.hpp"
+
 struct TiledBlock
 {
     enum class Visibility
@@ -14,7 +15,39 @@ struct TiledBlock
         PartiallyHidden = 1,
         TotallyHidden = 2,
     };
-    int x, y, width, height;
+
+    enum class BLOCK_TYPE
+    {
+        TB_OTHER = 0, // don't change this
+        TB_PANEL,
+        TB_PANEL_COLUMN,
+        TB_PANEL_BLOCK,
+        TB_PANEL_TILE,
+        TB_HCLUEBOX,
+        TB_HCLUE_TILE,
+        TB_VCLUEBOX,
+        TB_VCLUE_TILE,
+        TB_INFO_PANEL,
+        TB_TIME_PANEL,
+        TB_BUTTON_SETTINGS,
+        TB_BUTTON_HELP,
+        TB_BUTTON_CLUE,
+        TB_TIMER,
+        TB_ALL,
+        TB_BUTTON_UNDO,
+        TB_BUTTON_TILES
+    };
+
+    TiledBlock( BLOCK_TYPE type,
+                TiledBlock *parent,
+                ALLEGRO_COLOR background,
+                ALLEGRO_COLOR border,
+                Visibility visibility = Visibility::Visible );
+
+    int x;
+    int y;
+    int width;
+    int height;
     int margin;
     ALLEGRO_COLOR border_color;
     ALLEGRO_COLOR background_color; // set to something if no background bitmap
@@ -22,7 +55,7 @@ struct TiledBlock
     int number_of_subblocks;
     std::vector<TiledBlock *> sub;
     TiledBlock *parent;
-    int type;             // a descriptor
+    BLOCK_TYPE type;      // a descriptor
     int index;            // a number identifying it among same-type blocks
     Visibility hidden;    // 1 for semi-hidden, -1 for totally hidden.
     ALLEGRO_BITMAP **bmp; // set to nullptr for filled background

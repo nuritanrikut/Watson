@@ -362,10 +362,10 @@ void Game::handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mcli
     {
         if( !board.zoom || ( tiled_block->parent != board.zoom ) )
         {
-            if( ( ( tiled_block->parent ) && ( tiled_block->parent->type == TB_TIME_PANEL ) )
-                || ( tiled_block->type == TB_TIME_PANEL ) )
+            if( ( ( tiled_block->parent ) && ( tiled_block->parent->type == TiledBlock::BLOCK_TYPE::TB_TIME_PANEL ) )
+                || ( tiled_block->type == TiledBlock::BLOCK_TYPE::TB_TIME_PANEL ) )
                 zoom_TB( &board.time_panel );
-            else if( tiled_block->type == TB_PANEL_TILE )
+            else if( tiled_block->type == TiledBlock::BLOCK_TYPE::TB_PANEL_TILE )
                 zoom_TB( board.zoom = tiled_block->parent );
             return;
         }
@@ -375,37 +375,37 @@ void Game::handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mcli
 
     switch( tiled_block->type )
     { // which board component was clicked
-        case TB_PANEL_TILE:
+        case TiledBlock::BLOCK_TYPE::TB_PANEL_TILE:
             handle_mouse_click_panel_tile( tiled_block, mclick );
             break;
 
-        case TB_PANEL_BLOCK:
+        case TiledBlock::BLOCK_TYPE::TB_PANEL_BLOCK:
             handle_mouse_click_panel_block( tiled_block, mclick );
             break;
 
-        case TB_HCLUE_TILE:
-        case TB_VCLUE_TILE:
+        case TiledBlock::BLOCK_TYPE::TB_HCLUE_TILE:
+        case TiledBlock::BLOCK_TYPE::TB_VCLUE_TILE:
             // check that this is a real clue
             handle_mouse_click_clue_tile( tiled_block, mx, my, mclick );
             break;
 
-        case TB_BUTTON_CLUE: // time panel
+        case TiledBlock::BLOCK_TYPE::TB_BUTTON_CLUE: // time panel
             handle_mouse_click_button_clue();
             break;
 
-        case TB_BUTTON_SETTINGS:
+        case TiledBlock::BLOCK_TYPE::TB_BUTTON_SETTINGS:
             handle_mouse_click_button_settings();
             break;
 
-        case TB_BUTTON_HELP:
+        case TiledBlock::BLOCK_TYPE::TB_BUTTON_HELP:
             handle_mouse_click_button_help();
             break;
 
-        case TB_BUTTON_UNDO:
+        case TiledBlock::BLOCK_TYPE::TB_BUTTON_UNDO:
             handle_mouse_click_button_undo();
             break;
 
-        case TB_BUTTON_TILES:
+        case TiledBlock::BLOCK_TYPE::TB_BUTTON_TILES:
             gui.emit_event( EVENT_SWITCH_TILES );
             break;
 
@@ -464,7 +464,8 @@ void Game::mouse_grab( int mx, int my )
         return;
     }
 
-    if( ( board.dragging->type == TB_HCLUE_TILE ) || ( board.dragging->type == TB_VCLUE_TILE ) )
+    if( ( board.dragging->type == TiledBlock::BLOCK_TYPE::TB_HCLUE_TILE )
+        || ( board.dragging->type == TiledBlock::BLOCK_TYPE::TB_VCLUE_TILE ) )
     {
         board.dragging_origin_x = board.dragging->x;
         board.dragging_origin_y = board.dragging->y;
@@ -1271,7 +1272,8 @@ void Game::handle_allegro_event_mouse_button_up( ALLEGRO_EVENT &ev )
 
     if( ( tb_up ) && ( tb_up == tb_down ) )
     {
-        bool is_a_clue_tile = ( tb_up->type == TB_HCLUE_TILE ) || ( tb_up->type == TB_VCLUE_TILE );
+        bool is_a_clue_tile = ( tb_up->type == TiledBlock::BLOCK_TYPE::TB_HCLUE_TILE )
+                              || ( tb_up->type == TiledBlock::BLOCK_TYPE::TB_VCLUE_TILE );
         bool is_left_mouse_button_down = mouse_button_down == 1;
         bool down_event_is_short = mouse_up_time - mouse_down_time < DELTA_SHORT_CLICK;
 
@@ -1315,7 +1317,9 @@ void Game::handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev )
 
     if( mouse_button_down && !hold_click_check )
     {
-        if( tb_down && ( ( tb_down->type == TB_HCLUE_TILE ) || ( tb_down->type == TB_VCLUE_TILE ) ) )
+        if( tb_down
+            && ( ( tb_down->type == TiledBlock::BLOCK_TYPE::TB_HCLUE_TILE )
+                 || ( tb_down->type == TiledBlock::BLOCK_TYPE::TB_VCLUE_TILE ) ) )
         {
             handle_mouse_click( tb_down, mbdown_x, mbdown_y, 4 );
             hold_click_check = 1;
