@@ -591,45 +591,10 @@ WZ_WIDGET *Gui::create_settings_gui()
     return gui;
 }
 
-WZ_WIDGET *Gui::create_win_gui( double time )
+void Gui::create_win_gui_high_scores( double time, WZ_WIDGET *gui, int gui_w )
 {
     // scale other elements by font height
     auto fh = [gui_font_h = gui_font_h]( float scale ) { return scale * gui_font_h; };
-
-    settings_new = settings_current;
-
-    auto width_longest_string = al_get_text_width( gui_font, "You solved the puzzle in 000:000:000" );
-    auto width_settings = al_get_text_width( gui_font, "Settings" );
-    auto width_new_game = al_get_text_width( gui_font, "New game" );
-
-    int gui_w = width_longest_string + fh( 4 );
-    int but_w = fh( 2 ) + std::max( width_settings, width_new_game );
-
-    // 13 lines of text + 1.5 for button + 2 for margin = 16 (+17 * vspace?)
-    int gui_h = fh( 13 + 1.5 + 2 );
-
-    WZ_WIDGET *gui = nullptr;
-    {
-        auto x = ( base_gui->width - gui_w ) / 2;
-        auto y = ( base_gui->height - gui_h ) / 2;
-        gui = new_widget( -1, x, y );
-    }
-
-    {
-        auto x = fh( 0 );
-        auto y = fh( 0 );
-        auto w = gui_w;
-        auto h = gui_h;
-        new WZ_FILL_LAYOUT( gui, x, y, w, h, fh( 1 ), 0, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, -1 );
-    }
-
-    {
-        auto x = fh( 0 );
-        auto y = fh( 0 );
-        auto w = gui_w - fh( 2 );
-        auto h = fh( 1 );
-        new WZ_TEXTBOX( gui, x, y, w, h, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
-    }
 
     get_highscores( settings_current.number_of_columns,
                     settings_current.column_height,
@@ -737,6 +702,49 @@ WZ_WIDGET *Gui::create_win_gui( double time )
             hi_name[hi_score_idx][0] = '\0';
         }
     }
+}
+
+WZ_WIDGET *Gui::create_win_gui( double time )
+{
+    // scale other elements by font height
+    auto fh = [gui_font_h = gui_font_h]( float scale ) { return scale * gui_font_h; };
+
+    settings_new = settings_current;
+
+    auto width_longest_string = al_get_text_width( gui_font, "You solved the puzzle in 000:000:000" );
+    auto width_settings = al_get_text_width( gui_font, "Settings" );
+    auto width_new_game = al_get_text_width( gui_font, "New game" );
+
+    int gui_w = width_longest_string + fh( 4 );
+    int but_w = fh( 2 ) + std::max( width_settings, width_new_game );
+
+    // 13 lines of text + 1.5 for button + 2 for margin = 16 (+17 * vspace?)
+    int gui_h = fh( 13 + 1.5 + 2 );
+
+    WZ_WIDGET *gui = nullptr;
+    {
+        auto x = ( base_gui->width - gui_w ) / 2;
+        auto y = ( base_gui->height - gui_h ) / 2;
+        gui = new_widget( -1, x, y );
+    }
+
+    {
+        auto x = fh( 0 );
+        auto y = fh( 0 );
+        auto w = gui_w;
+        auto h = gui_h;
+        new WZ_FILL_LAYOUT( gui, x, y, w, h, fh( 1 ), 0, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, -1 );
+    }
+
+    {
+        auto x = fh( 0 );
+        auto y = fh( 0 );
+        auto w = gui_w - fh( 2 );
+        auto h = fh( 1 );
+        new WZ_TEXTBOX( gui, x, y, w, h, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
+    }
+
+    create_win_gui_high_scores( time, gui, gui_w );
 
     {
         auto x = fh( 0 );

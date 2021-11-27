@@ -72,6 +72,7 @@ private:
     WZ_WIDGET *create_msg_gui( int id, ALLEGRO_USTR *msg );
     WZ_WIDGET *create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg );
     WZ_WIDGET *create_settings_gui();
+    void create_win_gui_high_scores( double time, WZ_WIDGET *gui, int gui_w );
     WZ_WIDGET *create_win_gui( double time );
     WZ_WIDGET *create_params_gui();
     WZ_WIDGET *create_text_gui( ALLEGRO_USTR *text );
