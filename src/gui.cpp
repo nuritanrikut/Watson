@@ -367,30 +367,32 @@ WZ_WIDGET *Gui::create_msg_gui( int id, ALLEGRO_USTR *msg )
 
 WZ_WIDGET *Gui::create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg )
 {
-    int but_w = 6 * gui_font_h;
-    int but_h = gui_font_h * 1.5;
-    int width = std::max( int( base_gui->width / 3 ), 2 * but_w + 3 * gui_font_h );
-    int height = gui_font_h * get_multiline_text_lines( gui_font, width, al_cstr( msg ) );
+    int fh = gui_font_h;
+    int but_w = 6 * fh;
+    int but_h = 1.5 * fh;
+    int margin = fh;
+    int msg_width = std::max( int( base_gui->width / 3 ), 2 * but_w + 3 * fh );
+    int msg_height = gui_font_h * get_multiline_text_lines( gui_font, msg_width, al_cstr( msg ) );
 
-    WZ_WIDGET *wgt, *gui = new_widget( id,
-                                       ( base_gui->width - width - 2 * gui_font_h ) / 2,
-                                       ( base_gui->height - ( 3 * gui_font_h + but_h + height ) ) / 2 );
+    WZ_WIDGET *wgt;
+    WZ_WIDGET *gui = new_widget(
+        id, ( base_gui->width - msg_width ) / 2 - margin, ( base_gui->height - ( 3 * fh + but_h + msg_height ) ) / 2 );
 
-    wgt = new WZ_BOX( gui, 0, 0, width + 2 * gui_font_h, height + 3 * gui_font_h + but_h, -1 );
+    wgt = new WZ_BOX( gui, 0, 0, msg_width + 2 * margin, msg_height + 2 * margin + fh + but_h, -1 );
     wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
 
-    new WZ_TEXTBOX( gui, gui_font_h, gui_font_h, width, height, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, msg, 1, -1 );
+    new WZ_TEXTBOX( gui, fh, fh, msg_width, msg_height, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, msg, 1, -1 );
     new WZ_BUTTON( gui,
-                   gui_font_h + ( width - 2 * but_w ) / 3,
-                   2 * gui_font_h + height,
+                   fh + ( msg_width - 2 * but_w ) / 3,
+                   2 * margin + msg_height,
                    but_w,
                    but_h,
                    al_ustr_new( "OK" ),
                    1,
                    button_ok_id );
     wgt = new WZ_BUTTON( gui,
-                         gui_font_h + but_w + 2 * ( width - 2 * but_w ) / 3,
-                         2 * gui_font_h + height,
+                         fh + but_w + 2 * ( msg_width - 2 * but_w ) / 3,
+                         2 * margin + msg_height,
                          but_w,
                          but_h,
                          al_ustr_new( "Cancel" ),
@@ -455,55 +457,46 @@ WZ_WIDGET *Gui::create_settings_gui()
 
     // about button
     create_fill_layout( gui, 0, rh * ( rn++ ), gui_w, rh, sep, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, -1 );
-    new WZ_TEXTBOX( gui,
-                    0,
-                    0,
-                    al_get_text_width( skin_theme->font, "Settings" ),
-                    but_h,
-                    WZ_ALIGN_LEFT,
-                    WZ_ALIGN_CENTRE,
-                    al_ustr_new( "Settings" ),
-                    1,
-                    -1 );
+    {
+        auto str_width = al_get_text_width( skin_theme->font, "Settings" );
+        auto str = al_ustr_new( "Settings" );
+        new WZ_TEXTBOX( gui, 0, 0, str_width, but_h, WZ_ALIGN_LEFT, WZ_ALIGN_CENTRE, str, 1, -1 );
+    }
 
     // number of rows multitoggle
     create_fill_layout( gui, 0, rh * ( rn++ ), gui_w, rh, sep, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, -1 );
-    new WZ_TEXTBOX( gui,
-                    0,
-                    0,
-                    al_get_text_width( skin_theme->font, "Columns: " ),
-                    but_h,
-                    WZ_ALIGN_RIGHT,
-                    WZ_ALIGN_CENTRE,
-                    al_ustr_new( "Rows:" ),
-                    1,
-                    -1 );
+    {
+        // to align with 'Columns:' text                      |
+        //                                                    v
+        auto str_width = al_get_text_width( skin_theme->font, "Columns: " );
+        auto str = al_ustr_new( "Rows:" );
+        new WZ_TEXTBOX( gui, 0, 0, str_width, but_h, WZ_ALIGN_RIGHT, WZ_ALIGN_CENTRE, str, 1, -1 );
+    }
     for( i = 0; i < 5; i++ )
     {
-        WZ_TOGGLE *wgt =
-            new WZ_TOGGLE( gui, 0, 0, but_h, but_h, al_ustr_newf( "%c", '4' + i ), 1, GROUP_ROWS, BUTTON_ROWS );
+        auto str = al_ustr_newf( "%c", '4' + i );
+        WZ_TOGGLE *wgt = new WZ_TOGGLE( gui, 0, 0, but_h, but_h, str, 1, GROUP_ROWS, BUTTON_ROWS );
         if( 4 + i == settings_current.column_height )
+        {
             wgt->down = 1;
+        }
     }
 
     // number of columns multitoggle
     create_fill_layout( gui, 0, rh * ( rn++ ), gui_w, rh, sep, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, -1 );
-    new WZ_TEXTBOX( gui,
-                    0,
-                    0,
-                    al_get_text_width( skin_theme->font, "Columns: " ),
-                    but_h,
-                    WZ_ALIGN_RIGHT,
-                    WZ_ALIGN_CENTRE,
-                    al_ustr_new( "Columns:" ),
-                    1,
-                    -1 );
+    {
+        auto str_width = al_get_text_width( skin_theme->font, "Columns: " );
+        auto str = al_ustr_new( "Columns:" );
+        new WZ_TEXTBOX( gui, 0, 0, str_width, but_h, WZ_ALIGN_RIGHT, WZ_ALIGN_CENTRE, str, 1, -1 );
+    }
     for( i = 0; i < 5; i++ )
     {
-        WZ_TOGGLE *wgt =
-            new WZ_TOGGLE( gui, 0, 0, but_h, but_h, al_ustr_newf( "%c", '4' + i ), 1, GROUP_COLS, BUTTON_COLS );
+        auto str = al_ustr_newf( "%c", '4' + i );
+        WZ_TOGGLE *wgt = new WZ_TOGGLE( gui, 0, 0, but_h, but_h, str, 1, GROUP_COLS, BUTTON_COLS );
         if( 4 + i == settings_current.number_of_columns )
+        {
             wgt->down = 1;
+        }
     }
 
     // sound + swtich tiles + zoom
@@ -515,16 +508,8 @@ WZ_WIDGET *Gui::create_settings_gui()
 
     new WZ_BUTTON( gui, 0, 0, but_w, but_h, al_ustr_new( "Switch tiles" ), 1, BUTTON_TILES );
     {
-        WZ_TOGGLE *button_mute =
-            new WZ_TOGGLE( gui,
-                           0,
-                           0,
-                           but_w,
-                           but_h,
-                           settings_current.sound_mute ? al_ustr_new( "Sound: off" ) : al_ustr_new( "Sound: on" ),
-                           1,
-                           -1,
-                           BUTTON_SOUND );
+        auto str = settings_current.sound_mute ? al_ustr_new( "Sound: off" ) : al_ustr_new( "Sound: on" );
+        WZ_TOGGLE *button_mute = new WZ_TOGGLE( gui, 0, 0, but_w, but_h, str, 1, -1, BUTTON_SOUND );
         button_mute->down = !settings_current.sound_mute;
     }
 
@@ -559,17 +544,16 @@ WZ_WIDGET *Gui::create_settings_gui()
 WZ_WIDGET *Gui::create_win_gui( double time )
 {
     // Initialize Allegro 5 and the font routines
-    int gui_w, gui_h, but_w, lh;
-    int i, j;
 
     settings_new = settings_current;
 
-    lh = 1.2 * gui_font_h;
-    gui_w = al_get_text_width( gui_font, "You solved the puzzle in 000:000:000" ) + 4 * lh + 2;
-    but_w = 2 * lh + std::max( al_get_text_width( gui_font, "Settings" ), al_get_text_width( gui_font, "New game" ) );
+    int lh = 1.2 * gui_font_h;
+    int gui_w = al_get_text_width( gui_font, "You solved the puzzle in 000:000:000" ) + 4 * lh + 2;
+    int but_w =
+        2 * lh + std::max( al_get_text_width( gui_font, "Settings" ), al_get_text_width( gui_font, "New game" ) );
 
     // 13 lines of text + 1.5 for button + 2 for margin = lh*16 (+17 * vspace?)
-    gui_h = 16.5 * lh + 2;
+    int gui_h = 16.5 * lh + 2;
 
     WZ_WIDGET *gui = new_widget( -1, ( base_gui->width - gui_w ) / 2, ( base_gui->height - gui_h ) / 2 );
     new WZ_FILL_LAYOUT( gui, 0, 0, gui_w, gui_h, lh, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_TOP, -1 );
@@ -580,129 +564,92 @@ WZ_WIDGET *Gui::create_win_gui( double time )
                     settings_current.advanced,
                     hi_name,
                     (double *)hi_score );
+
+    int hi_score_idx;
     if( time > 0 )
     {
-        for( i = 0; i < 10; i++ )
+        for( hi_score_idx = 0; hi_score_idx < 10; hi_score_idx++ )
         {
-            if( hi_score[i] > time )
+            if( hi_score[hi_score_idx] > time )
                 break;
         }
     }
     else
     {
-        i = 10;
+        hi_score_idx = 10;
     }
 
     if( time > 0 )
-        new WZ_TEXTBOX(
-            gui,
-            0,
-            0,
-            gui_w - 2 * lh - 2,
-            lh,
-            WZ_ALIGN_CENTRE,
-            WZ_ALIGN_CENTRE,
-            al_ustr_newf( "You solved the puzzle in %02d:%02d:%02d", (int)time / 3600, (int)time / 60, (int)time % 60 ),
-            1,
-            -1 );
-
-    new WZ_TEXTBOX(
-        gui,
-        0,
-        0,
-        gui_w - 2 * lh - 2,
-        lh,
-        WZ_ALIGN_CENTRE,
-        WZ_ALIGN_CENTRE,
-        al_ustr_newf(
-            "Best times for %d x %d board:", settings_current.number_of_columns, settings_current.column_height ),
-        1,
-        -1 );
-
-    if( !( time > 0 ) )
-        new WZ_TEXTBOX( gui, 0, 0, gui_w - 2 * lh - 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
-
-    for( j = 0; j < i; j++ )
     {
-        new WZ_TEXTBOX( gui,
-                        0,
-                        0,
-                        ( gui_w - 4 * lh - 2 ) / 2.5,
-                        lh,
-                        WZ_ALIGN_LEFT,
-                        WZ_ALIGN_CENTRE,
-                        al_ustr_new( hi_name[j] ),
-                        1,
-                        -1 );
-        new WZ_TEXTBOX(
-            gui, 0, 0, ( gui_w - 4 * lh - 2 ) / 5, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
-        new WZ_TEXTBOX(
-            gui,
-            0,
-            0,
-            ( gui_w - 4 * lh - 2 ) / 2.5,
-            lh,
-            WZ_ALIGN_LEFT,
-            WZ_ALIGN_CENTRE,
-            al_ustr_newf(
-                "%02d:%02d:%02d", (int)hi_score[j] / 3600, ( (int)hi_score[j] / 60 ) % 60, (int)hi_score[j] % 60 ),
-            1,
-            -1 );
+        int hours = (int)time / 3600;
+        int minutes = ( (int)time / 60 ) % 60;
+        int seconds = (int)time % 60;
+        auto text = al_ustr_newf( "You solved the puzzle in %02d:%02d:%02d", hours, minutes, seconds );
+        new WZ_TEXTBOX( gui, 0, 0, gui_w - 2 * lh - 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, text, 1, -1 );
     }
 
-    if( i >= 10 )
+    {
+        auto str = al_ustr_newf(
+            "Best times for %d x %d board:", settings_current.number_of_columns, settings_current.column_height );
+        new WZ_TEXTBOX( gui, 0, 0, gui_w - 2 * lh - 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, str, 1, -1 );
+    }
+
+    if( !( time > 0 ) )
+    {
+        new WZ_TEXTBOX( gui, 0, 0, gui_w - 2 * lh - 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
+    }
+
+    float text_width = ( gui_w - 4 * lh - 2 ) / 2.5;
+
+    for( int j = 0; j < hi_score_idx; j++ )
+    {
+        new WZ_TEXTBOX( gui, 0, 0, text_width, lh, WZ_ALIGN_LEFT, WZ_ALIGN_CENTRE, al_ustr_new( hi_name[j] ), 1, -1 );
+        new WZ_TEXTBOX( gui, 0, 0, text_width / 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
+
+        int hours = (int)hi_score[j] / 3600;
+        int minutes = ( (int)hi_score[j] / 60 ) % 60;
+        int seconds = (int)hi_score[j] % 60;
+        auto str = al_ustr_newf( "%02d:%02d:%02d", hours, minutes, seconds );
+
+        new WZ_TEXTBOX( gui, 0, 0, text_width, lh, WZ_ALIGN_LEFT, WZ_ALIGN_CENTRE, str, 1, -1 );
+    }
+
+    if( hi_score_idx >= 10 )
     {
         hi_pos = -1;
     }
     else
     {
-        hi_pos = i;
-        new WZ_EDITBOX( gui, 0, 0, ( gui_w - 4 * lh - 2 ) / 2.5, lh, al_ustr_new( "your name" ), 1, EDITBOX_HISCORE );
-        new WZ_TEXTBOX(
-            gui, 0, 0, ( gui_w - 4 * lh - 2 ) / 5, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
-        new WZ_TEXTBOX( gui,
-                        0,
-                        0,
-                        ( gui_w - 4 * lh - 2 ) / 2.5,
-                        lh,
-                        WZ_ALIGN_LEFT,
-                        WZ_ALIGN_CENTRE,
-                        al_ustr_newf( "%02d:%02d:%02d", (int)time / 3600, ( (int)time / 60 ) % 60, (int)time % 60 ),
-                        1,
-                        -1 );
+        hi_pos = hi_score_idx;
+        new WZ_EDITBOX( gui, 0, 0, text_width, lh, al_ustr_new( "your name" ), 1, EDITBOX_HISCORE );
+        new WZ_TEXTBOX( gui, 0, 0, text_width / 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
 
-        for( j = i; j < 9; j++ )
+        int hours = (int)time / 3600;
+        int minutes = ( (int)time / 60 ) % 60;
+        int seconds = (int)time % 60;
+        auto hi_score_text = al_ustr_newf( "%02d:%02d:%02d", hours, minutes, seconds );
+
+        new WZ_TEXTBOX( gui, 0, 0, text_width, lh, WZ_ALIGN_LEFT, WZ_ALIGN_CENTRE, hi_score_text, 1, -1 );
+
+        for( int j = hi_score_idx; j < 9; j++ )
         {
-            new WZ_TEXTBOX( gui,
-                            0,
-                            0,
-                            ( gui_w - 4 * lh - 2 ) / 2.5,
-                            lh,
-                            WZ_ALIGN_LEFT,
-                            WZ_ALIGN_CENTRE,
-                            al_ustr_new( hi_name[j] ),
-                            1,
-                            -1 );
             new WZ_TEXTBOX(
-                gui, 0, 0, ( gui_w - 4 * lh - 2 ) / 5, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
-            new WZ_TEXTBOX(
-                gui,
-                0,
-                0,
-                ( gui_w - 4 * lh - 2 ) / 2.5,
-                lh,
-                WZ_ALIGN_LEFT,
-                WZ_ALIGN_CENTRE,
-                al_ustr_newf(
-                    "%02d:%02d:%02d", (int)hi_score[j] / 3600, ( (int)hi_score[j] / 60 ) % 60, (int)hi_score[j] % 60 ),
-                1,
-                -1 );
-        }
-        memcpy( &hi_name[i + 1], &hi_name[i], 64 * sizeof( char ) * ( 9 - i ) );
-        memcpy( &hi_score[i + 1], &hi_score[i], sizeof( double ) * ( 9 - i ) );
-        hi_score[i] = time;
+                gui, 0, 0, text_width, lh, WZ_ALIGN_LEFT, WZ_ALIGN_CENTRE, al_ustr_new( hi_name[j] ), 1, -1 );
+            new WZ_TEXTBOX( gui, 0, 0, text_width / 2, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
 
-        hi_name[i][0] = '\0';
+            int hours = (int)hi_score[j] / 3600;
+            int minutes = ( (int)hi_score[j] / 60 ) % 60;
+            int seconds = (int)hi_score[j] % 60;
+            auto str = al_ustr_newf( "%02d:%02d:%02d", hours, minutes, seconds );
+
+            new WZ_TEXTBOX( gui, 0, 0, text_width, lh, WZ_ALIGN_LEFT, WZ_ALIGN_CENTRE, str, 1, -1 );
+        }
+
+        memcpy( &hi_name[hi_score_idx + 1], &hi_name[hi_score_idx], 64 * sizeof( char ) * ( 9 - hi_score_idx ) );
+        memcpy( &hi_score[hi_score_idx + 1], &hi_score[hi_score_idx], sizeof( double ) * ( 9 - hi_score_idx ) );
+        hi_score[hi_score_idx] = time;
+
+        hi_name[hi_score_idx][0] = '\0';
     }
 
     new WZ_TEXTBOX( gui, 0, 0, gui_w * 0.9, lh, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE, al_ustr_new( "" ), 1, -1 );
@@ -838,19 +785,21 @@ WZ_WIDGET *Gui::create_text_gui( ALLEGRO_USTR *text )
 void Gui::confirm_restart( Settings *new_set )
 {
     settings_new = *new_set;
-    add_gui( base_gui,
-             create_yesno_gui( -1,
-                               BUTTON_RESTART_NOW,
-                               BUTTON_CLOSE,
-                               al_ustr_newf( "Start new %dx%d%s game?",
-                                             settings_new.number_of_columns,
-                                             settings_new.column_height,
-                                             settings_new.advanced ? " advanced" : "" ) ) );
+
+    auto str = al_ustr_newf( "Start new %dx%d%s game?",
+                             settings_new.number_of_columns,
+                             settings_new.column_height,
+                             settings_new.advanced ? " advanced" : "" );
+    auto gui = create_yesno_gui( -1, BUTTON_RESTART_NOW, BUTTON_CLOSE, str );
+
+    add_gui( base_gui, gui );
 }
 
 void Gui::confirm_exit()
 {
-    add_gui( base_gui, create_yesno_gui( -1, BUTTON_EXIT_NOW, BUTTON_CLOSE, al_ustr_newf( "Exit game?" ) ) );
+    auto str = al_ustr_newf( "Exit game?" );
+    auto gui = create_yesno_gui( -1, BUTTON_EXIT_NOW, BUTTON_CLOSE, str );
+    add_gui( base_gui, gui );
 }
 
 void Gui::show_help()
@@ -865,17 +814,16 @@ void Gui::show_about()
 
 void Gui::confirm_save()
 {
-    add_gui(
-        base_gui,
-        create_yesno_gui(
-            -1, BUTTON_SAVE_NOW, BUTTON_CLOSE, al_ustr_new( "Save game? This will overwrite\na previous save." ) ) );
+    auto str = al_ustr_new( "Save game? This will overwrite\na previous save." );
+    auto gui = create_yesno_gui( -1, BUTTON_SAVE_NOW, BUTTON_CLOSE, str );
+    add_gui( base_gui, gui );
 }
 
 void Gui::confirm_load()
 {
-    add_gui( base_gui,
-             create_yesno_gui(
-                 -1, BUTTON_LOAD_NOW, BUTTON_CLOSE, al_ustr_new( "Discard current progress and load saved game?" ) ) );
+    auto str = al_ustr_new( "Discard current progress and load saved game?" );
+    auto gui = create_yesno_gui( -1, BUTTON_LOAD_NOW, BUTTON_CLOSE, str );
+    add_gui( base_gui, gui );
 }
 
 void Gui::show_settings()
@@ -893,6 +841,200 @@ void Gui::show_params()
     add_gui( base_gui, create_params_gui() );
 }
 
+void Gui::handle_gui_event_text_changed( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui )
+{
+    if( wgt->id != EDITBOX_HISCORE )
+        return;
+
+    strncpy( hi_name[hi_pos], al_cstr( ( (WZ_TEXTBOX *)wgt )->text ), 63 );
+    wgt->flags &= ~WZ_STATE_HAS_FOCUS;
+    wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
+    save_highscores( settings_current.number_of_columns,
+                     settings_current.column_height,
+                     settings_current.advanced,
+                     hi_name,
+                     hi_score );
+    remove_gui( gui );
+    add_gui( base_gui, create_win_gui( -1 ) );
+}
+
+void Gui::handle_gui_event_button_pressed( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui )
+{
+    switch( wgt->id )
+    {
+        case BUTTON_CLOSE:
+            remove_gui( gui );
+            break;
+
+        case BUTTON_EXIT_NOW:
+            emit_event( EVENT_EXIT );
+            break;
+
+        case BUTTON_RESTART_NOW:
+            emit_event( EVENT_RESTART );
+            break;
+
+        case BUTTON_SAVE_NOW:
+            emit_event( EVENT_SAVE );
+            remove_gui( gui );
+            break;
+
+        case BUTTON_LOAD_NOW:
+            emit_event( EVENT_LOAD );
+            remove_gui( gui );
+            break;
+        case BUTTON_SETTINGS:
+            add_gui( base_gui, create_settings_gui() );
+            break;
+    }
+}
+
+void Gui::handle_gui_event_settings( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui )
+{
+    if( ( event->type == ALLEGRO_EVENT_KEY_CHAR ) && ( event->keyboard.keycode == ALLEGRO_KEY_BACK ) )
+    { // android "back" key
+        remove_gui( gui );
+    }
+
+    if( event->type != WZ_BUTTON_PRESSED )
+        return;
+
+    switch( wgt->id )
+    {
+        case BUTTON_EXIT:
+            confirm_exit();
+            break;
+
+        case BUTTON_OK:
+            if( ( settings_new.number_of_columns != settings_current.number_of_columns )
+                || ( settings_new.column_height != settings_current.column_height )
+                || ( settings_new.advanced != settings_current.advanced ) )
+            {
+                confirm_restart( &settings_new );
+            }
+            else
+            {
+                settings_new = settings_current;
+                remove_gui( gui );
+            }
+            break;
+
+        case BUTTON_RESTART:
+            confirm_restart( &settings_new );
+            break;
+
+        case BUTTON_TILES:
+            emit_event( EVENT_SWITCH_TILES );
+            break;
+
+        case BUTTON_ZOOM:
+            settings_current.fat_fingers = !settings_current.fat_fingers;
+            settings_new.fat_fingers = settings_current.fat_fingers;
+            break;
+
+        case BUTTON_ABOUT:
+            show_about();
+            break;
+
+        case BUTTON_SOUND:
+            settings_current.sound_mute = !settings_current.sound_mute;
+            if( settings_current.sound_mute )
+            {
+                wz_set_text_own( (WZ_WIDGET *)event->user.data2, al_ustr_new( "Sound: off" ) );
+            }
+            else
+            {
+                wz_set_text_own( (WZ_WIDGET *)event->user.data2, al_ustr_new( "Sound: on" ) );
+            }
+            settings_new.sound_mute = settings_current.sound_mute;
+            break;
+
+        case BUTTON_PARAMS:
+            show_params();
+            break;
+
+        case BUTTON_SAVE:
+            if( settings_current.saved )
+                confirm_save();
+            else
+                emit_event( EVENT_SAVE );
+            break;
+
+        case BUTTON_LOAD:
+            if( !settings_current.saved )
+            { // if no saved game exists, revert button press
+                ( (WZ_BUTTON *)wgt )->down = 1;
+            }
+            else
+            {
+                confirm_load();
+            }
+            break;
+
+        case BUTTON_ROWS:
+            settings_new.column_height = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
+            break;
+
+        case BUTTON_COLS:
+            settings_new.number_of_columns = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
+            break;
+    }
+}
+
+void Gui::handle_gui_event_params( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui )
+{
+    if( event->type == WZ_BUTTON_PRESSED )
+    {
+        if( wgt->id == BUTTON_EXTRA_HARD )
+        {
+            settings_new.advanced = !settings_new.advanced;
+        }
+        else if( wgt->id == BUTTON_OK )
+        {
+            wgt = gui->first_child;
+            while( wgt )
+            {
+                if( wgt->id >= 1024 ) // is slider
+                {
+                    REL_PERCENT[wgt->id - 1024] = ( (WZ_SCROLL *)wgt )->cur_pos;
+                }
+                wgt = wgt->next_sib;
+            }
+
+            ALLEGRO_USTR *msg = al_ustr_newf(
+                "WARNING: The puzzle generation parameters are here for debug purposes and altering "
+                "them may make the game unbalanced. You can reset these settings later.\n\n%s",
+                settings_new.advanced ? "You also turned on extra hard mode. This mode is not recommended. "
+                                        "Puzzle generation will be slower, and solving the puzzles may "
+                                        "require thinking ahead many steps and very indirect reasoning."
+                                      : "" );
+            remove_gui( gui );
+            add_gui( base_gui, create_msg_gui( -1, msg ) );
+        }
+        else if( wgt->id == BUTTON_RESET_PARAMS )
+        {
+            wgt = gui->first_child;
+            reset_rel_params();
+            settings_new.advanced = settings_current.advanced = 0;
+
+            // update sliders and button
+            while( wgt )
+            {
+                if( wgt->id >= 1024 ) // is slider
+                {
+                    ( (WZ_SCROLL *)wgt )->cur_pos = REL_PERCENT[wgt->id - 1024];
+                }
+                else if( wgt->id == BUTTON_EXTRA_HARD )
+                {
+                    ( (WZ_BUTTON *)wgt )->down = 0;
+                }
+
+                wgt = wgt->next_sib;
+            }
+        }
+    }
+}
+
 int Gui::handle_gui_event( ALLEGRO_EVENT *event )
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)event->user.data2;
@@ -906,196 +1048,22 @@ int Gui::handle_gui_event( ALLEGRO_EVENT *event )
 
     if( event->type == WZ_TEXT_CHANGED )
     {
-        if( wgt->id == EDITBOX_HISCORE )
-        {
-            strncpy( hi_name[hi_pos], al_cstr( ( (WZ_TEXTBOX *)wgt )->text ), 63 );
-            wgt->flags &= ~WZ_STATE_HAS_FOCUS;
-            wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
-            save_highscores( settings_current.number_of_columns,
-                             settings_current.column_height,
-                             settings_current.advanced,
-                             hi_name,
-                             hi_score );
-            remove_gui( gui );
-            add_gui( base_gui, create_win_gui( -1 ) );
-        }
+        handle_gui_event_text_changed( event, wgt, gui );
     }
 
     // general buttons
     if( event->type == WZ_BUTTON_PRESSED )
     {
-        switch( wgt->id )
-        {
-            case BUTTON_CLOSE:
-                remove_gui( gui );
-                break;
-
-            case BUTTON_EXIT_NOW:
-                emit_event( EVENT_EXIT );
-                break;
-
-            case BUTTON_RESTART_NOW:
-                emit_event( EVENT_RESTART );
-                break;
-
-            case BUTTON_SAVE_NOW:
-                emit_event( EVENT_SAVE );
-                remove_gui( gui );
-                break;
-
-            case BUTTON_LOAD_NOW:
-                emit_event( EVENT_LOAD );
-                remove_gui( gui );
-                break;
-            case BUTTON_SETTINGS:
-                add_gui( base_gui, create_settings_gui() );
-                break;
-        }
+        handle_gui_event_button_pressed( event, wgt, gui );
     }
 
     if( gui->id == GUI_SETTINGS )
     {
-        if( ( event->type == ALLEGRO_EVENT_KEY_CHAR ) && ( event->keyboard.keycode == ALLEGRO_KEY_BACK ) )
-        { // android "back" key
-            remove_gui( gui );
-        }
-
-        if( event->type == WZ_BUTTON_PRESSED )
-        {
-            switch( wgt->id )
-            {
-                case BUTTON_EXIT:
-                    confirm_exit();
-                    break;
-
-                case BUTTON_OK:
-                    if( ( settings_new.number_of_columns != settings_current.number_of_columns )
-                        || ( settings_new.column_height != settings_current.column_height )
-                        || ( settings_new.advanced != settings_current.advanced ) )
-                    {
-                        confirm_restart( &settings_new );
-                    }
-                    else
-                    {
-                        settings_new = settings_current;
-                        remove_gui( gui );
-                    }
-                    break;
-
-                case BUTTON_RESTART:
-                    confirm_restart( &settings_new );
-                    break;
-
-                case BUTTON_TILES:
-                    emit_event( EVENT_SWITCH_TILES );
-                    break;
-
-                case BUTTON_ZOOM:
-                    settings_current.fat_fingers = !settings_current.fat_fingers;
-                    settings_new.fat_fingers = settings_current.fat_fingers;
-                    break;
-
-                case BUTTON_ABOUT:
-                    show_about();
-                    break;
-
-                case BUTTON_SOUND:
-                    settings_current.sound_mute = !settings_current.sound_mute;
-                    if( settings_current.sound_mute )
-                    {
-                        wz_set_text_own( (WZ_WIDGET *)event->user.data2, al_ustr_new( "Sound: off" ) );
-                    }
-                    else
-                    {
-                        wz_set_text_own( (WZ_WIDGET *)event->user.data2, al_ustr_new( "Sound: on" ) );
-                    }
-                    settings_new.sound_mute = settings_current.sound_mute;
-                    break;
-
-                case BUTTON_PARAMS:
-                    show_params();
-                    break;
-
-                case BUTTON_SAVE:
-                    if( settings_current.saved )
-                        confirm_save();
-                    else
-                        emit_event( EVENT_SAVE );
-                    break;
-
-                case BUTTON_LOAD:
-                    if( !settings_current.saved )
-                    { // if no saved game exists, revert button press
-                        ( (WZ_BUTTON *)wgt )->down = 1;
-                    }
-                    else
-                    {
-                        confirm_load();
-                    }
-                    break;
-
-                case BUTTON_ROWS:
-                    settings_new.column_height = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
-                    break;
-
-                case BUTTON_COLS:
-                    settings_new.number_of_columns = atoi( al_cstr( ( (WZ_BUTTON *)wgt )->text ) );
-                    break;
-            }
-        }
+        handle_gui_event_settings( event, wgt, gui );
     }
     else if( gui->id == GUI_PARAMS )
     {
-        if( event->type == WZ_BUTTON_PRESSED )
-        {
-            if( wgt->id == BUTTON_EXTRA_HARD )
-            {
-                settings_new.advanced = !settings_new.advanced;
-            }
-            else if( wgt->id == BUTTON_OK )
-            {
-                wgt = gui->first_child;
-                while( wgt )
-                {
-                    if( wgt->id >= 1024 ) // is slider
-                    {
-                        REL_PERCENT[wgt->id - 1024] = ( (WZ_SCROLL *)wgt )->cur_pos;
-                    }
-                    wgt = wgt->next_sib;
-                }
-
-                ALLEGRO_USTR *msg = al_ustr_newf(
-                    "WARNING: The puzzle generation parameters are here for debug purposes and altering "
-                    "them may make the game unbalanced. You can reset these settings later.\n\n%s",
-                    settings_new.advanced ? "You also turned on extra hard mode. This mode is not recommended. "
-                                            "Puzzle generation will be slower, and solving the puzzles may "
-                                            "require thinking ahead many steps and very indirect reasoning."
-                                          : "" );
-                remove_gui( gui );
-                add_gui( base_gui, create_msg_gui( -1, msg ) );
-            }
-            else if( wgt->id == BUTTON_RESET_PARAMS )
-            {
-                wgt = gui->first_child;
-                reset_rel_params();
-                settings_new.advanced = settings_current.advanced = 0;
-
-                // update sliders and button
-                while( wgt )
-                {
-                    if( wgt->id >= 1024 ) // is slider
-                    {
-                        ( (WZ_SCROLL *)wgt )->cur_pos = REL_PERCENT[wgt->id - 1024];
-                    }
-                    else if( wgt->id == BUTTON_EXTRA_HARD )
-                    {
-                        ( (WZ_BUTTON *)wgt )->down = 0;
-                    }
-
-                    wgt = wgt->next_sib;
-                }
-            }
-        }
+        handle_gui_event_params( event, wgt, gui );
     }
 
     return 0;

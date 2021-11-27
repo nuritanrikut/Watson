@@ -12,7 +12,13 @@ public:
     void get_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score );
     void save_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score );
     void draw_guis();
+
     int handle_gui_event( ALLEGRO_EVENT *event );
+    void handle_gui_event_text_changed( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui );
+    void handle_gui_event_button_pressed( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui );
+    void handle_gui_event_settings( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui );
+    void handle_gui_event_params( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui );
+
     int gui_send_event( ALLEGRO_EVENT *event );
     void init_theme();
     void init_guis( int x, int y, int width, int height );
