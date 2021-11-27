@@ -48,6 +48,15 @@ public:
     WZ_WIDGET *guis[10];
 
     int gui_n;
+    int gui_font_h;
+    WZ_WIDGET *base_gui;
+
+    WZ_SKIN_THEME *skin_theme;
+    ALLEGRO_FONT *gui_font;
+
+    char hi_name[10][64];
+    double hi_score[10];
+    int hi_pos;
 
 private:
     Settings &settings_current;
