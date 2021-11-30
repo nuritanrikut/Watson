@@ -1,13 +1,13 @@
 #include "text.hpp"
 
-bool callback( int line_num, const char * /*line*/, int /*size*/, void *extra )
+auto callback( int line_num, const char * /*line*/, int /*size*/, void *extra ) -> bool
 {
     *(int *)extra = line_num;
-    return 1;
+    return true;
 }
 
 // xxx todo: make same function for text_bf (also do_multiline_text_bf)
-int get_multiline_text_lines( const ALLEGRO_FONT *font, float max_width, const char *text )
+auto get_multiline_text_lines( const ALLEGRO_FONT *font, float max_width, const char *text ) -> int
 {
     int lines = 0;
     al_do_multiline_text( font, max_width, text, &callback, &lines );

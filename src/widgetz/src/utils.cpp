@@ -218,7 +218,7 @@ Note that the first widget gets the event whether it is focused or not.
 Returns:
 1 if the event was handled by some widget, 0 if it was not
 */
-int WZ_WIDGET::send_event( const ALLEGRO_EVENT *event )
+auto WZ_WIDGET::send_event( const ALLEGRO_EVENT *event ) -> int
 {
     WZ_WIDGET *child = first_child;
 
@@ -263,7 +263,7 @@ Broadcasts an event to a widget, and to all of its children, propagating down th
 Returns:
 1 if the event was handled by some widget, 0 if it was not
 */
-int WZ_WIDGET::broadcast_event( const ALLEGRO_EVENT *event )
+auto WZ_WIDGET::broadcast_event( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 0;
     WZ_WIDGET *child = first_child;
@@ -452,7 +452,7 @@ Parameters:
 frac - Blending factor. 0 results in the output being the first color passed, 1 results in the second color passed.
 Intermediate values blend between the two colors.
 */
-ALLEGRO_COLOR wz_blend_colors( ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac )
+auto wz_blend_colors( ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac ) -> ALLEGRO_COLOR
 {
     ALLEGRO_COLOR ret;
     ret.a = c1.a + ( c2.a - c1.a ) * frac;
@@ -470,7 +470,7 @@ Tints an Allegro color by multiplying each component by a constant. Alpha is not
 Parameters:
 scale - Scaling factor. 0 results in a black color, 1 results in no change
 */
-ALLEGRO_COLOR wz_scale_color( ALLEGRO_COLOR c, float scale )
+auto wz_scale_color( ALLEGRO_COLOR c, float scale ) -> ALLEGRO_COLOR
 {
     ALLEGRO_COLOR ret;
     ret.a = c.a;
@@ -498,7 +498,7 @@ Tests if a point is inside the widget
 Returns:
 1 if the point is inside the widget, 0 otherwise
 */
-int WZ_WIDGET::widget_rect_test( float x, float y )
+auto WZ_WIDGET::widget_rect_test( float x, float y ) -> int
 {
     return x > local_x && x < local_x + width && y > local_y && y < local_y + height;
 }
@@ -512,7 +512,7 @@ intersect with the passed coordinates. Hidden widgets are ignored.
 Returns:
 1 if the point is inside one of the widgets, 0 otherwise
 */
-int WZ_WIDGET::widget_rect_test_all( float x, float y )
+auto WZ_WIDGET::widget_rect_test_all( float x, float y ) -> int
 {
     WZ_WIDGET *child;
 

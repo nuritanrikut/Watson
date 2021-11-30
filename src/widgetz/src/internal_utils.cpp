@@ -43,7 +43,7 @@ Returns:
 
 0 if the widget cannot be focused
 */
-int WZ_WIDGET::ask_parent_for_focus()
+auto WZ_WIDGET::ask_parent_for_focus() -> int
 {
     if( this->flags & WZ_STATE_HAS_FOCUS )
         return 1;
@@ -57,7 +57,7 @@ int WZ_WIDGET::ask_parent_for_focus()
     if( this->flags & WZ_STATE_HIDDEN )
         return 0;
 
-    if( this->parent == 0 )
+    if( this->parent == nullptr )
     {
         ALLEGRO_EVENT event;
         wz_craft_event( &event, WZ_TAKE_FOCUS, this, 0 );
@@ -88,7 +88,7 @@ void WZ_WIDGET::ask_parent_to_focus_next()
 {
     WZ_WIDGET *child;
 
-    if( this->parent == 0 )
+    if( this->parent == nullptr )
         return;
 
     child = this->next_sib;
@@ -121,7 +121,7 @@ void WZ_WIDGET::ask_parent_to_focus_prev()
 {
     WZ_WIDGET *child;
 
-    if( this->parent == 0 )
+    if( this->parent == nullptr )
         return;
 
     child = this->prev_sib;
@@ -157,13 +157,13 @@ Returns:
 
 The widget it found, or the passed widget if it found nothing
 */
-WZ_WIDGET *WZ_WIDGET::get_widget_dir( int dir )
+auto WZ_WIDGET::get_widget_dir( int dir ) -> WZ_WIDGET *
 {
     float least_dev = 100000;
     WZ_WIDGET *ret = this;
     WZ_WIDGET *child;
 
-    if( this->parent == 0 )
+    if( this->parent == nullptr )
         return this;
 
     child = this->parent->first_child;
@@ -239,7 +239,7 @@ void wz_craft_event( ALLEGRO_EVENT *event, int type, WZ_WIDGET *source, intptr_t
 {
     event->user.type = type;
     event->user.timestamp = al_get_time();
-    event->user.data1 = source == 0 ? -1 : source->id;
+    event->user.data1 = source == nullptr ? -1 : source->id;
     event->user.data2 = (intptr_t)source;
     event->user.data3 = data;
 }
@@ -257,7 +257,7 @@ Returns:
 The character position such that the text length of the string up to that character
 is as close as possible to the passed length.
 */
-int wz_get_text_pos( ALLEGRO_FONT *font, ALLEGRO_USTR *text, float x )
+auto wz_get_text_pos( ALLEGRO_FONT *font, ALLEGRO_USTR *text, float x ) -> int
 {
     int ii = 0;
     int len = al_ustr_length( text );

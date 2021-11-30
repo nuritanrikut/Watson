@@ -85,7 +85,7 @@ Function: wz_editbox_proc
 See also:
 <wz_widget_proc>
 */
-int WZ_EDITBOX::proc( const ALLEGRO_EVENT *event )
+auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
 
@@ -286,7 +286,7 @@ int WZ_EDITBOX::proc( const ALLEGRO_EVENT *event )
         {
             ALLEGRO_EVENT ev;
             wz_craft_event( &ev, WZ_TEXT_CHANGED, this, 0 );
-            al_emit_user_event( this->source, &ev, 0 );
+            al_emit_user_event( this->source, &ev, nullptr );
             break;
         }
         case ALLEGRO_EVENT_MOUSE_AXES:

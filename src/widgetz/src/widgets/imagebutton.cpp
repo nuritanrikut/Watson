@@ -38,7 +38,7 @@ Function: wz_button_proc
 See also:
 <wz_widget_proc>
 */
-int WZ_IMAGE_BUTTON::proc( const ALLEGRO_EVENT *event )
+auto WZ_IMAGE_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
 
@@ -46,7 +46,7 @@ int WZ_IMAGE_BUTTON::proc( const ALLEGRO_EVENT *event )
     {
         case WZ_DRAW:
         {
-            ALLEGRO_BITMAP *image = 0;
+            ALLEGRO_BITMAP *image = nullptr;
 
             if( this->flags & WZ_STATE_HIDDEN )
                 break;

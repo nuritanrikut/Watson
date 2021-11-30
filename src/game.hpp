@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <array>
 
 #define ALLEGRO_UNSTABLE
 
@@ -38,9 +39,13 @@ constexpr double BLINK_DELAY = 0.3;
 constexpr double BLINK_TIME = 0.05;
 constexpr double FIXED_DT = 1.0 / FPS;
 
+constexpr size_t MAX_COLUMNS = 8;
+constexpr size_t MAX_ROWS = 8;
+constexpr size_t MAX_CELLS = 8;
+
 struct PanelState
 {
-    int tile[8][8][8];
+    std::array<std::array<std::array<int, MAX_CELLS>, MAX_ROWS>, MAX_COLUMNS> tile;
     PanelState *parent;
 };
 
@@ -49,9 +54,9 @@ class Game
 public:
     Game();
 
-    bool init();
-    bool run();
-    bool cleanup();
+    auto init() -> bool;
+    auto run() -> bool;
+    auto cleanup() -> bool;
 
 private:
     void halt( ALLEGRO_EVENT_QUEUE *queue );
@@ -68,17 +73,13 @@ private:
 
     void mouse_grab( int mx, int my );
     void mouse_drop( int mx, int my );
-    TiledBlock *get_TiledBlock_at( int x, int y );
+    auto get_TiledBlock_at( int x, int y ) -> TiledBlock *;
     void destroy_undo();
-    ALLEGRO_USTR *get_hint_info_text( RELATION relation, char *b0, char *b1, char *b2, char *b3 );
+    auto get_hint_info_text( RELATION relation, char *b0, char *b1, char *b2, char *b3 ) -> ALLEGRO_USTR *;
     void explain_clue( Clue *clue );
     void game_loop();
     void destroy_everything();
-    int toggle_fullscreen();
-    void handle_allegro_event_display_close();
-    void handle_allegro_event_display_resize();
-    void handle_allegro_event_redraw();
-    void handle_event_switch_tiles();
+    auto toggle_fullscreen() -> int;
     void draw_stuff();
     void update_board();
     void show_hint();
@@ -86,19 +87,26 @@ private:
     void execute_undo();
     void save_state();
     void switch_solve_puzzle();
-    int save_game_f();
-    int load_game_f();
+    auto save_game_f() -> int;
+    auto load_game_f() -> int;
     void swap_clues( TiledBlock *c1, TiledBlock *c2 );
     void zoom_TB( TiledBlock *tiled_block );
     void animate_win();
     void draw_generating_puzzle( Settings *settings );
-    int switch_tiles();
+    auto switch_tiles() -> int;
     void win_or_lose();
+
     void handle_event_restart();
     void handle_event_exit();
     void handle_event_save();
-    bool handle_event_load();
+    auto handle_event_load() -> bool;
     void handle_event_settings();
+    void handle_event_switch_tiles();
+    void handle_events();
+
+    void handle_allegro_event_display_close();
+    void handle_allegro_event_display_resize();
+    void handle_allegro_event_redraw();
     void handle_allegro_event_touch_begin( ALLEGRO_EVENT &ev );
     void handle_allegro_event_mouse_button_down( ALLEGRO_EVENT &ev );
     void handle_allegro_event_touch_end( ALLEGRO_EVENT &ev );
@@ -106,10 +114,13 @@ private:
     void handle_allegro_event_touch_move( ALLEGRO_EVENT &ev );
     void handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev );
     void handle_allegro_event_key_char( ALLEGRO_EVENT &ev );
-    void handle_events();
-    void game_inner_loop();
 
-private:
+    void game_inner_loop();
+    auto game_inner_loop_check_resizing() -> bool;
+    void game_inner_loop_check_double_click();
+    void game_inner_loop_check_hold_click();
+    void game_inner_loop_update_timer();
+
     Settings set;
     Settings nset; // settings for new game
 

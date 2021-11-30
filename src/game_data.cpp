@@ -39,7 +39,7 @@ int REL_PERCENT_MAX;
 //void get_clue( int column, int row, Clue *clue );
 //int filter_clues( GameData *game_data );
 
-int is_vclue( RELATION rel )
+auto is_vclue( RELATION rel ) -> int
 {
     return ( ( rel == TOGETHER_2 ) || ( rel == TOGETHER_3 ) || ( rel == NOT_TOGETHER ) || ( rel == TOGETHER_NOT_MIDDLE )
              || ( rel == TOGETHER_FIRST_WITH_ONLY_ONE ) );
@@ -74,7 +74,7 @@ void GameData::create_puzzle()
     }
 }
 
-int rand_int( int n )
+auto rand_int( int n ) -> int
 { // make static
     int limit = RAND_MAX - RAND_MAX % n;
     int rnd;
@@ -86,7 +86,7 @@ int rand_int( int n )
     return rnd % n;
 }
 
-static int rand_sign()
+static auto rand_sign() -> int
 {
     return ( rand() % 2 == 0 ) ? -1 : 1;
 }
@@ -107,7 +107,7 @@ void GameData::remove_clue( int i )
     clues[i] = clues[clue_n];
 }
 
-TileAddress GameData::check_this_clue_reveal( Clue *clue )
+auto GameData::check_this_clue_reveal( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -122,7 +122,7 @@ TileAddress GameData::check_this_clue_reveal( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_one_side( Clue *clue )
+auto GameData::check_this_clue_one_side( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -152,7 +152,7 @@ TileAddress GameData::check_this_clue_one_side( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_together_2( Clue *clue )
+auto GameData::check_this_clue_together_2( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -178,7 +178,7 @@ TileAddress GameData::check_this_clue_together_2( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_together_3( Clue *clue )
+auto GameData::check_this_clue_together_3( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -211,7 +211,7 @@ TileAddress GameData::check_this_clue_together_3( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_together_not_middle( Clue *clue )
+auto GameData::check_this_clue_together_not_middle( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -247,7 +247,7 @@ TileAddress GameData::check_this_clue_together_not_middle( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_not_together( Clue *clue )
+auto GameData::check_this_clue_not_together( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -270,7 +270,7 @@ TileAddress GameData::check_this_clue_not_together( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_next_to( Clue *clue )
+auto GameData::check_this_clue_next_to( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -321,7 +321,7 @@ TileAddress GameData::check_this_clue_next_to( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_not_next_to( Clue *clue )
+auto GameData::check_this_clue_not_next_to( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -363,7 +363,7 @@ TileAddress GameData::check_this_clue_not_next_to( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_consecutive( Clue *clue )
+auto GameData::check_this_clue_consecutive( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -440,7 +440,7 @@ TileAddress GameData::check_this_clue_consecutive( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_not_middle( Clue *clue )
+auto GameData::check_this_clue_not_middle( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -510,7 +510,7 @@ TileAddress GameData::check_this_clue_not_middle( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue_together_first_with_only_one( Clue *clue )
+auto GameData::check_this_clue_together_first_with_only_one( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -549,7 +549,7 @@ TileAddress GameData::check_this_clue_together_first_with_only_one( Clue *clue )
     return tile;
 }
 
-TileAddress GameData::check_this_clue( Clue *clue )
+auto GameData::check_this_clue( Clue *clue ) -> TileAddress
 {
     TileAddress tile;
 
@@ -601,7 +601,7 @@ TileAddress GameData::check_this_clue( Clue *clue )
     return tile;
 }
 
-int GameData::check_solution()
+auto GameData::check_solution() -> int
 {
     for( int column = 0; column < number_of_columns; column++ )
         for( int row = 0; row < column_height; row++ )
@@ -631,7 +631,7 @@ void GameData::switch_game( int type )
 }
 
 // returns a hint that contains a clue and a tile that can be ruled out with this clue
-Hint GameData::get_hint()
+auto GameData::get_hint() -> Hint
 { // still not working properly
     int clue_number = 0;
     TileAddress tile_to_rule_out;
@@ -653,7 +653,7 @@ Hint GameData::get_hint()
     hint.tile = tile_to_rule_out;
     return hint;
 }
-int GameData::advanced_check_clues()
+auto GameData::advanced_check_clues() -> int
 {
     int info;
 
@@ -696,7 +696,7 @@ int GameData::advanced_check_clues()
     return 0;
 }
 
-int GameData::check_clues()
+auto GameData::check_clues() -> int
 {
     // check whether the clues add new info (within reason -- this can be tuned)
     // for now it does not combine clues (analyze each one separately)
@@ -772,11 +772,11 @@ void GameData::create_game_with_clues()
     // mark clues unhidden
     for( int i = 0; i < clue_n; i++ )
     {
-        clues[i].hidden = 0;
+        clues[i].hidden = false;
     }
 }
 
-int GameData::is_clue_compatible_reveal( Clue *clue )
+auto GameData::is_clue_compatible_reveal( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -790,7 +790,7 @@ int GameData::is_clue_compatible_reveal( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_one_side( Clue *clue )
+auto GameData::is_clue_compatible_one_side( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -817,7 +817,7 @@ int GameData::is_clue_compatible_one_side( Clue *clue )
     return ret;
 }
 
-int GameData::is_clue_compatible_together_2( Clue *clue )
+auto GameData::is_clue_compatible_together_2( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -834,7 +834,7 @@ int GameData::is_clue_compatible_together_2( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_together_3( Clue *clue )
+auto GameData::is_clue_compatible_together_3( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -852,7 +852,7 @@ int GameData::is_clue_compatible_together_3( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_together_not_middle( Clue *clue )
+auto GameData::is_clue_compatible_together_not_middle( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -870,7 +870,7 @@ int GameData::is_clue_compatible_together_not_middle( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_not_together( Clue *clue )
+auto GameData::is_clue_compatible_not_together( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -887,7 +887,7 @@ int GameData::is_clue_compatible_not_together( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_next_to( Clue *clue )
+auto GameData::is_clue_compatible_next_to( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -905,7 +905,7 @@ int GameData::is_clue_compatible_next_to( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_not_next_to( Clue *clue )
+auto GameData::is_clue_compatible_not_next_to( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -928,7 +928,7 @@ int GameData::is_clue_compatible_not_next_to( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_consecutive( Clue *clue )
+auto GameData::is_clue_compatible_consecutive( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -948,7 +948,7 @@ int GameData::is_clue_compatible_consecutive( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_not_middle( Clue *clue )
+auto GameData::is_clue_compatible_not_middle( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -968,7 +968,7 @@ int GameData::is_clue_compatible_not_middle( Clue *clue )
     return 0;
 }
 
-int GameData::is_clue_compatible_together_first_with_only_one( Clue *clue )
+auto GameData::is_clue_compatible_together_first_with_only_one( Clue *clue ) -> int
 {
     auto &tile0 = clue->tile[0];
     auto &tile1 = clue->tile[1];
@@ -988,7 +988,7 @@ int GameData::is_clue_compatible_together_first_with_only_one( Clue *clue )
 }
 
 // checks if clue is compatible with current panel (not necessarily with solution)
-int GameData::is_clue_compatible( Clue *clue )
+auto GameData::is_clue_compatible( Clue *clue ) -> int
 {
     switch( clue->rel )
     {
@@ -1040,7 +1040,7 @@ int GameData::is_clue_compatible( Clue *clue )
     return 0;
 }
 
-int GameData::check_panel_consistency()
+auto GameData::check_panel_consistency() -> int
 {
     for( int m = 0; m < clue_n; m++ )
     {
@@ -1050,7 +1050,7 @@ int GameData::check_panel_consistency()
     return 1;
 }
 
-int GameData::check_panel_correctness()
+auto GameData::check_panel_correctness() -> int
 {
     for( int column = 0; column < number_of_columns; column++ )
     {
@@ -1065,7 +1065,7 @@ int GameData::check_panel_correctness()
     return 1;
 }
 
-int GameData::check_clues_for_solution()
+auto GameData::check_clues_for_solution() -> int
 {
     int info;
 
@@ -1199,7 +1199,7 @@ void GameData::sort_clues()
     }
 }
 
-int GameData::filter_clues()
+auto GameData::filter_clues() -> int
 {
     int ret = 0;
 
@@ -1224,7 +1224,7 @@ int GameData::filter_clues()
     return ret;
 }
 
-int GameData::get_random_tile( int column, int *row, int *cell )
+auto GameData::get_random_tile( int column, int *row, int *cell ) -> int
 { // random item in column
     int row2, cell2 = 0;
 
@@ -1265,7 +1265,7 @@ int GameData::get_random_tile( int column, int *row, int *cell )
     return 1;
 }
 
-int GameData::random_relation()
+auto GameData::random_relation() -> int
 {
     int rel = -1;
     int m = rand_int( REL_PERCENT_MAX );
@@ -1696,7 +1696,7 @@ void GameData::init_game()
 
 // return -1 if there is more than one tile left in block
 // last tile number otherwise
-int GameData::last_tile_in_block( int column, int row )
+auto GameData::last_tile_in_block( int column, int row ) -> int
 {
     int m = -1, count = 0;
 
@@ -1718,7 +1718,7 @@ int GameData::last_tile_in_block( int column, int row )
 
 // return -1 if there is more than one block with given tile
 // last block number (column) otherwise
-int GameData::last_tile_in_row( int row, int cell )
+auto GameData::last_tile_in_row( int row, int cell ) -> int
 {
     int m = -1, count = 0;
 
@@ -1738,7 +1738,7 @@ int GameData::last_tile_in_row( int row, int cell )
 }
 
 // check any obviously guessable clues in row
-int GameData::check_row( int row )
+auto GameData::check_row( int row ) -> int
 {
     int m;
 
@@ -1787,7 +1787,7 @@ void GameData::guess_tile( TileAddress tile )
     check_row( tile.row );
 }
 
-int GameData::is_guessed( int row, int cell )
+auto GameData::is_guessed( int row, int cell ) -> int
 {
     for( int column = 0; column < number_of_columns; column++ )
     {
@@ -1814,7 +1814,7 @@ void GameData::unguess_tile( int column, int row )
 }
 
 // only for debug puprposes. Check if clue is compatible with solution
-int GameData::is_clue_valid( Clue *clue )
+auto GameData::is_clue_valid( Clue *clue ) -> int
 {
     int ret = 0;
 

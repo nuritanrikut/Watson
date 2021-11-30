@@ -30,7 +30,7 @@ struct WZ_THEME
     virtual void
     draw_editbox( float x, float y, float width, float height, int cursor_pos, ALLEGRO_USTR *text, int style ) = 0;
     virtual void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) = 0;
-    virtual ALLEGRO_FONT *get_font( int font_num ) = 0;
+    virtual auto get_font( int font_num ) -> ALLEGRO_FONT * = 0;
 };
 
 /*
@@ -58,10 +58,10 @@ struct WZ_DEF_THEME : WZ_THEME
     virtual void
     draw_editbox( float x, float y, float width, float height, int cursor_pos, ALLEGRO_USTR *text, int style ) override;
     virtual void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) override;
-    virtual ALLEGRO_FONT *get_font( int font_num ) override;
+    virtual auto get_font( int font_num ) -> ALLEGRO_FONT * override;
 
     void draw_3d_rectangle( float x1, float y1, float x2, float y2, float border, ALLEGRO_COLOR col, bool invert );
-    int find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end );
+    auto find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end ) -> int;
     void draw_single_text( float x,
                            float y,
                            float width,
@@ -131,10 +131,10 @@ struct WZ_SKIN_THEME : WZ_DEF_THEME
     void
     draw_editbox( float x, float y, float width, float height, int cursor_pos, ALLEGRO_USTR *text, int style ) override;
     void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) override;
-    ALLEGRO_FONT *get_font( int font_num ) override;
+    auto get_font( int font_num ) -> ALLEGRO_FONT * override;
 
-    WZ_NINE_PATCH_PADDING
-    draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float y, float width, float height );
+    auto
+    draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float y, float width, float height ) -> WZ_NINE_PATCH_PADDING;
 
     WZ_NINE_PATCH_BITMAP *button_up_patch;
     WZ_NINE_PATCH_BITMAP *button_down_patch;
@@ -182,8 +182,8 @@ struct WZ_SKIN_THEME : WZ_DEF_THEME
     int skin_pad;
 };
 
-WZ_DEF_THEME *get_def_theme();
-WZ_SKIN_THEME *get_skin_theme();
+auto get_def_theme() -> WZ_DEF_THEME *;
+auto get_skin_theme() -> WZ_SKIN_THEME *;
 
 struct WZ_SHORTCUT
 {
@@ -211,8 +211,8 @@ struct WZ_WIDGET
     void set_shortcut( int keycode, int modifiers );
     void register_sources( ALLEGRO_EVENT_QUEUE *queue );
 
-    int send_event( const ALLEGRO_EVENT *event );
-    int broadcast_event( const ALLEGRO_EVENT *event );
+    auto send_event( const ALLEGRO_EVENT *event ) -> int;
+    auto broadcast_event( const ALLEGRO_EVENT *event ) -> int;
     void update( double dt );
 
     void trigger();
@@ -228,28 +228,28 @@ struct WZ_WIDGET
     void set_scroll_pos( int pos, int max );
     void set_cursor_pos( int pos );
 
-    int widget_rect_test( float x, float y );
-    int widget_rect_test_all( float x, float y );
+    auto widget_rect_test( float x, float y ) -> int;
+    auto widget_rect_test_all( float x, float y ) -> int;
 
-    int ask_parent_for_focus();
+    auto ask_parent_for_focus() -> int;
     void ask_parent_to_focus_next();
     void ask_parent_to_focus_prev();
-    WZ_WIDGET *get_widget_dir( int dir );
+    auto get_widget_dir( int dir ) -> WZ_WIDGET *;
 
     void set_theme( WZ_THEME *theme );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
-    int handle_hide();
-    int handle_show();
-    int handle_disable();
-    int handle_enable();
-    int handle_update_position();
-    int handle_destroy();
-    int handle_lose_focus();
-    int handle_take_focus();
-    int handle_want_focus( const ALLEGRO_EVENT *event );
-    int handle_resize( const ALLEGRO_EVENT *event );
-    int handle_key_char( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto handle_hide() -> int;
+    auto handle_show() -> int;
+    auto handle_disable() -> int;
+    auto handle_enable() -> int;
+    auto handle_update_position() -> int;
+    auto handle_destroy() -> int;
+    auto handle_lose_focus() -> int;
+    auto handle_take_focus() -> int;
+    auto handle_want_focus( const ALLEGRO_EVENT *event ) -> int;
+    auto handle_resize( const ALLEGRO_EVENT *event ) -> int;
+    auto handle_key_char( const ALLEGRO_EVENT *event ) -> int;
 
     /*
 	Variable: x
@@ -306,7 +306,7 @@ struct WZ_BOX : WZ_WIDGET
 {
     WZ_BOX( WZ_WIDGET *parent, float x, float y, float width, float height, int id );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
 };
 
 /*
@@ -324,9 +324,9 @@ struct WZ_BUTTON : WZ_BOX
 {
     WZ_BUTTON( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
 
-    int handle_draw();
+    auto handle_draw() -> int;
 
     ALLEGRO_USTR *text;
     int own;
@@ -358,7 +358,7 @@ struct WZ_IMAGE_BUTTON : WZ_BUTTON
                      ALLEGRO_BITMAP *disabled,
                      int id );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
 
     ALLEGRO_BITMAP *normal;
     ALLEGRO_BITMAP *down;
@@ -393,7 +393,7 @@ struct WZ_FILL_LAYOUT : WZ_BOX
                     int valign,
                     int id );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
 
     float h_spacing;
     float v_spacing;
@@ -425,7 +425,7 @@ struct WZ_TEXTBOX : WZ_WIDGET
                 int own,
                 int id );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
 
     ALLEGRO_USTR *text;
     int own;
@@ -449,9 +449,9 @@ struct WZ_SCROLL : WZ_WIDGET
 {
     WZ_SCROLL( WZ_WIDGET *parent, float x, float y, float width, float height, int max_pos, int slider_size, int id );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
 
-    int set_scroll_pos( float x, float y );
+    auto set_scroll_pos( float x, float y ) -> int;
 
     int max_pos;
     int cur_pos;
@@ -484,7 +484,7 @@ struct WZ_TOGGLE : WZ_BUTTON
                int group,
                int id );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
 
     int group;
 };
@@ -505,7 +505,7 @@ struct WZ_EDITBOX : WZ_WIDGET
 {
     WZ_EDITBOX( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id );
 
-    virtual int proc( const ALLEGRO_EVENT *event );
+    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
 
     void snap();
 
@@ -596,5 +596,5 @@ enum
 extern const WZ_DEF_THEME wz_def_theme;
 extern const WZ_SKIN_THEME wz_skin_theme;
 
-ALLEGRO_COLOR wz_blend_colors( ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac );
-ALLEGRO_COLOR wz_scale_color( ALLEGRO_COLOR c, float scale );
+auto wz_blend_colors( ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac ) -> ALLEGRO_COLOR;
+auto wz_scale_color( ALLEGRO_COLOR c, float scale ) -> ALLEGRO_COLOR;

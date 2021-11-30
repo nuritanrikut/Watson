@@ -27,7 +27,7 @@ TiledBlock::TiledBlock( TiledBlock::BLOCK_TYPE type_,
 // find the tile at x,y. Returns in path[] an array of integers starting at path[0] representing the
 // nested sequence of subblocks that leads to it (depth=0 means the main tile doesn't match)
 
-int get_TiledBlock_tile( TiledBlock *tiled_block, int x, int y, int *path )
+auto get_TiledBlock_tile( TiledBlock *tiled_block, int x, int y, int *path ) -> int
 {
     int m;
     int depth = 0;
@@ -50,7 +50,7 @@ int get_TiledBlock_tile( TiledBlock *tiled_block, int x, int y, int *path )
 }
 
 // get pointer to tiledblock at position x,y
-TiledBlock *get_TiledBlock( TiledBlock *tiled_block, int x, int y )
+auto get_TiledBlock( TiledBlock *tiled_block, int x, int y ) -> TiledBlock *
 {
     int m;
     TiledBlock *rt = nullptr;

@@ -39,7 +39,7 @@ Function: wz_toggle_button_proc
 See also:
 <wz_widget_proc>
 */
-int WZ_TOGGLE::proc( const ALLEGRO_EVENT *event )
+auto WZ_TOGGLE::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
     float x, y;
@@ -142,7 +142,7 @@ int WZ_TOGGLE::proc( const ALLEGRO_EVENT *event )
             }
 
             wz_craft_event( &ev, WZ_BUTTON_PRESSED, this, 0 );
-            al_emit_user_event( this->source, &ev, 0 );
+            al_emit_user_event( this->source, &ev, nullptr );
             break;
         }
         default:

@@ -244,7 +244,7 @@ void Gui::destroy_theme()
     skin_theme->font = nullptr;
 }
 
-WZ_WIDGET *Gui::new_widget( int id, int x, int y )
+auto Gui::new_widget( int id, int x, int y ) -> WZ_WIDGET *
 {
     WZ_WIDGET *wgt = new WZ_WIDGET( nullptr, x, y, 0, 0, id );
     wgt->set_theme( skin_theme );
@@ -320,7 +320,7 @@ void Gui::destroy_base_gui()
     destroy_theme();
 }
 
-WZ_WIDGET *Gui::create_msg_gui( int id, ALLEGRO_USTR *msg )
+auto Gui::create_msg_gui( int id, ALLEGRO_USTR *msg ) -> WZ_WIDGET *
 {
     // scale other elements by font height
     auto fh = [gui_font_h = gui_font_h]( float scale ) { return scale * gui_font_h; };
@@ -377,7 +377,7 @@ WZ_WIDGET *Gui::create_msg_gui( int id, ALLEGRO_USTR *msg )
     return gui;
 }
 
-WZ_WIDGET *Gui::create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg )
+auto Gui::create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg ) -> WZ_WIDGET *
 {
     // scale other elements by font height
     auto fh = [gui_font_h = gui_font_h]( float scale ) { return scale * gui_font_h; };
@@ -427,7 +427,7 @@ WZ_WIDGET *Gui::create_yesno_gui( int id, int button_ok_id, int button_cancel_id
     return gui;
 }
 
-WZ_WIDGET *Gui::create_settings_gui()
+auto Gui::create_settings_gui() -> WZ_WIDGET *
 {
     // scale other elements by font height
     auto fh = [gui_font_h = gui_font_h]( float scale ) { return scale * gui_font_h; };
@@ -704,7 +704,7 @@ void Gui::create_win_gui_high_scores( double time, WZ_WIDGET *gui, int gui_w )
     }
 }
 
-WZ_WIDGET *Gui::create_win_gui( double time )
+auto Gui::create_win_gui( double time ) -> WZ_WIDGET *
 {
     // scale other elements by font height
     auto fh = [gui_font_h = gui_font_h]( float scale ) { return scale * gui_font_h; };
@@ -777,7 +777,7 @@ WZ_WIDGET *Gui::create_win_gui( double time )
     return gui;
 }
 
-WZ_WIDGET *Gui::create_params_gui()
+auto Gui::create_params_gui() -> WZ_WIDGET *
 {
     // scale other elements by font height
     auto fh = [gui_font_h = gui_font_h]( float scale ) { return scale * gui_font_h; };
@@ -885,7 +885,7 @@ WZ_WIDGET *Gui::create_params_gui()
     return gui;
 }
 
-WZ_WIDGET *Gui::create_text_gui( ALLEGRO_USTR *text )
+auto Gui::create_text_gui( ALLEGRO_USTR *text ) -> WZ_WIDGET *
 {
     // scale other elements by font height
     auto fh = [gui_font_h = gui_font_h]( float scale ) { return scale * gui_font_h; };
@@ -1169,7 +1169,7 @@ void Gui::handle_gui_event_params( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDG
     {
         wgt = gui->first_child;
         reset_rel_params();
-        settings_new.advanced = settings_current.advanced = 0;
+        settings_new.advanced = settings_current.advanced = false;
 
         // update sliders and button
         while( wgt )
@@ -1188,7 +1188,7 @@ void Gui::handle_gui_event_params( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDG
     }
 }
 
-int Gui::handle_gui_event( ALLEGRO_EVENT *event )
+auto Gui::handle_gui_event( ALLEGRO_EVENT *event ) -> int
 {
     WZ_WIDGET *wgt = (WZ_WIDGET *)event->user.data2;
     WZ_WIDGET *gui = (WZ_WIDGET *)wgt->parent;
@@ -1227,7 +1227,7 @@ void Gui::update_base_gui( float dt )
     base_gui->update( dt );
 }
 
-int Gui::gui_send_event( ALLEGRO_EVENT *event )
+auto Gui::gui_send_event( ALLEGRO_EVENT *event ) -> int
 {
     int ret = 0;
 

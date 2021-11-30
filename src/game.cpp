@@ -67,7 +67,7 @@ Game::Game()
 {
 }
 
-bool Game::init()
+auto Game::init() -> bool
 {
     // seed random number generator. comment out for debug
     srand( (unsigned int)time( nullptr ) );
@@ -118,7 +118,7 @@ bool Game::init()
 
     if( !load_game_f() )
     {
-        set.saved = 1;
+        set.saved = true;
         SPDLOG_DEBUG( "Saved game found." );
     }
     else
@@ -129,7 +129,7 @@ bool Game::init()
     return true;
 }
 
-bool Game::run()
+auto Game::run() -> bool
 {
     game_state = GAME_INTRO;
 
@@ -143,7 +143,7 @@ bool Game::run()
     return true;
 }
 
-bool Game::cleanup()
+auto Game::cleanup() -> bool
 {
     destroy_everything();
     al_destroy_display( display );
@@ -506,7 +506,7 @@ void Game::mouse_drop( int mx, int my )
     board.clear_info_panel();
 }
 
-TiledBlock *Game::get_TiledBlock_at( int x, int y )
+auto Game::get_TiledBlock_at( int x, int y ) -> TiledBlock *
 {
     if( !board.zoom )
         return get_TiledBlock( &board.all, x, y );
@@ -635,7 +635,7 @@ void Game::switch_solve_puzzle()
     update_board();
 }
 
-int Game::save_game_f()
+auto Game::save_game_f() -> int
 {
     ALLEGRO_PATH *path = al_get_standard_path( ALLEGRO_USER_DATA_PATH );
 
@@ -670,7 +670,7 @@ int Game::save_game_f()
     return 0;
 }
 
-int Game::load_game_f()
+auto Game::load_game_f() -> int
 {
     ALLEGRO_PATH *path = al_get_standard_path( ALLEGRO_USER_DATA_PATH );
 
@@ -707,7 +707,7 @@ int Game::load_game_f()
     return 0;
 }
 
-ALLEGRO_USTR *Game::get_hint_info_text( RELATION relation, char *b0, char *b1, char *b2, char *b3 )
+auto Game::get_hint_info_text( RELATION relation, char *b0, char *b1, char *b2, char *b3 ) -> ALLEGRO_USTR *
 {
     const char *fmt = nullptr;
     switch( relation )
@@ -982,7 +982,7 @@ void Game::draw_generating_puzzle( Settings *settings )
     gui.draw_text_gui( msg );
 }
 
-int Game::switch_tiles()
+auto Game::switch_tiles() -> int
 {
     // cycle through tyle types (font, bitmap, classic)
     SPDLOG_DEBUG( "Swtiching tiles." );
@@ -1059,7 +1059,7 @@ void Game::destroy_everything()
     gui.destroy_base_gui();
 }
 
-int Game::toggle_fullscreen()
+auto Game::toggle_fullscreen() -> int
 {
     get_desktop_resolution( 0, &desktop_width, &desktop_height );
 
@@ -1167,7 +1167,7 @@ void Game::handle_event_save()
     if( !save_game_f() )
     {
         show_info_text( &board, al_ustr_new( "Game saved" ) );
-        set.saved = 1;
+        set.saved = true;
     }
     else
     {
@@ -1175,7 +1175,7 @@ void Game::handle_event_save()
     }
 }
 
-bool Game::handle_event_load()
+auto Game::handle_event_load() -> bool
 {
     if( load_game_f() )
     {
@@ -1472,21 +1472,8 @@ void Game::handle_events()
     }
 }
 
-void Game::game_inner_loop()
+auto Game::game_inner_loop_check_resizing() -> bool
 {
-    double dt = al_current_time() - old_time;
-    al_rest( FIXED_DT - dt ); //rest at least fixed_dt
-    dt = al_get_time() - old_time;
-    if( game_state == GAME_PLAYING )
-        game_data.time += dt;
-    old_time = al_get_time();
-
-    gui.update_base_gui( dt );
-
-    handle_events();
-    if( restart != RESTART_STATE::NO_RESTART )
-        return;
-
     if( resizing )
     {
         if( al_get_time() - resize_time > RESIZE_DELAY )
@@ -1514,16 +1501,21 @@ void Game::game_inner_loop()
         al_flip_display();
     }
 
-    if( resizing ) // skip redraw and other stuff
-        return;
+    return resizing;  // skip redraw and other stuff
+}
 
+void Game::game_inner_loop_check_double_click()
+{
     if( wait_for_double_click && ( al_get_time() - mouse_up_time > DELTA_DOUBLE_CLICK ) )
     {
         wait_for_double_click = false;
         tb_down = get_TiledBlock_at( mbdown_x, mbdown_y );
         handle_mouse_click( tb_down, mbdown_x, mbdown_y, 1 ); // single click
     }
+}
 
+void Game::game_inner_loop_check_hold_click()
+{
     if( mouse_button_down && hold_click_check == HOLD_CLICK_CHECK::RELEASED && !board.dragging )
     {
         if( al_get_time() - mouse_down_time > DELTA_HOLD_CLICK )
@@ -1556,21 +1548,10 @@ void Game::game_inner_loop()
             }
         }
     }
+}
 
-    if( mouse_move )
-    {
-        mouse_move = false;
-        if( board.dragging )
-            redraw = true;
-    }
-
-    if( keypress )
-    {
-        if( game_state == GAME_INTRO )
-            game_state = GAME_PLAYING;
-        keypress = false;
-    }
-
+void Game::game_inner_loop_update_timer()
+{
     if( old_time - play_time > 1 )
     { // runs every second
         if( game_state == GAME_INTRO )
@@ -1588,6 +1569,44 @@ void Game::game_inner_loop()
             gui.emit_event( EVENT_REDRAW );
         }
     }
+}
+
+void Game::game_inner_loop()
+{
+    double dt = al_current_time() - old_time;
+    al_rest( FIXED_DT - dt ); //rest at least fixed_dt
+    dt = al_get_time() - old_time;
+    if( game_state == GAME_PLAYING )
+        game_data.time += dt;
+    old_time = al_get_time();
+
+    gui.update_base_gui( dt );
+
+    handle_events();
+    if( restart != RESTART_STATE::NO_RESTART )
+        return;
+
+    if(game_inner_loop_check_resizing()) // skip redraw and other stuff
+        return;
+
+    game_inner_loop_check_double_click();
+    game_inner_loop_check_hold_click();
+
+    if( mouse_move )
+    {
+        mouse_move = false;
+        if( board.dragging )
+            redraw = true;
+    }
+
+    if( keypress )
+    {
+        if( game_state == GAME_INTRO )
+            game_state = GAME_PLAYING;
+        keypress = false;
+    }
+
+    game_inner_loop_update_timer();
 
     if( board.rule_out && ( al_get_time() - blink_time > BLINK_DELAY ) )
     {

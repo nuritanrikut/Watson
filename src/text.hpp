@@ -26,4 +26,4 @@ void draw_multiline_text_vbf( ALLEGRO_FONT *font,
                               const char *format,
                               va_list ap );
 
-int get_multiline_text_lines( const ALLEGRO_FONT *font, float max_width, const char *text );
+auto get_multiline_text_lines( const ALLEGRO_FONT *font, float max_width, const char *text ) -> int;

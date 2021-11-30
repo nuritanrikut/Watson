@@ -43,7 +43,7 @@ Returns:
 
 1 if the event was handled by the widget, 0 otherwise
 */
-int WZ_WIDGET::proc( const ALLEGRO_EVENT *event )
+auto WZ_WIDGET::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
 
@@ -89,35 +89,35 @@ int WZ_WIDGET::proc( const ALLEGRO_EVENT *event )
     return ret;
 }
 
-int WZ_WIDGET::handle_hide()
+auto WZ_WIDGET::handle_hide() -> int
 {
     int ret = 1;
     this->flags |= WZ_STATE_HIDDEN;
     return ret;
 }
 
-int WZ_WIDGET::handle_show()
+auto WZ_WIDGET::handle_show() -> int
 {
     int ret = 1;
     this->flags &= ~WZ_STATE_HIDDEN;
     return ret;
 }
 
-int WZ_WIDGET::handle_disable()
+auto WZ_WIDGET::handle_disable() -> int
 {
     int ret = 1;
     this->flags |= WZ_STATE_DISABLED;
     return ret;
 }
 
-int WZ_WIDGET::handle_enable()
+auto WZ_WIDGET::handle_enable() -> int
 {
     int ret = 1;
     this->flags &= ~WZ_STATE_DISABLED;
     return ret;
 }
 
-int WZ_WIDGET::handle_update_position()
+auto WZ_WIDGET::handle_update_position() -> int
 {
     int ret = 1;
     if( this->parent )
@@ -133,7 +133,7 @@ int WZ_WIDGET::handle_update_position()
     return ret;
 }
 
-int WZ_WIDGET::handle_destroy()
+auto WZ_WIDGET::handle_destroy() -> int
 {
     int ret = 1;
     al_destroy_user_event_source( this->source );
@@ -142,14 +142,14 @@ int WZ_WIDGET::handle_destroy()
     return ret;
 }
 
-int WZ_WIDGET::handle_lose_focus()
+auto WZ_WIDGET::handle_lose_focus() -> int
 {
     int ret = 1;
     this->flags &= ~WZ_STATE_HAS_FOCUS;
     return ret;
 }
 
-int WZ_WIDGET::handle_take_focus()
+auto WZ_WIDGET::handle_take_focus() -> int
 {
     int ret = 1;
     this->focus( 0 );
@@ -160,7 +160,7 @@ int WZ_WIDGET::handle_take_focus()
     return ret;
 }
 
-int WZ_WIDGET::handle_want_focus( const ALLEGRO_EVENT *event )
+auto WZ_WIDGET::handle_want_focus( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
     WZ_WIDGET *child = this->first_child;
@@ -188,7 +188,7 @@ int WZ_WIDGET::handle_want_focus( const ALLEGRO_EVENT *event )
     return ret;
 }
 
-int WZ_WIDGET::handle_resize( const ALLEGRO_EVENT *event )
+auto WZ_WIDGET::handle_resize( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
     float factor = *(float *)&event->user.data3;
@@ -201,7 +201,7 @@ int WZ_WIDGET::handle_resize( const ALLEGRO_EVENT *event )
     return ret;
 }
 
-int WZ_WIDGET::handle_key_char( const ALLEGRO_EVENT *event )
+auto WZ_WIDGET::handle_key_char( const ALLEGRO_EVENT *event ) -> int
 {
     if( event->keyboard.keycode == this->shortcut.keycode
         && ( ( event->keyboard.modifiers & this->shortcut.modifiers ) || this->shortcut.modifiers == 0 ) )
@@ -217,7 +217,7 @@ int WZ_WIDGET::handle_key_char( const ALLEGRO_EVENT *event )
            || ( event->keyboard.keycode == ALLEGRO_KEY_LEFT ) ) )
         return 0;
 
-    if( this->first_child != 0 || !this->parent )
+    if( this->first_child != nullptr || !this->parent )
     {
         return 0;
     }

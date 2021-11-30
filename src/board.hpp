@@ -20,7 +20,7 @@ struct Board
         CreateFullscreen = 2
     };
 
-    int create_board( GameData *game_data, CreateMode mode );
+    auto create_board( GameData *game_data, CreateMode mode ) -> int;
     void destroy_board();
     void destroy_board_clue_blocks();
     void clear_info_panel();

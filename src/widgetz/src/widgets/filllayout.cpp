@@ -38,7 +38,7 @@ Function: wz_fill_layout_proc
 See also:
 <wz_widget_proc>
 */
-int WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event )
+auto WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
 
@@ -157,7 +157,7 @@ int WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event )
             else
                 x = ( this->width - total_width ) / 2 + this->h_spacing;
 
-            while( it != 0 )
+            while( it != nullptr )
             {
                 if( it->flags & WZ_STATE_LAYOUT )
                     break;

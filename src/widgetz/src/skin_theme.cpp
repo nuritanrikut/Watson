@@ -46,35 +46,35 @@ void WZ_SKIN_THEME::init()
 {
     skin_pad = 0;
 
-    if( this->button_up_bitmap != 0 )
+    if( this->button_up_bitmap != nullptr )
         this->button_up_patch = wz_create_nine_patch_bitmap( this->button_up_bitmap, false );
     else
-        this->button_up_patch = 0;
+        this->button_up_patch = nullptr;
 
-    if( this->button_down_bitmap != 0 )
+    if( this->button_down_bitmap != nullptr )
         this->button_down_patch = wz_create_nine_patch_bitmap( this->button_down_bitmap, false );
     else
-        this->button_down_patch = 0;
+        this->button_down_patch = nullptr;
 
-    if( this->box_bitmap != 0 )
+    if( this->box_bitmap != nullptr )
         this->box_patch = wz_create_nine_patch_bitmap( this->box_bitmap, false );
     else
-        this->box_patch = 0;
+        this->box_patch = nullptr;
 
-    if( this->editbox_bitmap != 0 )
+    if( this->editbox_bitmap != nullptr )
         this->editbox_patch = wz_create_nine_patch_bitmap( this->editbox_bitmap, false );
     else
-        this->editbox_patch = 0;
+        this->editbox_patch = nullptr;
 
-    if( this->scroll_track_bitmap != 0 )
+    if( this->scroll_track_bitmap != nullptr )
         this->scroll_track_patch = wz_create_nine_patch_bitmap( this->scroll_track_bitmap, false );
     else
-        this->scroll_track_patch = 0;
+        this->scroll_track_patch = nullptr;
 
-    if( this->slider_bitmap != 0 )
+    if( this->slider_bitmap != nullptr )
         this->slider_patch = wz_create_nine_patch_bitmap( this->slider_bitmap, false );
     else
-        this->slider_patch = 0;
+        this->slider_patch = nullptr;
 }
 
 /*
@@ -93,12 +93,12 @@ WZ_SKIN_THEME::~WZ_SKIN_THEME()
 }
 
 /* Returns the padding corrected in case the passed rectangle was too small */
-WZ_NINE_PATCH_PADDING WZ_SKIN_THEME::draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9,
+auto WZ_SKIN_THEME::draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9,
                                                         ALLEGRO_COLOR tint,
                                                         float x,
                                                         float y,
                                                         float width,
-                                                        float height )
+                                                        float height ) -> WZ_NINE_PATCH_PADDING
 {
     WZ_NINE_PATCH_PADDING pad = wz_get_nine_patch_padding( p9 );
     float min_w = wz_get_nine_patch_bitmap_min_width( p9 );
@@ -348,7 +348,7 @@ void WZ_SKIN_THEME::draw_image( float x, float y, float width, float height, ALL
     al_draw_bitmap( image, ix, iy, 0 );
 }
 
-ALLEGRO_FONT *WZ_SKIN_THEME::get_font( int font_num )
+auto WZ_SKIN_THEME::get_font( int font_num ) -> ALLEGRO_FONT *
 {
     return this->font;
 }
@@ -407,7 +407,7 @@ WZ_SKIN_THEME::WZ_SKIN_THEME( WZ_SKIN_THEME *other )
 {
 }
 
-WZ_SKIN_THEME *get_skin_theme()
+auto get_skin_theme() -> WZ_SKIN_THEME *
 {
     static WZ_SKIN_THEME instance;
     return &instance;

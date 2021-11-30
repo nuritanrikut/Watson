@@ -38,7 +38,7 @@ struct nine_patch_bitmap_tag
     ALLEGRO_MUTEX *mutex;
 };
 
-static bool init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int vertical )
+static auto init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int vertical ) -> bool
 {
     const int len = vertical ? al_get_bitmap_height( bmp ) : al_get_bitmap_width( bmp );
     int i, s, t, n, z;
@@ -109,7 +109,7 @@ static bool init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int 
     return true;
 }
 
-WZ_NINE_PATCH_BITMAP *wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap )
+auto wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap ) -> WZ_NINE_PATCH_BITMAP *
 {
     int i;
     ALLEGRO_COLOR c;
@@ -295,7 +295,7 @@ void wz_draw_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9, int dx, int dy, int dw
     wz_draw_tinted_nine_patch_bitmap( p9, al_map_rgb_f( 1, 1, 1 ), dx, dy, dw, dh );
 }
 
-ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int width, int h )
+auto wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int width, int h ) -> ALLEGRO_BITMAP *
 {
     ALLEGRO_BITMAP *bmp = al_create_bitmap( width, h );
     ALLEGRO_STATE s;
@@ -311,45 +311,45 @@ ALLEGRO_BITMAP *wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int 
     return bmp;
 }
 
-WZ_NINE_PATCH_BITMAP *wz_load_nine_patch_bitmap( const char *filename )
+auto wz_load_nine_patch_bitmap( const char *filename ) -> WZ_NINE_PATCH_BITMAP *
 {
     ALLEGRO_BITMAP *bmp = al_load_bitmap( filename );
     return bmp ? wz_create_nine_patch_bitmap( bmp, true ) : nullptr;
 }
 
-int wz_get_nine_patch_bitmap_width( const WZ_NINE_PATCH_BITMAP *p9 )
+auto wz_get_nine_patch_bitmap_width( const WZ_NINE_PATCH_BITMAP *p9 ) -> int
 {
     return p9->width;
 }
 
-int wz_get_nine_patch_bitmap_height( const WZ_NINE_PATCH_BITMAP *p9 )
+auto wz_get_nine_patch_bitmap_height( const WZ_NINE_PATCH_BITMAP *p9 ) -> int
 {
     return p9->height;
 }
 
-int wz_get_nine_patch_bitmap_min_width( const WZ_NINE_PATCH_BITMAP *p9 )
+auto wz_get_nine_patch_bitmap_min_width( const WZ_NINE_PATCH_BITMAP *p9 ) -> int
 {
     return p9->h.fix;
 }
 
-int wz_get_nine_patch_bitmap_min_height( const WZ_NINE_PATCH_BITMAP *p9 )
+auto wz_get_nine_patch_bitmap_min_height( const WZ_NINE_PATCH_BITMAP *p9 ) -> int
 {
     return p9->v.fix;
 }
 
-ALLEGRO_BITMAP *wz_get_nine_patch_bitmap_source( const WZ_NINE_PATCH_BITMAP *p9 )
+auto wz_get_nine_patch_bitmap_source( const WZ_NINE_PATCH_BITMAP *p9 ) -> ALLEGRO_BITMAP *
 {
     return p9->bmp;
 }
 
-WZ_NINE_PATCH_PADDING wz_get_nine_patch_padding( const WZ_NINE_PATCH_BITMAP *p9 )
+auto wz_get_nine_patch_padding( const WZ_NINE_PATCH_BITMAP *p9 ) -> WZ_NINE_PATCH_PADDING
 {
     return p9->padding;
 }
 
 void wz_destroy_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9 )
 {
-    if( p9 == 0 )
+    if( p9 == nullptr )
         return;
 
     if( p9->destroy_bmp )

@@ -13,13 +13,13 @@ public:
     void save_highscores( int number_of_columns, int h, int advanced, char ( *name )[64], double *score );
     void draw_guis();
 
-    int handle_gui_event( ALLEGRO_EVENT *event );
+    auto handle_gui_event( ALLEGRO_EVENT *event ) -> int;
     void handle_gui_event_text_changed( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui );
     void handle_gui_event_button_pressed( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui );
     void handle_gui_event_settings( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui );
     void handle_gui_event_params( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui );
 
-    int gui_send_event( ALLEGRO_EVENT *event );
+    auto gui_send_event( ALLEGRO_EVENT *event ) -> int;
     void init_theme();
     void init_guis( int x, int y, int width, int height );
     void destroy_base_gui();
@@ -68,13 +68,13 @@ private:
     void scale_gui( float factor );
     void destroy_theme();
 
-    WZ_WIDGET *new_widget( int id, int x, int y );
-    WZ_WIDGET *create_msg_gui( int id, ALLEGRO_USTR *msg );
-    WZ_WIDGET *create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg );
-    WZ_WIDGET *create_settings_gui();
+    auto new_widget( int id, int x, int y ) -> WZ_WIDGET *;
+    auto create_msg_gui( int id, ALLEGRO_USTR *msg ) -> WZ_WIDGET *;
+    auto create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLEGRO_USTR *msg ) -> WZ_WIDGET *;
+    auto create_settings_gui() -> WZ_WIDGET *;
     void create_win_gui_high_scores( double time, WZ_WIDGET *gui, int gui_w );
-    WZ_WIDGET *create_win_gui( double time );
-    WZ_WIDGET *create_params_gui();
-    WZ_WIDGET *create_text_gui( ALLEGRO_USTR *text );
+    auto create_win_gui( double time ) -> WZ_WIDGET *;
+    auto create_params_gui() -> WZ_WIDGET *;
+    auto create_text_gui( ALLEGRO_USTR *text ) -> WZ_WIDGET *;
     void show_params();
 };

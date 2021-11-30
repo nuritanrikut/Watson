@@ -12,8 +12,8 @@
 #include "sound.hpp"
 
 ALLEGRO_FONT *default_font = nullptr;
-MemFile text_font_mem = { 0 };
-MemFile tile_font_mem = { 0 };
+MemFile text_font_mem = { nullptr };
+MemFile tile_font_mem = { nullptr };
 const char *TILE_FONT_FILE = "fonts/tiles.ttf";
 const char *TEXT_FONT_FILE = "fonts/text_font.ttf";
 
@@ -25,7 +25,7 @@ struct Buffer_USTR
 
 Buffer_USTR *buffer_ustr = nullptr;
 
-int init_fonts()
+auto init_fonts() -> int
 {
     text_font_mem = create_memfile( TEXT_FONT_FILE );
     if( !text_font_mem.mem )
@@ -44,7 +44,7 @@ int init_fonts()
     return 0;
 }
 
-ALLEGRO_FONT *load_font_mem( MemFile font_mem, const char *filename, int size )
+auto load_font_mem( MemFile font_mem, const char *filename, int size ) -> ALLEGRO_FONT *
 {
     // filename is only to detect extension
     ALLEGRO_FILE *fp = nullptr;
@@ -58,7 +58,7 @@ ALLEGRO_FONT *load_font_mem( MemFile font_mem, const char *filename, int size )
     return font;
 }
 
-int init_allegro()
+auto init_allegro() -> int
 {
     ALLEGRO_PATH *path;
     int no_input = 1;
@@ -129,9 +129,9 @@ int init_allegro()
     return 0;
 }
 
-MemFile create_memfile( const char *filename )
+auto create_memfile( const char *filename ) -> MemFile
 {
-    MemFile ret = { 0 };
+    MemFile ret = { nullptr };
 
     ALLEGRO_FILE *fp = al_fopen( filename, "rb" );
 
@@ -246,7 +246,7 @@ void wait_for_input( ALLEGRO_EVENT_QUEUE *queue )
         al_destroy_event_queue( queue );
 }
 
-ALLEGRO_USTR *new_ustr( const char *str )
+auto new_ustr( const char *str ) -> ALLEGRO_USTR *
 {
     Buffer_USTR *buf = new Buffer_USTR();
     buf->ustr = al_ustr_new( str );
@@ -266,13 +266,13 @@ void free_ustr()
     }
 }
 
-ALLEGRO_BITMAP *screenshot()
+auto screenshot() -> ALLEGRO_BITMAP *
 {
     ALLEGRO_BITMAP *ret = al_clone_bitmap( al_get_target_bitmap() );
     return ret;
 }
 
-ALLEGRO_BITMAP *screenshot_part( int x, int y, int width, int height )
+auto screenshot_part( int x, int y, int width, int height ) -> ALLEGRO_BITMAP *
 {
     int store = al_get_new_bitmap_format();
 
@@ -291,7 +291,7 @@ ALLEGRO_BITMAP *screenshot_part( int x, int y, int width, int height )
     return ret;
 }
 
-ALLEGRO_BITMAP *scaled_clone_bitmap( ALLEGRO_BITMAP *source, int width, int height )
+auto scaled_clone_bitmap( ALLEGRO_BITMAP *source, int width, int height ) -> ALLEGRO_BITMAP *
 {
     ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
     ALLEGRO_BITMAP *ret = al_create_bitmap( width, height );

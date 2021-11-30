@@ -98,26 +98,26 @@ struct GameData
 
     void init_game(); // clean board and guesses xxx todo: add clues?
     void switch_game( int type );
-    int advanced_check_clues();
+    auto advanced_check_clues() -> int;
     void create_game_with_clues();
     void create_puzzle();
-    Hint get_hint();
-    int check_solution();
-    int check_panel_consistency();
-    int check_panel_correctness();
+    auto get_hint() -> Hint;
+    auto check_solution() -> int;
+    auto check_panel_consistency() -> int;
+    auto check_panel_correctness() -> int;
     void guess_tile( TileAddress tile );
     void hide_tile_and_check( TileAddress tile );
     void unguess_tile( int i, int j );
-    int is_guessed( int j, int k ); // is the value k on row j guessed?
+    auto is_guessed( int j, int k ) -> int; // is the value k on row j guessed?
     void get_clue( int i, int j, Clue *clue );
 
     void remove_clue( int i );
     void join_clues();
-    int filter_clues();
+    auto filter_clues() -> int;
     void sort_clues();
 
-    int get_random_tile( int column, int *row, int *cell );
-    int random_relation();
+    auto get_random_tile( int column, int *row, int *cell ) -> int;
+    auto random_relation() -> int;
     void get_random_item_col( int column, int *row, int *cell );
     void get_random_item_col_except( int column, int *row, int *cell, int ej1, int ej2 );
 
@@ -133,44 +133,44 @@ struct GameData
     void get_clue_reveal( int column, int row, int cell, Clue *clue );
     void get_clue_together_first_with_only_one( int column, int row, int cell, Clue *clue );
 
-    int check_clues();
-    int check_clues_for_solution();
-    TileAddress check_this_clue( Clue *clue );
-    TileAddress check_this_clue_reveal( Clue *clue );
-    TileAddress check_this_clue_one_side( Clue *clue );
-    TileAddress check_this_clue_together_2( Clue *clue );
-    TileAddress check_this_clue_together_3( Clue *clue );
-    TileAddress check_this_clue_together_not_middle( Clue *clue );
-    TileAddress check_this_clue_not_together( Clue *clue );
-    TileAddress check_this_clue_next_to( Clue *clue );
-    TileAddress check_this_clue_not_next_to( Clue *clue );
-    TileAddress check_this_clue_consecutive( Clue *clue );
-    TileAddress check_this_clue_not_middle( Clue *clue );
-    TileAddress check_this_clue_together_first_with_only_one( Clue *clue );
+    auto check_clues() -> int;
+    auto check_clues_for_solution() -> int;
+    auto check_this_clue( Clue *clue ) -> TileAddress;
+    auto check_this_clue_reveal( Clue *clue ) -> TileAddress;
+    auto check_this_clue_one_side( Clue *clue ) -> TileAddress;
+    auto check_this_clue_together_2( Clue *clue ) -> TileAddress;
+    auto check_this_clue_together_3( Clue *clue ) -> TileAddress;
+    auto check_this_clue_together_not_middle( Clue *clue ) -> TileAddress;
+    auto check_this_clue_not_together( Clue *clue ) -> TileAddress;
+    auto check_this_clue_next_to( Clue *clue ) -> TileAddress;
+    auto check_this_clue_not_next_to( Clue *clue ) -> TileAddress;
+    auto check_this_clue_consecutive( Clue *clue ) -> TileAddress;
+    auto check_this_clue_not_middle( Clue *clue ) -> TileAddress;
+    auto check_this_clue_together_first_with_only_one( Clue *clue ) -> TileAddress;
 
-    int last_tile_in_block( int column, int row );
-    int last_tile_in_row( int row, int cell );
-    int check_row( int row );
+    auto last_tile_in_block( int column, int row ) -> int;
+    auto last_tile_in_row( int row, int cell ) -> int;
+    auto check_row( int row ) -> int;
 
     // debug
-    int is_clue_valid( Clue *clue );
+    auto is_clue_valid( Clue *clue ) -> int;
 
-    int is_clue_compatible( Clue *clue );
-    int is_clue_compatible_reveal(Clue *clue);
-    int is_clue_compatible_one_side(Clue *clue);
-    int is_clue_compatible_together_2(Clue *clue);
-    int is_clue_compatible_together_3(Clue *clue);
-    int is_clue_compatible_together_not_middle(Clue *clue);
-    int is_clue_compatible_not_together(Clue *clue);
-    int is_clue_compatible_next_to(Clue *clue);
-    int is_clue_compatible_not_next_to(Clue *clue);
-    int is_clue_compatible_consecutive(Clue *clue);
-    int is_clue_compatible_not_middle(Clue *clue);
-    int is_clue_compatible_together_first_with_only_one(Clue *clue);
+    auto is_clue_compatible( Clue *clue ) -> int;
+    auto is_clue_compatible_reveal(Clue *clue) -> int;
+    auto is_clue_compatible_one_side(Clue *clue) -> int;
+    auto is_clue_compatible_together_2(Clue *clue) -> int;
+    auto is_clue_compatible_together_3(Clue *clue) -> int;
+    auto is_clue_compatible_together_not_middle(Clue *clue) -> int;
+    auto is_clue_compatible_not_together(Clue *clue) -> int;
+    auto is_clue_compatible_next_to(Clue *clue) -> int;
+    auto is_clue_compatible_not_next_to(Clue *clue) -> int;
+    auto is_clue_compatible_consecutive(Clue *clue) -> int;
+    auto is_clue_compatible_not_middle(Clue *clue) -> int;
+    auto is_clue_compatible_together_first_with_only_one(Clue *clue) -> int;
 };
 
 void shuffle( int p[], int n );
-int is_vclue( RELATION rel ); // is this relation a vertical clue?
+auto is_vclue( RELATION rel ) -> int; // is this relation a vertical clue?
 void reset_rel_params();
 
 // globals

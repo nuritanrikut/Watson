@@ -39,7 +39,7 @@ Function: wz_textbox_proc
 See also:
 <wz_widget_proc>
 */
-int WZ_TEXTBOX::proc( const ALLEGRO_EVENT *event )
+auto WZ_TEXTBOX::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
 

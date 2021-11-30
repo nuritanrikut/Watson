@@ -136,7 +136,7 @@ void Board::clear_info_panel()
 
 //xxx todo: better board generation. Fix tile size first, then compute everything?
 // mode: 1 = create, 0 = update, 2 = create fullscreen
-int Board::create_board( GameData *game_data, CreateMode mode )
+auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
 {
     int column_w, column_h, block_w, block_h, block_space;
     int hclue_tile_w, hclue_tile_h, vclue_tile_w, vclue_tile_h;

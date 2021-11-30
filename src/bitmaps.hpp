@@ -17,12 +17,12 @@
 
 void destroy_board_bitmaps( Board *board );
 void destroy_all_bitmaps( Board *board );
-int init_bitmaps( Board *board );
-int init_bitmaps_classic();
-int update_bitmaps( GameData *game_data, Board *board );
-int update_font_bitmaps( GameData *game_data, Board *board );
+auto init_bitmaps( Board *board ) -> int;
+auto init_bitmaps_classic() -> int;
+auto update_bitmaps( GameData *game_data, Board *board ) -> int;
+auto update_font_bitmaps( GameData *game_data, Board *board ) -> int;
 void fit_board( Board *board );
-ALLEGRO_BITMAP *create_title_bmp();
+auto create_title_bmp() -> ALLEGRO_BITMAP *;
 void destroy_settings_bitmaps( Board *board );
 void create_settings_bitmaps( Board *board );
 void update_timer( int seconds, Board *board );
@@ -37,4 +37,4 @@ void create_font_symbols( Board *board );
 extern char symbol_char[9][8][6];
 
 // debug
-ALLEGRO_BITMAP *get_clue_bitmap( Board *board, Clue *clue );
+auto get_clue_bitmap( Board *board, Clue *clue ) -> ALLEGRO_BITMAP *;

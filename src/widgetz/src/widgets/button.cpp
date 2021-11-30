@@ -38,7 +38,7 @@ Function: wz_button_proc
 See also:
 <wz_widget_proc>
 */
-int WZ_BUTTON::proc( const ALLEGRO_EVENT *event )
+auto WZ_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
     float x, y;
@@ -260,7 +260,7 @@ int WZ_BUTTON::proc( const ALLEGRO_EVENT *event )
             ALLEGRO_EVENT ev;
             this->down = 0;
             wz_craft_event( &ev, WZ_BUTTON_PRESSED, this, (intptr_t)this );
-            al_emit_user_event( this->source, &ev, 0 );
+            al_emit_user_event( this->source, &ev, nullptr );
             break;
         }
         default:
@@ -273,7 +273,7 @@ int WZ_BUTTON::proc( const ALLEGRO_EVENT *event )
     return ret;
 }
 
-int WZ_BUTTON::handle_draw()
+auto WZ_BUTTON::handle_draw() -> int
 {
     int ret = 1;
     return ret;

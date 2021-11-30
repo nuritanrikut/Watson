@@ -64,10 +64,10 @@ struct TiledBlock
 // find the tile at x,y. Returns an array of integers starting at path[0] representing the
 // nested sequence of subblocks that leads to it. path should be an int array of size
 // at least the max depth of the subblock sequence
-int get_TiledBlock_tile( TiledBlock *tiled_block, int x, int y, int *path );
+auto get_TiledBlock_tile( TiledBlock *tiled_block, int x, int y, int *path ) -> int;
 void draw_TiledBlock( TiledBlock *tiled_block, int x, int y );
 void highlight_TiledBlock( TiledBlock *tiled_block );
 void get_TiledBlock_offset( TiledBlock *tiled_block, int *x, int *y );
-TiledBlock *get_TiledBlock( TiledBlock *tiled_block, int x, int y );
+auto get_TiledBlock( TiledBlock *tiled_block, int x, int y ) -> TiledBlock *;
 // returns pointer to new tiled block
-TiledBlock *new_TiledBlock();
+auto new_TiledBlock() -> TiledBlock *;

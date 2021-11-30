@@ -30,7 +30,7 @@ distribution.
 #include "../../../macros.hpp"
 
 /* Returns 1 if the position changed, 0 otherwise*/
-int WZ_SCROLL::set_scroll_pos( float x, float y )
+auto WZ_SCROLL::set_scroll_pos( float x, float y ) -> int
 {
     float fraction;
     int old_pos;
@@ -70,7 +70,7 @@ Function: wz_scroll_proc
 See also:
 <wz_widget_proc>
 */
-int WZ_SCROLL::proc( const ALLEGRO_EVENT *event )
+auto WZ_SCROLL::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
     float x, y;
@@ -290,7 +290,7 @@ int WZ_SCROLL::proc( const ALLEGRO_EVENT *event )
             }
 
             wz_craft_event( &ev, WZ_SCROLL_POS_CHANGED, this, this->cur_pos );
-            al_emit_user_event( this->source, &ev, 0 );
+            al_emit_user_event( this->source, &ev, nullptr );
             break;
         }
         default:

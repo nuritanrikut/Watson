@@ -75,7 +75,7 @@ void WZ_DEF_THEME::draw_3d_rectangle( float x1,
     vtx[4].y = y1;
     vtx[5].x = x2 - border;
     vtx[5].y = y1 + border;
-    al_draw_prim( vtx, 0, 0, 0, 6, ALLEGRO_PRIM_TRIANGLE_FAN );
+    al_draw_prim( vtx, nullptr, nullptr, 0, 6, ALLEGRO_PRIM_TRIANGLE_FAN );
     vtx[0].x = x2 - border;
     vtx[0].y = y2 - border;
     vtx[1].x = x1 + border;
@@ -94,19 +94,19 @@ void WZ_DEF_THEME::draw_3d_rectangle( float x1,
         vtx[ii].color = lo;
     }
 
-    al_draw_prim( vtx, 0, 0, 0, 6, ALLEGRO_PRIM_TRIANGLE_FAN );
+    al_draw_prim( vtx, nullptr, nullptr, 0, 6, ALLEGRO_PRIM_TRIANGLE_FAN );
     al_draw_filled_rectangle( x1 + border, y1 + border, x2 - border, y2 - border, col );
 }
 
 //return the new start
-int WZ_DEF_THEME::find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end )
+auto WZ_DEF_THEME::find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end ) -> int
 {
     int a, b;
     int first = 1;
     int last = 0;
     a = start;
 
-    while( 1 )
+    while( true )
     {
         ALLEGRO_USTR_INFO info;
         const ALLEGRO_USTR *token;
@@ -450,7 +450,7 @@ void WZ_DEF_THEME::draw_image( float x, float y, float width, float height, ALLE
     al_draw_bitmap( image, ix, iy, 0 );
 }
 
-ALLEGRO_FONT *WZ_DEF_THEME::get_font( int font_num )
+auto WZ_DEF_THEME::get_font( int font_num ) -> ALLEGRO_FONT *
 {
     return this->font;
 }
@@ -465,7 +465,7 @@ WZ_DEF_THEME::WZ_DEF_THEME( ALLEGRO_COLOR color1_, ALLEGRO_COLOR color2_, ALLEGR
 
 WZ_DEF_THEME::~WZ_DEF_THEME() { }
 
-WZ_DEF_THEME *get_def_theme()
+auto get_def_theme() -> WZ_DEF_THEME *
 {
     static WZ_DEF_THEME instance;
     return &instance;

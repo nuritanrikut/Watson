@@ -17,7 +17,7 @@ struct MemFile
 // Prototypes
 
 // Init mouse, kbd, addons, set path to resources path (or cwd), etc
-int init_allegro();
+auto init_allegro() -> int;
 
 // adapter = 0 for first desktop
 void get_desktop_resolution( int adapter, int *width, int *height );
@@ -31,18 +31,18 @@ void wait_for_keypress();
 // if queue = NULL will use own queue, with installed input devices
 // otherwise uses provided queue with registered input devices
 void wait_for_input( ALLEGRO_EVENT_QUEUE *queue );
-MemFile create_memfile( const char *filename );
-int init_fonts();
-ALLEGRO_FONT *load_font_mem( MemFile font_mem, const char *filename, int size );
+auto create_memfile( const char *filename ) -> MemFile;
+auto init_fonts() -> int;
+auto load_font_mem( MemFile font_mem, const char *filename, int size ) -> ALLEGRO_FONT *;
 
-ALLEGRO_USTR *new_ustr( const char *str );
+auto new_ustr( const char *str ) -> ALLEGRO_USTR *;
 void free_ustr();
 
 // clones the target bitmap (usually the display backbuffer)
-ALLEGRO_BITMAP *screenshot();
-ALLEGRO_BITMAP *screenshot_part( int x, int y, int width, int height );
+auto screenshot() -> ALLEGRO_BITMAP *;
+auto screenshot_part( int x, int y, int width, int height ) -> ALLEGRO_BITMAP *;
 
-ALLEGRO_BITMAP *scaled_clone_bitmap( ALLEGRO_BITMAP *source, int width, int height );
+auto scaled_clone_bitmap( ALLEGRO_BITMAP *source, int width, int height ) -> ALLEGRO_BITMAP *;
 
 // variables
 extern ALLEGRO_FONT *default_font;

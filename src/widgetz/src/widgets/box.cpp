@@ -38,7 +38,7 @@ Function: wz_box_proc
 See also:
 <wz_widget_proc>
 */
-int WZ_BOX::proc( const ALLEGRO_EVENT *event )
+auto WZ_BOX::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
 

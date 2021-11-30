@@ -16,7 +16,7 @@ const char *sound_sample_filename[] = { "sounds/click-hide.wav",
                                         "sounds/click-sound.wav",
                                         "sounds/stone.wav" };
 
-int init_sound()
+auto init_sound() -> int
 {
     int i, err = 0;
 

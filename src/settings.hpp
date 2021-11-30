@@ -6,12 +6,12 @@ struct Settings
     {
         number_of_columns = 5;
         column_height = 5;
-        advanced = 0;
-        sound_mute = 0;
+        advanced = false;
+        sound_mute = false;
         type_of_tiles = 0;
-        fat_fingers = 0;
+        fat_fingers = false;
         restart = 0;
-        saved = 0;
+        saved = false;
     }
 
     int number_of_columns;

@@ -38,7 +38,7 @@ const float SHADOW_ALPHA = 0.3;
 
 // prototypes
 
-int make_clue_bitmaps( GameData *game_data, Board *board );
+auto make_clue_bitmaps( GameData *game_data, Board *board ) -> int;
 
 const char *CLUE_BACKGROUND_COLOR[8] =
     { "808080", "5522F0", "008080", "840543", "BB6000", "DAB520", "FFB6C1", "9ACD32" };
@@ -181,7 +181,7 @@ void unload_basic_bmps( Board *board, int jj, int kk )
     }
 }
 
-int init_bitmaps( Board *board )
+auto init_bitmaps( Board *board ) -> int
 {
     // will load bitmaps from folders named 0, 1,..., 7
     // inside the folder "icons", each containing 8 square bitmaps
@@ -293,7 +293,7 @@ void draw_shadow( int width, int height, int thickness )
     al_draw_line( width - a, a, width - a, height - a, al_map_rgba_f( 0, 0, 0, SHADOW_ALPHA ), thickness );
 }
 
-ALLEGRO_COLOR invert_color( ALLEGRO_COLOR c )
+auto invert_color( ALLEGRO_COLOR c ) -> ALLEGRO_COLOR
 {
     return ( ALLEGRO_COLOR ){ 1 - c.r, 1 - c.g, 1 - c.b, c.a };
 }
@@ -411,7 +411,7 @@ void draw_symbol_only_one( Board *board )
     al_draw_line( line_x, line_top, line_x, line_bottom, WHITE_COLOR, thickness );
 }
 
-int draw_symbols( Board *board )
+auto draw_symbols( Board *board ) -> int
 {
     float cus = board->clue_unit_size;
 
@@ -436,7 +436,7 @@ int draw_symbols( Board *board )
     return 0;
 }
 
-int draw_classic_symbols( GameData *game_data, Board *board )
+auto draw_classic_symbols( GameData *game_data, Board *board ) -> int
 {
     // create symbols
     board->symbol_bmp[SYM_FORBIDDEN] = al_create_bitmap( board->clue_unit_size, board->clue_unit_size );
@@ -476,7 +476,7 @@ int draw_classic_symbols( GameData *game_data, Board *board )
     return 0;
 }
 
-int update_font_bitmaps( GameData *game_data, Board *board )
+auto update_font_bitmaps( GameData *game_data, Board *board ) -> int
 {
     int i, j, size;
     float FONT_FACTOR = 1;
@@ -601,7 +601,7 @@ int update_font_bitmaps( GameData *game_data, Board *board )
     return make_clue_bitmaps( game_data, board );
 }
 
-int make_clue_bitmaps( GameData *game_data, Board *board )
+auto make_clue_bitmaps( GameData *game_data, Board *board ) -> int
 {
     int i;
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
@@ -712,7 +712,7 @@ void show_info_text( Board *board, ALLEGRO_USTR *msg )
     al_ustr_free( msg );
 }
 
-int update_bitmaps( GameData *game_data, Board *board )
+auto update_bitmaps( GameData *game_data, Board *board ) -> int
 {
     int i, j, size;
 
@@ -851,7 +851,7 @@ int update_bitmaps( GameData *game_data, Board *board )
     return make_clue_bitmaps( game_data, board );
 }
 
-int init_bitmaps_classic()
+auto init_bitmaps_classic() -> int
 {
     ALLEGRO_BITMAP *test_bmp;
     int i, j;
@@ -949,7 +949,7 @@ void draw_title()
 }
 
 // debug
-ALLEGRO_BITMAP *get_clue_bitmap( Board *board, Clue *clue )
+auto get_clue_bitmap( Board *board, Clue *clue ) -> ALLEGRO_BITMAP *
 {
     int width, height;
     int size = board->clue_unit_size;

@@ -4,7 +4,7 @@
 
 /* xxx todo: improve dialog options */
 
-int yes_no_dialog( const char *text )
+auto yes_no_dialog( const char *text ) -> int
 {
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
     ALLEGRO_EVENT ev;
