@@ -47,34 +47,58 @@ void WZ_SKIN_THEME::init()
     skin_pad = 0;
 
     if( this->button_up_bitmap != nullptr )
+    {
         this->button_up_patch = wz_create_nine_patch_bitmap( this->button_up_bitmap, false );
+    }
     else
+    {
         this->button_up_patch = nullptr;
+    }
 
     if( this->button_down_bitmap != nullptr )
+    {
         this->button_down_patch = wz_create_nine_patch_bitmap( this->button_down_bitmap, false );
+    }
     else
+    {
         this->button_down_patch = nullptr;
+    }
 
     if( this->box_bitmap != nullptr )
+    {
         this->box_patch = wz_create_nine_patch_bitmap( this->box_bitmap, false );
+    }
     else
+    {
         this->box_patch = nullptr;
+    }
 
     if( this->editbox_bitmap != nullptr )
+    {
         this->editbox_patch = wz_create_nine_patch_bitmap( this->editbox_bitmap, false );
+    }
     else
+    {
         this->editbox_patch = nullptr;
+    }
 
     if( this->scroll_track_bitmap != nullptr )
+    {
         this->scroll_track_patch = wz_create_nine_patch_bitmap( this->scroll_track_bitmap, false );
+    }
     else
+    {
         this->scroll_track_patch = nullptr;
+    }
 
     if( this->slider_bitmap != nullptr )
+    {
         this->slider_patch = wz_create_nine_patch_bitmap( this->slider_bitmap, false );
+    }
     else
+    {
         this->slider_patch = nullptr;
+    }
 }
 
 /*
@@ -94,11 +118,11 @@ WZ_SKIN_THEME::~WZ_SKIN_THEME()
 
 /* Returns the padding corrected in case the passed rectangle was too small */
 auto WZ_SKIN_THEME::draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9,
-                                                        ALLEGRO_COLOR tint,
-                                                        float x,
-                                                        float y,
-                                                        float width,
-                                                        float height ) -> WZ_NINE_PATCH_PADDING
+                                       ALLEGRO_COLOR tint,
+                                       float x,
+                                       float y,
+                                       float width,
+                                       float height ) -> WZ_NINE_PATCH_PADDING
 {
     WZ_NINE_PATCH_PADDING pad = wz_get_nine_patch_padding( p9 );
     float min_w = wz_get_nine_patch_bitmap_min_width( p9 );
@@ -135,11 +159,17 @@ void WZ_SKIN_THEME::draw_box( float x, float y, float width, float height, int s
     if( this->box_patch )
     {
         if( style & WZ_STYLE_FOCUSED )
+        {
             col = wz_scale_color( this->color1, 1.5 );
+        }
         else if( style & WZ_STYLE_DISABLED )
+        {
             col = wz_scale_color( this->color1, 0.5 );
+        }
         else
+        {
             col = this->color1;
+        }
 
         draw_tinted_patch( this->box_patch, col, x, y, width, height );
     }
@@ -207,9 +237,13 @@ void WZ_SKIN_THEME::draw_textbox( float x,
     ALLEGRO_COLOR text_col;
 
     if( style & WZ_STYLE_DISABLED )
+    {
         text_col = wz_scale_color( this->color2, 0.5 );
+    }
     else
+    {
         text_col = this->color2;
+    }
 
     draw_multi_text( x, y, width, height, halign, valign, text_col, this->font, text );
 }
@@ -260,10 +294,14 @@ void WZ_SKIN_THEME::draw_scroll( float x,
     }
 
     if( this->scroll_track_patch )
+    {
         draw_tinted_patch( this->scroll_track_patch, this->color1, x, y, width, height );
+    }
 
     if( this->slider_patch )
+    {
         draw_tinted_patch( this->slider_patch, col, xpos, ypos, slider_w, slider_h );
+    }
 }
 
 void WZ_SKIN_THEME::draw_editbox( float x,
@@ -275,7 +313,10 @@ void WZ_SKIN_THEME::draw_editbox( float x,
                                   int style )
 {
     int len = wz_get_text_pos( this->font, text, width - 4 );
-    int cx, cy, cw, ch;
+    int cx;
+    int cy;
+    int cw;
+    int ch;
     int len2 = al_ustr_length( text );
     int offset;
     ALLEGRO_USTR_INFO info;

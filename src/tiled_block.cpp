@@ -62,19 +62,21 @@ auto get_TiledBlock( TiledBlock *tiled_block, int x, int y ) -> TiledBlock *
         {
             rt = get_TiledBlock( tiled_block->sub[m], x - tiled_block->x, y - tiled_block->y );
             if( rt && ( rt->hidden != TiledBlock::Visibility::TotallyHidden ) )
+            {
                 return rt;
+            }
         }
         return tiled_block;
     }
     else
+    {
         return nullptr;
+    }
 }
 
 // Draw the tiled block in the target allegro display
 void draw_TiledBlock( TiledBlock *tiled_block, int x, int y )
 {
-    int i;
-
     if( tiled_block->bmp && ( tiled_block->hidden != TiledBlock::Visibility::TotallyHidden ) )
     {
         if( tiled_block->hidden != TiledBlock::Visibility::Visible )
@@ -97,17 +99,21 @@ void draw_TiledBlock( TiledBlock *tiled_block, int x, int y )
     }
 
     if( tiled_block->draw_border )
+    {
         al_draw_rectangle( tiled_block->x + x,
                            tiled_block->y + y,
                            tiled_block->x + x + tiled_block->width,
                            tiled_block->y + y + tiled_block->height,
                            tiled_block->border_color,
                            tiled_block->draw_border );
+    }
 
-    for( i = 0; i < tiled_block->number_of_subblocks; i++ )
+    for( int i = 0; i < tiled_block->number_of_subblocks; i++ )
     {
         if( tiled_block->sub[i] )
+        {
             draw_TiledBlock( tiled_block->sub[i], tiled_block->x + x, tiled_block->y + y );
+        }
     }
 }
 
@@ -126,7 +132,8 @@ void get_TiledBlock_offset( TiledBlock *tiled_block, int *x, int *y )
 
 void highlight_TiledBlock( TiledBlock *tiled_block )
 {
-    int x, y;
+    int x;
+    int y;
     get_TiledBlock_offset( tiled_block, &x, &y );
     for( int i = 0; i < 8; i++ )
     {

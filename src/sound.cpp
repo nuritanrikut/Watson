@@ -18,7 +18,8 @@ const char *sound_sample_filename[] = { "sounds/click-hide.wav",
 
 auto init_sound() -> int
 {
-    int i, err = 0;
+    int i;
+    int err = 0;
 
     al_init_acodec_addon();
 
@@ -42,9 +43,13 @@ auto init_sound() -> int
 
     al_reserve_samples( RESERVED_SAMPLES );
     if( err )
+    {
         return -1;
+    }
     else
+    {
         return 0;
+    }
 }
 
 void play_sound( SOUND s )
@@ -57,10 +62,11 @@ void play_sound( SOUND s )
 
 void destroy_sound()
 {
-    int i;
-    for( i = 0; i < NUMBER_OF_SOUNDS; i++ )
+    for( int i = 0; i < NUMBER_OF_SOUNDS; i++ )
     {
         if( sound_sample[i] )
+        {
             al_destroy_sample( sound_sample[i] );
+        }
     }
 }

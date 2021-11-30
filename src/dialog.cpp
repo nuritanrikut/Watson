@@ -9,11 +9,15 @@ auto yes_no_dialog( const char *text ) -> int
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
     ALLEGRO_EVENT ev;
     int noexit;
-    int yes_x, yes_y, no_x, no_y;
+    int yes_x;
+    int yes_y;
+    int no_x;
+    int no_y;
     int dw = al_get_bitmap_width( al_get_target_bitmap() );
     int dh = al_get_bitmap_height( al_get_target_bitmap() );
     int ret = 0;
-    int bh = 120, bw = 400;
+    int bh = 120;
+    int bw = 400;
 
     al_register_event_source( queue, al_get_keyboard_event_source() );
     al_register_event_source( queue, al_get_mouse_event_source() );
@@ -58,7 +62,9 @@ auto yes_no_dialog( const char *text ) -> int
             }
         }
         if( ev.type == ALLEGRO_EVENT_KEY_CHAR )
+        {
             noexit = 0;
+        }
     }
     al_destroy_event_queue( queue );
     return ret;
@@ -76,10 +82,13 @@ void draw_center_text_box( ALLEGRO_FONT *font,
     int dw = al_get_bitmap_width( al_get_target_bitmap() );
     int dh = al_get_bitmap_height( al_get_target_bitmap() );
     float factor = width_factor;
-    int width, height;
+    int width;
+    int height;
 
     if( !font )
+    {
         return;
+    }
 
     do
     {

@@ -49,17 +49,27 @@ auto WZ_IMAGE_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
             ALLEGRO_BITMAP *image = nullptr;
 
             if( this->flags & WZ_STATE_HIDDEN )
+            {
                 break;
+            }
             else if( this->flags & WZ_STATE_DISABLED )
+            {
                 image = this->disabled;
+            }
             else
             {
                 if( this->down )
+                {
                     image = this->down;
+                }
                 else if( this->flags & WZ_STATE_HAS_FOCUS )
+                {
                     image = this->focused;
+                }
                 else
+                {
                     image = this->normal;
+                }
             }
 
             this->theme->draw_image( this->local_x, this->local_y, this->width, this->height, image );
@@ -70,7 +80,9 @@ auto WZ_IMAGE_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
     }
 
     if( ret == 0 )
+    {
         ret = WZ_BUTTON::proc( event );
+    }
 
     return ret;
 }

@@ -11,56 +11,42 @@ Taken from Allegro Nine Patch library. See LICENSE for copying information.
 
 #include "../../macros.hpp"
 
-typedef struct nine_patch_mark_tag
-{
-    int offset;
-    int length;
-    int dest_offset;
-    int dest_length;
-    float ratio;
-} NINE_PATCH_MARK;
-
-typedef struct nine_patch_side_tag
-{
-    std::vector<NINE_PATCH_MARK> m;
-    int count;
-    int fix;
-} NINE_PATCH_SIDE;
-
-struct nine_patch_bitmap_tag
-{
-    ALLEGRO_BITMAP *bmp;
-    NINE_PATCH_SIDE h, v;
-    WZ_NINE_PATCH_PADDING padding;
-    bool destroy_bmp;
-    int width, height;
-    int cached_dw, cached_dh;
-    ALLEGRO_MUTEX *mutex;
-};
-
 static auto init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int vertical ) -> bool
 {
     const int len = vertical ? al_get_bitmap_height( bmp ) : al_get_bitmap_width( bmp );
-    int i, s, t, n, z;
-    ALLEGRO_COLOR c;
 
     ps->m.resize( 8 );
 
-    for( i = 1, s = -1, t = 0, n = 0, z = -1; i < len; ++i )
+    int s = -1;
+    int t = 0;
+    int n = 0;
+    int z = -1;
+    for( int i = 1; i < len; ++i )
     {
         int zz;
-        uint8_t r, g, b, a;
-        c = vertical ? al_get_pixel( bmp, 0, i ) : al_get_pixel( bmp, i, 0 );
+        ALLEGRO_COLOR c = vertical ? al_get_pixel( bmp, 0, i ) : al_get_pixel( bmp, i, 0 );
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+        uint8_t a;
         al_unmap_rgba( c, &r, &g, &b, &a );
 
         if( i == len - 1 )
+        {
             zz = -1;
+        }
         else if( r == 0 && g == 0 && b == 0 && a == 255 )
+        {
             zz = 0;
+        }
         else if( a == 0 || r + g + b + a == 255 * 4 )
+        {
             zz = 1;
+        }
         else
+        {
             return false;
+        }
 
         if( z != zz )
         {
@@ -100,10 +86,12 @@ static auto init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int 
     ps->count = n;
     ps->fix = len - 2 - t;
 
-    for( i = 0; i < n; ++i )
+    for( int i = 0; i < n; ++i )
     {
         if( ps->m[i].ratio )
+        {
             ps->m[i].ratio = ps->m[i].length / (float)t;
+        }
     }
 
     return true;
@@ -111,10 +99,10 @@ static auto init_nine_patch_side( NINE_PATCH_SIDE *ps, ALLEGRO_BITMAP *bmp, int 
 
 auto wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap ) -> WZ_NINE_PATCH_BITMAP *
 {
-    int i;
+    int i = 0;
     ALLEGRO_COLOR c;
 
-    WZ_NINE_PATCH_BITMAP *p9 = new WZ_NINE_PATCH_BITMAP();
+    auto *p9 = new WZ_NINE_PATCH_BITMAP();
     p9->bmp = bmp;
     p9->destroy_bmp = owns_bitmap;
     p9->cached_dw = 0;
@@ -125,9 +113,11 @@ auto wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap ) -> WZ_
     al_lock_bitmap( bmp, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY );
 
     if( p9->width <= 0 || p9->height <= 0 )
+    {
         goto bad_bitmap;
+    }
 
-        /* make sure all four corners are transparent */
+    /* make sure all four corners are transparent */
 #define _check_pixel( x, y ) \
     c = al_get_pixel( bmp, x, y ); \
     if( c.a != 0 && c.r + c.g + c.b + c.a != 4 ) \
@@ -137,6 +127,7 @@ auto wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap ) -> WZ_
     _check_pixel( 0, al_get_bitmap_height( bmp ) - 1 );
     _check_pixel( al_get_bitmap_width( bmp ) - 1, al_get_bitmap_height( bmp ) - 1 );
 #undef _check_pixel
+
     p9->padding.top = p9->padding.right = p9->padding.bottom = p9->padding.left = -1;
     i = 1;
 
@@ -147,14 +138,20 @@ auto wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap ) -> WZ_
         if( c.r + c.g + c.b == 0 && c.a == 1 )
         {
             if( p9->padding.left == -1 )
+            {
                 p9->padding.left = i - 1;
+            }
             else if( p9->padding.right != -1 )
+            {
                 goto bad_bitmap;
+            }
         }
         else if( c.a == 0 || c.r + c.g + c.b + c.a == 4 )
         {
             if( p9->padding.left != -1 && p9->padding.right == -1 )
+            {
                 p9->padding.right = al_get_bitmap_width( bmp ) - i - 1;
+            }
         }
 
         ++i;
@@ -169,14 +166,20 @@ auto wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap ) -> WZ_
         if( c.r + c.g + c.b == 0 && c.a == 1 )
         {
             if( p9->padding.top == -1 )
+            {
                 p9->padding.top = i - 1;
+            }
             else if( p9->padding.bottom != -1 )
+            {
                 goto bad_bitmap;
+            }
         }
         else if( c.a == 0 || c.r + c.g + c.b + c.a == 4 )
         {
             if( p9->padding.top != -1 && p9->padding.bottom == -1 )
+            {
                 p9->padding.bottom = al_get_bitmap_height( bmp ) - i - 1;
+            }
         }
 
         ++i;
@@ -200,11 +203,11 @@ auto wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap ) -> WZ_
 
 void calc_nine_patch_offsets( NINE_PATCH_SIDE *ps, int len )
 {
-    int i, j;
+    int j = 0;
     int dest_offset = 0;
     int remaining_stretch = len - ps->fix;
 
-    for( i = 0, j = 0; i < ps->count; ++i )
+    for( int i = 0; i < ps->count; ++i )
     {
         ps->m[i].dest_offset = dest_offset;
 
@@ -227,18 +230,21 @@ void calc_nine_patch_offsets( NINE_PATCH_SIDE *ps, int len )
         ps->m[j].dest_length += remaining_stretch;
 
         if( j + 1 < ps->count )
+        {
             ps->m[j + 1].dest_offset += remaining_stretch;
+        }
     }
 }
 
 void wz_draw_tinted_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, int dx, int dy, int dw, int dh )
 {
-    int i, j;
     bool release_drawing = false;
 
     /* don't draw bitmaps that are smaller than the fixed area */
     if( dw < p9->h.fix || dh < p9->v.fix )
+    {
         return;
+    }
 
     /* if the bitmap is the same size as the origin, then draw it as-is */
     if( dw == p9->width && dh == p9->height )
@@ -266,9 +272,9 @@ void wz_draw_tinted_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR t
     }
 
     /* draw each region */
-    for( i = 0; i < p9->v.count; ++i )
+    for( int i = 0; i < p9->v.count; ++i )
     {
-        for( j = 0; j < p9->h.count; ++j )
+        for( int j = 0; j < p9->h.count; ++j )
         {
             al_draw_tinted_scaled_bitmap( p9->bmp,
                                           tint,
@@ -287,7 +293,9 @@ void wz_draw_tinted_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR t
     al_unlock_mutex( p9->mutex );
 
     if( release_drawing )
+    {
         al_hold_bitmap_drawing( false );
+    }
 }
 
 void wz_draw_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9, int dx, int dy, int dw, int dh )
@@ -301,7 +309,9 @@ auto wz_create_bitmap_from_nine_patch( WZ_NINE_PATCH_BITMAP *p9, int width, int 
     ALLEGRO_STATE s;
 
     if( !bmp )
+    {
         return nullptr;
+    }
 
     al_store_state( &s, ALLEGRO_STATE_TARGET_BITMAP );
     al_set_target_bitmap( bmp );
@@ -350,10 +360,14 @@ auto wz_get_nine_patch_padding( const WZ_NINE_PATCH_BITMAP *p9 ) -> WZ_NINE_PATC
 void wz_destroy_nine_patch_bitmap( WZ_NINE_PATCH_BITMAP *p9 )
 {
     if( p9 == nullptr )
+    {
         return;
+    }
 
     if( p9->destroy_bmp )
+    {
         al_destroy_bitmap( p9->bmp );
+    }
 
     al_destroy_mutex( p9->mutex );
     p9->h.m.clear();

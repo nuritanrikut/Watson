@@ -4,14 +4,40 @@ Taken from Allegro Nine Patch library. See LICENSE for copying information.
 
 #pragma once
 
+#include <vector>
 #include <allegro5/allegro.h>
 
-typedef struct nine_patch_bitmap_tag WZ_NINE_PATCH_BITMAP;
+struct NINE_PATCH_MARK
+{
+    int offset;
+    int length;
+    int dest_offset;
+    int dest_length;
+    float ratio;
+};
 
-typedef struct nine_patch_padding_tag
+struct NINE_PATCH_SIDE
+{
+    std::vector<NINE_PATCH_MARK> m;
+    int count;
+    int fix;
+};
+
+struct WZ_NINE_PATCH_PADDING
 {
     int top, right, bottom, left;
-} WZ_NINE_PATCH_PADDING;
+};
+
+struct WZ_NINE_PATCH_BITMAP
+{
+    ALLEGRO_BITMAP *bmp;
+    NINE_PATCH_SIDE h, v;
+    WZ_NINE_PATCH_PADDING padding;
+    bool destroy_bmp;
+    int width, height;
+    int cached_dw, cached_dh;
+    ALLEGRO_MUTEX *mutex;
+};
 
 auto wz_create_nine_patch_bitmap( ALLEGRO_BITMAP *bmp, bool owns_bitmap ) -> WZ_NINE_PATCH_BITMAP *;
 auto wz_load_nine_patch_bitmap( const char *filename ) -> WZ_NINE_PATCH_BITMAP *;

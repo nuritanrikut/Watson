@@ -74,7 +74,9 @@ auto Game::init() -> bool
 
     SPDLOG_DEBUG( "Watson v" PRE_VERSION " - " PRE_DATE " has started." );
     if( init_allegro() )
+    {
         return false;
+    }
 
 #ifndef _WIN32
     // use anti-aliasing if available (seems to cause problems in windows)
@@ -157,7 +159,8 @@ void Game::draw_stuff()
     //xxx todo: there's still the issue that the timer and some fonts appear broken in some android devices
     // ex: samsung galaxy s2
     // probably has to do with memory->video bitmaps
-    int x, y;
+    int x;
+    int y;
 
     al_clear_to_color( BLACK_COLOR );
 
@@ -180,7 +183,9 @@ void Game::draw_stuff()
         else
         {
             if( board.highlight )
+            {
                 highlight_TiledBlock( board.highlight );
+            }
         }
 
         if( board.dragging )
@@ -210,7 +215,9 @@ void Game::draw_stuff()
 void Game::handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick )
 {
     if( game_state != GAME_PLAYING )
+    {
         return;
+    }
 
     int k = tiled_block->index;
     int j = tiled_block->parent->index;
@@ -222,7 +229,9 @@ void Game::handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick )
         { // hide tile
             game_data.hide_tile_and_check( { i, j, k } );
             if( !set.sound_mute )
+            {
                 play_sound( SOUND_HIDE_TILE );
+            }
         }
     }
     else if( ( mclick == 2 ) || ( mclick == 4 ) )
@@ -232,7 +241,9 @@ void Game::handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick )
             save_state();
             game_data.guess_tile( { i, j, k } );
             if( !set.sound_mute )
+            {
                 play_sound( SOUND_GUESS_TILE );
+            }
         }
         else
         { // tile was hidden, unhide
@@ -240,7 +251,9 @@ void Game::handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick )
             {
                 game_data.tiles[i][j][k] = 1;
                 if( !set.sound_mute )
+                {
                     play_sound( SOUND_UNHIDE_TILE );
+                }
             }
         }
     }
@@ -250,7 +263,9 @@ void Game::handle_mouse_click_panel_tile( TiledBlock *tiled_block, int mclick )
 void Game::handle_mouse_click_panel_block( TiledBlock *tiled_block, int mclick )
 {
     if( game_state != GAME_PLAYING )
+    {
         return;
+    }
 
     if( ( ( mclick == 2 ) || ( mclick == 4 ) )
         && ( game_data.guess[tiled_block->parent->index][tiled_block->index] >= 0 ) )
@@ -259,7 +274,9 @@ void Game::handle_mouse_click_panel_block( TiledBlock *tiled_block, int mclick )
         save_state();
         game_data.unguess_tile( tiled_block->parent->index, tiled_block->index );
         if( !set.sound_mute )
+        {
             play_sound( SOUND_UNHIDE_TILE );
+        }
     }
     update_board();
 }
@@ -267,7 +284,9 @@ void Game::handle_mouse_click_panel_block( TiledBlock *tiled_block, int mclick )
 void Game::handle_mouse_click_clue_tile( TiledBlock *tiled_block, int mx, int my, int mclick )
 {
     if( game_state != GAME_PLAYING )
+    {
         return;
+    }
 
     if( tiled_block->bmp && ( tiled_block->index >= 0 ) )
     {
@@ -278,14 +297,18 @@ void Game::handle_mouse_click_clue_tile( TiledBlock *tiled_block, int mx, int my
                                       : TiledBlock::Visibility::Visible;
             game_data.clues[tiled_block->index].hidden = !game_data.clues[tiled_block->index].hidden;
             if( !set.sound_mute )
+            {
                 play_sound( SOUND_HIDE_TILE );
+            }
         }
         else if( mclick == 1 )
         { // explain clue in info panel
             if( tiled_block->hidden == TiledBlock::Visibility::Visible )
             {
                 if( !set.sound_mute )
+                {
                     play_sound( SOUND_CLICK );
+                }
                 explain_clue( &game_data.clues[tiled_block->index] );
                 board.highlight = tiled_block; // highlight clue
             }
@@ -300,24 +323,32 @@ void Game::handle_mouse_click_clue_tile( TiledBlock *tiled_block, int mx, int my
 void Game::handle_mouse_click_button_clue()
 {
     if( game_state != GAME_PLAYING )
+    {
         return;
+    }
 
     if( !set.sound_mute )
+    {
         play_sound( SOUND_CLICK );
+    }
     show_hint();
 }
 
 void Game::handle_mouse_click_button_settings()
 {
     if( !set.sound_mute )
+    {
         play_sound( SOUND_CLICK );
+    }
     gui.show_settings();
 }
 
 void Game::handle_mouse_click_button_help()
 {
     if( !set.sound_mute )
+    {
         play_sound( SOUND_CLICK );
+    }
     gui.show_help();
 }
 
@@ -338,9 +369,13 @@ void Game::handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mcli
     if( swap_mouse_buttons )
     {
         if( mclick == 1 )
+        {
             mclick = 2;
+        }
         else if( mclick == 2 )
+        {
             mclick = 1;
+        }
     }
 
     board.clear_info_panel(); // remove text if there was any
@@ -351,7 +386,9 @@ void Game::handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mcli
     gui.emit_event( EVENT_REDRAW );
 
     if( !tiled_block )
+    {
         return;
+    }
 
     if( game_state == GAME_OVER )
     {
@@ -364,9 +401,13 @@ void Game::handle_mouse_click( TiledBlock *tiled_block, int mx, int my, int mcli
         {
             if( ( ( tiled_block->parent ) && ( tiled_block->parent->type == TiledBlock::BLOCK_TYPE::TB_TIME_PANEL ) )
                 || ( tiled_block->type == TiledBlock::BLOCK_TYPE::TB_TIME_PANEL ) )
+            {
                 zoom_TB( &board.time_panel );
+            }
             else if( tiled_block->type == TiledBlock::BLOCK_TYPE::TB_PANEL_TILE )
+            {
                 zoom_TB( board.zoom = tiled_block->parent );
+            }
             return;
         }
     }
@@ -456,7 +497,9 @@ void Game::mouse_grab( int mx, int my )
     board.dragging = get_TiledBlock_at( mx, my );
 
     if( !board.dragging )
+    {
         return;
+    }
 
     if( !board.dragging->bmp )
     {
@@ -484,7 +527,9 @@ void Game::mouse_drop( int mx, int my )
     gui.emit_event( EVENT_REDRAW );
 
     if( !board.dragging )
+    {
         return;
+    }
 
     board.dragging->x = board.dragging_origin_x;
     board.dragging->y = board.dragging_origin_y;
@@ -495,11 +540,17 @@ void Game::mouse_drop( int mx, int my )
     {
         swap_clues( board.dragging, tiled_block );
         if( board.highlight == board.dragging )
+        {
             board.highlight = tiled_block;
+        }
         else if( board.highlight == tiled_block )
+        {
             board.highlight = board.dragging;
+        }
         if( !set.sound_mute )
+        {
             play_sound( SOUND_HIDE_TILE );
+        }
     }
 
     board.dragging = nullptr;
@@ -509,23 +560,32 @@ void Game::mouse_drop( int mx, int my )
 auto Game::get_TiledBlock_at( int x, int y ) -> TiledBlock *
 {
     if( !board.zoom )
+    {
         return get_TiledBlock( &board.all, x, y );
+    }
 
-    float xx = x, yy = y;
+    float xx = x;
+    float yy = y;
     al_transform_coordinates( &board.zoom_transform_inv, &xx, &yy );
 
     TiledBlock *tiled_block = get_TiledBlock( board.zoom, xx, yy );
 
     if( tiled_block && ( tiled_block->parent == board.zoom ) )
+    {
         return tiled_block;
+    }
     else
+    {
         return nullptr;
+    }
 }
 
 void Game::show_hint()
 {
     if( game_state != GAME_PLAYING )
+    {
         return;
+    }
     if( !game_data.check_panel_correctness() )
     {
         show_info_text( &board, al_ustr_new( "Something is wrong. An item was ruled out incorrectly." ) );
@@ -557,7 +617,11 @@ void Game::show_hint()
 
 void Game::update_guessed()
 {
-    int i, j, k, count, val;
+    int i;
+    int j;
+    int k;
+    int count;
+    int val;
 
     game_data.guessed = 0;
 
@@ -574,7 +638,9 @@ void Game::update_guessed()
                     count++;
                     val = k;
                     if( count > 1 )
+                    {
                         break;
+                    }
                 }
             }
             if( count == 1 )
@@ -583,7 +649,9 @@ void Game::update_guessed()
                 game_data.guessed++;
             }
             else
+            {
                 game_data.guess[i][j] = -1;
+            }
         }
     }
 }
@@ -591,25 +659,29 @@ void Game::update_guessed()
 void Game::execute_undo()
 {
     if( !undo )
+    {
         return;
+    }
 
     memcpy( &game_data.tiles, &undo->tile, sizeof( game_data.tiles ) );
 
-    PanelState *undo_old = undo->parent;
+    auto *undo_old = undo->parent;
 
     delete undo;
 
     undo = undo_old;
 
     if( !set.sound_mute )
+    {
         play_sound( SOUND_UNHIDE_TILE );
+    }
 
     update_guessed();
 }
 
 void Game::save_state()
 {
-    PanelState *foo = new PanelState();
+    auto *foo = new PanelState();
 
     foo->parent = undo;
     undo = foo;
@@ -817,7 +889,9 @@ void Game::explain_clue( Clue *clue )
     }
 
     if( clue_explanation )
+    {
         show_info_text( &board, clue_explanation );
+    }
 }
 
 void Game::swap_clues( TiledBlock *c1, TiledBlock *c2 )
@@ -825,9 +899,13 @@ void Game::swap_clues( TiledBlock *c1, TiledBlock *c2 )
     std::swap( c1->bmp, c2->bmp );
 
     if( c1->index >= 0 )
+    {
         board.clue_tiledblock[c1->index] = c2;
+    }
     if( c2->index >= 0 )
+    {
         board.clue_tiledblock[c2->index] = c1;
+    }
 
     std::swap( c1->index, c2->index );
     std::swap( c1->hidden, c2->hidden );
@@ -836,7 +914,9 @@ void Game::swap_clues( TiledBlock *c1, TiledBlock *c2 )
 void Game::zoom_TB( TiledBlock *tiled_block )
 {
     if( !tiled_block )
+    {
         return;
+    }
 
     int dw = al_get_display_width( al_get_current_display() );
     int dh = al_get_display_height( al_get_current_display() );
@@ -849,22 +929,32 @@ void Game::zoom_TB( TiledBlock *tiled_block )
 
     int tr_x = -( scale_factor - 1 ) * ( x + tiled_block->width / 2 );
     if( scale_factor * x + tr_x < 0 )
+    {
         tr_x = -scale_factor * x;
+    }
     else if( scale_factor * ( x + tiled_block->width ) + tr_x > dw )
+    {
         tr_x = dw - scale_factor * ( x + tiled_block->width );
+    }
 
     int tr_y = -( scale_factor - 1 ) * ( y + tiled_block->height / 2 );
     if( scale_factor * y + tr_y < 0 )
+    {
         tr_y = -scale_factor * y;
+    }
     else if( scale_factor * ( y + tiled_block->height ) + tr_y > dh )
+    {
         tr_y = dh - scale_factor * ( y + tiled_block->height );
+    }
 
     al_identity_transform( &board.identity_transform );
     al_identity_transform( &board.zoom_transform );
 
     al_build_transform( &board.zoom_transform, tr_x, tr_y, scale_factor, scale_factor, 0 );
     if( tiled_block->parent )
+    {
         get_TiledBlock_offset( tiled_block->parent, &x, &y );
+    }
     al_translate_transform( &board.zoom_transform, scale_factor * x, scale_factor * y );
 
     board.zoom_transform_inv = board.zoom_transform;
@@ -873,7 +963,9 @@ void Game::zoom_TB( TiledBlock *tiled_block )
     board.zoom = tiled_block;
 
     if( !set.sound_mute )
+    {
         play_sound( SOUND_CLICK );
+    }
 }
 
 void Game::halt( ALLEGRO_EVENT_QUEUE *queue )
@@ -932,7 +1024,8 @@ void Game::animate_win()
             int ii = arr[kk] / board.column_height;
             int jj = arr[kk] % board.column_height;
 
-            int x, y;
+            int x;
+            int y;
             get_TiledBlock_offset( board.panel.sub[ii]->sub[jj], &x, &y );
 
             al_draw_filled_rectangle( x,
@@ -968,14 +1061,20 @@ void Game::animate_win()
 void Game::draw_generating_puzzle( Settings *settings )
 {
     if( game_state == GAME_INTRO )
+    {
         return;
+    }
 
     const char *fmt = nullptr;
 
     if( !settings->advanced )
+    {
         fmt = "Generating %d x %d puzzle, please wait...";
+    }
     else
+    {
         fmt = "Generating %d x %d advanced puzzle, please wait (this could take a while)...";
+    }
 
     ALLEGRO_USTR *msg = al_ustr_newf( fmt, settings->number_of_columns, settings->column_height );
 
@@ -999,7 +1098,9 @@ auto Game::switch_tiles() -> int
         board.type_of_tiles = ( board.type_of_tiles + 1 ) % 3;
 
         if( init_bitmaps( &board ) )
+        {
             board.type_of_tiles = ( board.type_of_tiles + 1 ) % 3;
+        }
 
         if( init_bitmaps( &board ) )
         {
@@ -1034,14 +1135,18 @@ void Game::win_or_lose()
         animate_win();
 
         if( !set.sound_mute )
+        {
             play_sound( SOUND_WIN );
+        }
     }
     else
     {
         show_info_text( &board, al_ustr_new( "Something is wrong. Try again, go to settings to start a new puzzle." ) );
 
         if( !set.sound_mute )
+        {
             play_sound( SOUND_WRONG );
+        }
 
         execute_undo();
         update_board();
@@ -1122,10 +1227,14 @@ void Game::handle_allegro_event_display_close()
 void Game::handle_allegro_event_display_resize()
 {
     if( board.dragging )
+    {
         mouse_drop( -1, -1 );
+    }
 
     if( fullscreen )
+    {
         return;
+    }
 
     al_acknowledge_resize( display );
 
@@ -1162,7 +1271,9 @@ void Game::handle_event_exit()
 void Game::handle_event_save()
 {
     if( game_state != GAME_PLAYING )
+    {
         return;
+    }
 
     if( !save_game_f() )
     {
@@ -1198,7 +1309,9 @@ void Game::handle_event_settings()
 void Game::handle_allegro_event_touch_begin( ALLEGRO_EVENT &ev )
 {
     if( gui.gui_n )
+    {
         return;
+    }
 
     ev.mouse.x = ev.touch.x;
     ev.mouse.y = ev.touch.y;
@@ -1210,10 +1323,14 @@ void Game::handle_allegro_event_touch_begin( ALLEGRO_EVENT &ev )
 void Game::handle_allegro_event_mouse_button_down( ALLEGRO_EVENT &ev )
 {
     if( gui.gui_n )
+    {
         return;
+    }
 
     if( mouse_button_down )
+    {
         return;
+    }
 
     mouse_down_time = al_get_time(); // workaround ev.any.timestamp for touch;
     mbdown_x = ev.mouse.x;
@@ -1252,7 +1369,9 @@ void Game::handle_allegro_event_touch_end( ALLEGRO_EVENT &ev )
 void Game::handle_allegro_event_mouse_button_up( ALLEGRO_EVENT &ev )
 {
     if( wait_for_double_click )
+    {
         wait_for_double_click = false;
+    }
 
     if( board.dragging )
     {
@@ -1270,7 +1389,9 @@ void Game::handle_allegro_event_mouse_button_up( ALLEGRO_EVENT &ev )
     hold_click_check = HOLD_CLICK_CHECK::RELEASED;
 
     if( !mouse_button_down )
+    {
         return;
+    }
 
     mouse_up_time = al_get_time(); //workaround ev.any.timestamp for touch;
     tb_up = get_TiledBlock_at( ev.mouse.x, ev.mouse.y );
@@ -1285,7 +1406,9 @@ void Game::handle_allegro_event_mouse_button_up( ALLEGRO_EVENT &ev )
         wait_for_double_click = is_a_clue_tile && is_left_mouse_button_down && down_event_is_short;
 
         if( !wait_for_double_click )
+        {
             handle_mouse_click( tb_up, ev.mouse.x, ev.mouse.y, mouse_button_down );
+        }
     }
 
     mouse_button_down = 0;
@@ -1294,10 +1417,14 @@ void Game::handle_allegro_event_mouse_button_up( ALLEGRO_EVENT &ev )
 void Game::handle_allegro_event_touch_move( ALLEGRO_EVENT &ev )
 {
     if( gui.gui_n )
+    {
         return;
+    }
 
     if( !ev.touch.primary )
+    {
         return;
+    }
 
     ev.mouse.x = ev.touch.x;
     ev.mouse.y = ev.touch.y;
@@ -1306,7 +1433,9 @@ void Game::handle_allegro_event_touch_move( ALLEGRO_EVENT &ev )
 void Game::handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev )
 {
     if( gui.gui_n )
+    {
         return;
+    }
 
     if( board.dragging )
     {
@@ -1318,7 +1447,9 @@ void Game::handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev )
 
     // don't grab if movement was small
     if( ( abs( ev.mouse.x - mbdown_x ) < 10 ) && ( abs( ev.mouse.y - mbdown_y ) < 10 ) )
+    {
         return;
+    }
 
     if( mouse_button_down && hold_click_check == HOLD_CLICK_CHECK::RELEASED )
     {
@@ -1335,7 +1466,9 @@ void Game::handle_allegro_event_mouse_axes( ALLEGRO_EVENT &ev )
 void Game::handle_allegro_event_key_char( ALLEGRO_EVENT &ev )
 {
     if( gui.gui_n )
+    {
         return;
+    }
 
     keypress = true;
     switch( ev.keyboard.keycode )
@@ -1351,7 +1484,9 @@ void Game::handle_allegro_event_key_char( ALLEGRO_EVENT &ev )
             break;
         case ALLEGRO_KEY_S: // debug: show solution
             if( game_state != GAME_PLAYING )
+            {
                 break;
+            }
             switch_solve_puzzle();
             redraw = true;
             break;
@@ -1375,7 +1510,9 @@ void Game::handle_allegro_event_key_char( ALLEGRO_EVENT &ev )
             break;
         case ALLEGRO_KEY_U:
             if( game_state != GAME_PLAYING )
+            {
                 break;
+            }
             execute_undo();
             update_board();
             // why flush?
@@ -1437,7 +1574,9 @@ void Game::handle_events()
 
             case EVENT_LOAD:
                 if( !handle_event_load() )
+                {
                     return;
+                }
                 break;
 
             case EVENT_SETTINGS:
@@ -1501,7 +1640,7 @@ auto Game::game_inner_loop_check_resizing() -> bool
         al_flip_display();
     }
 
-    return resizing;  // skip redraw and other stuff
+    return resizing; // skip redraw and other stuff
 }
 
 void Game::game_inner_loop_check_double_click()
@@ -1523,7 +1662,8 @@ void Game::game_inner_loop_check_hold_click()
             hold_click_check = HOLD_CLICK_CHECK::DRAGGING;
             if( tb_down )
             {
-                int tbdx, tbdy;
+                int tbdx;
+                int tbdy;
                 if( touch_down )
                 {
                     ALLEGRO_TOUCH_INPUT_STATE touch;
@@ -1555,7 +1695,9 @@ void Game::game_inner_loop_update_timer()
     if( old_time - play_time > 1 )
     { // runs every second
         if( game_state == GAME_INTRO )
+        {
             game_state = GAME_PLAYING;
+        }
         if( game_state == GAME_PLAYING )
         {
             play_time = al_get_time();
@@ -1577,17 +1719,23 @@ void Game::game_inner_loop()
     al_rest( FIXED_DT - dt ); //rest at least fixed_dt
     dt = al_get_time() - old_time;
     if( game_state == GAME_PLAYING )
+    {
         game_data.time += dt;
+    }
     old_time = al_get_time();
 
     gui.update_base_gui( dt );
 
     handle_events();
     if( restart != RESTART_STATE::NO_RESTART )
+    {
         return;
+    }
 
-    if(game_inner_loop_check_resizing()) // skip redraw and other stuff
+    if( game_inner_loop_check_resizing() )
+    { // skip redraw and other stuff
         return;
+    }
 
     game_inner_loop_check_double_click();
     game_inner_loop_check_hold_click();
@@ -1596,13 +1744,17 @@ void Game::game_inner_loop()
     {
         mouse_move = false;
         if( board.dragging )
+        {
             redraw = true;
+        }
     }
 
     if( keypress )
     {
         if( game_state == GAME_INTRO )
+        {
             game_state = GAME_PLAYING;
+        }
         keypress = false;
     }
 
@@ -1659,16 +1811,22 @@ void Game::game_loop()
     }
 
     if( restart == RESTART_STATE::NEW_GAME )
+    {
         game_data.time = 0; // new game, otherwise it's a load game
+    }
 
     get_desktop_resolution( 0, &desktop_width, &desktop_height );
 
     float max_display_factor;
 
     if( !fullscreen )
+    {
         max_display_factor = 0.9;
+    }
     else
+    {
         max_display_factor = 1;
+    }
 
     if( restart != RESTART_STATE::NO_RESTART )
     {
@@ -1719,9 +1877,13 @@ void Game::game_loop()
 
         al_register_event_source( gui.event_queue, al_get_display_event_source( display ) );
         if( al_is_keyboard_installed() )
+        {
             al_register_event_source( gui.event_queue, al_get_keyboard_event_source() );
+        }
         if( al_is_mouse_installed() )
+        {
             al_register_event_source( gui.event_queue, al_get_mouse_event_source() );
+        }
         if( al_is_touch_input_installed() )
         {
             al_register_event_source( gui.event_queue, al_get_touch_input_event_source() );
@@ -1746,7 +1908,9 @@ void Game::game_loop()
     resize_time = 0;
 
     if( game_state != GAME_INTRO )
+    {
         game_state = GAME_PLAYING;
+    }
 
     board.time_start = al_get_time();
     blink_time = 0;

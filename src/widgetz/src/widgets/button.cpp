@@ -41,7 +41,8 @@ See also:
 auto WZ_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
-    float x, y;
+    float x;
+    float y;
 
     switch( event->type )
     {
@@ -60,12 +61,18 @@ auto WZ_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
             {
                 int flags = 0;
                 if( this->flags & WZ_STATE_DISABLED )
+                {
                     flags |= WZ_STYLE_DISABLED;
+                }
                 else if( this->flags & WZ_STATE_HAS_FOCUS )
+                {
                     flags |= WZ_STYLE_FOCUSED;
+                }
 
                 if( this->down )
+                {
                     flags |= WZ_STYLE_DOWN;
+                }
 
                 this->theme->draw_button( this->local_x, this->local_y, this->width, this->height, this->text, flags );
             }
@@ -146,7 +153,9 @@ auto WZ_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
                         this->down = 1;
                     }
                     else
+                    {
                         ret = 0;
+                    }
 
                     break;
                 }
@@ -171,7 +180,9 @@ auto WZ_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
                         this->trigger();
                     }
                     else
+                    {
                         ret = 0;
+                    }
 
                     break;
                 }
@@ -236,7 +247,9 @@ auto WZ_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
         case WZ_DESTROY:
         {
             if( this->own )
+            {
                 al_ustr_free( this->text );
+            }
 
             ret = 0;
             break;
@@ -268,7 +281,9 @@ auto WZ_BUTTON::proc( const ALLEGRO_EVENT *event ) -> int
     }
 
     if( ret == 0 )
+    {
         ret = WZ_WIDGET::proc( event );
+    }
 
     return ret;
 }

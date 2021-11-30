@@ -62,7 +62,6 @@ private:
     Settings &settings_current;
     Settings &settings_new;
 
-private:
     void wz_set_text_own( WZ_WIDGET *wgt, ALLEGRO_USTR *text );
     void init_theme_noskin();
     void scale_gui( float factor );

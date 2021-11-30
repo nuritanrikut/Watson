@@ -95,7 +95,9 @@ auto WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event ) -> int
             while( child )
             {
                 if( child->flags & WZ_STATE_LAYOUT )
+                {
                     break;
+                }
 
                 if( !( child->flags & WZ_STATE_HIDDEN ) )
                 {
@@ -110,11 +112,17 @@ auto WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event ) -> int
                             it = row_start;
 
                             if( this->h_align == WZ_ALIGN_LEFT )
+                            {
                                 x = this->h_spacing;
+                            }
                             else if( this->h_align == WZ_ALIGN_RIGHT )
+                            {
                                 x = this->width - total_width + this->h_spacing;
+                            }
                             else
+                            {
                                 x = ( this->width - total_width ) / 2 + this->h_spacing;
+                            }
 
                             while( it != child )
                             {
@@ -151,16 +159,24 @@ auto WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event ) -> int
             x = 0;
 
             if( this->h_align == WZ_ALIGN_LEFT )
+            {
                 x = this->h_spacing;
+            }
             else if( this->h_align == WZ_ALIGN_RIGHT )
+            {
                 x = this->width - total_width + this->h_spacing;
+            }
             else
+            {
                 x = ( this->width - total_width ) / 2 + this->h_spacing;
+            }
 
             while( it != nullptr )
             {
                 if( it->flags & WZ_STATE_LAYOUT )
+                {
                     break;
+                }
 
                 if( !( it->flags & WZ_STATE_HIDDEN ) )
                 {
@@ -185,16 +201,24 @@ auto WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event ) -> int
             child = this->next_sib;
 
             if( this->v_align == WZ_ALIGN_TOP )
+            {
                 y = this->v_spacing;
+            }
             else if( this->v_align == WZ_ALIGN_BOTTOM )
+            {
                 y = this->height - total_height + this->v_spacing;
+            }
             else
+            {
                 y = ( this->height - total_height ) / 2 + this->v_spacing;
+            }
 
             while( child )
             {
                 if( child->flags & WZ_STATE_LAYOUT )
+                {
                     break;
+                }
 
                 if( !( child->flags & WZ_STATE_HIDDEN ) )
                 {
@@ -223,7 +247,9 @@ auto WZ_FILL_LAYOUT::proc( const ALLEGRO_EVENT *event ) -> int
     }
 
     if( ret == 0 )
+    {
         ret = WZ_BOX::proc( event );
+    }
 
     return ret;
 }

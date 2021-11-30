@@ -47,15 +47,21 @@ void draw_multiline_text_vbf( ALLEGRO_FONT *font,
                               const char *format,
                               va_list ap )
 {
-    ALLEGRO_BITMAP *tmp[MAX_BF_BITMAPS], *bmp = nullptr, *currbuf = al_get_target_bitmap();
+    ALLEGRO_BITMAP *tmp[MAX_BF_BITMAPS];
+    ALLEGRO_BITMAP *bmp = nullptr;
+    ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
     ALLEGRO_USTR *ustr = al_ustr_new( "" );
     ALLEGRO_FONT *newfont = nullptr;
     char *fmt_cpy = new char[strlen( format ) + 1];
     char *pos;
     const char *btag = format;
-    int i, bn = 0;
+    int i;
+    int bn = 0;
     int texth = al_get_font_line_height( font );
-    int bitmap_w, x, bw, bh;
+    int bitmap_w;
+    int x;
+    int bw;
+    int bh;
     int range[2];
 
     strcpy( fmt_cpy, format );

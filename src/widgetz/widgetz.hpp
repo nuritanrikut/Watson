@@ -48,17 +48,17 @@ struct WZ_DEF_THEME : WZ_THEME
     WZ_DEF_THEME( ALLEGRO_COLOR color1, ALLEGRO_COLOR color2, ALLEGRO_FONT *font );
     virtual ~WZ_DEF_THEME();
 
-    virtual void draw_button( float x, float y, float width, float height, ALLEGRO_USTR *text, int style ) override;
-    virtual void draw_box( float x, float y, float width, float height, int style ) override;
-    virtual void
+    void draw_button( float x, float y, float width, float height, ALLEGRO_USTR *text, int style ) override;
+    void draw_box( float x, float y, float width, float height, int style ) override;
+    void
     draw_textbox( float x, float y, float width, float height, int halign, int valign, ALLEGRO_USTR *text, int style )
         override;
-    virtual void
+    void
     draw_scroll( float x, float y, float width, float height, float fraction, float slider_size, int style ) override;
-    virtual void
+    void
     draw_editbox( float x, float y, float width, float height, int cursor_pos, ALLEGRO_USTR *text, int style ) override;
-    virtual void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) override;
-    virtual auto get_font( int font_num ) -> ALLEGRO_FONT * override;
+    void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) override;
+    auto get_font( int font_num ) -> ALLEGRO_FONT * override;
 
     void draw_3d_rectangle( float x1, float y1, float x2, float y2, float border, ALLEGRO_COLOR col, bool invert );
     auto find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end ) -> int;
@@ -117,7 +117,7 @@ struct WZ_SKIN_THEME : WZ_DEF_THEME
     WZ_SKIN_THEME();
     WZ_SKIN_THEME( WZ_DEF_THEME *other );
     WZ_SKIN_THEME( WZ_SKIN_THEME *other );
-    ~WZ_SKIN_THEME();
+    ~WZ_SKIN_THEME() override;
 
     void init();
 
@@ -133,8 +133,8 @@ struct WZ_SKIN_THEME : WZ_DEF_THEME
     void draw_image( float x, float y, float width, float height, ALLEGRO_BITMAP *image ) override;
     auto get_font( int font_num ) -> ALLEGRO_FONT * override;
 
-    auto
-    draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float y, float width, float height ) -> WZ_NINE_PATCH_PADDING;
+    auto draw_tinted_patch( WZ_NINE_PATCH_BITMAP *p9, ALLEGRO_COLOR tint, float x, float y, float width, float height )
+        -> WZ_NINE_PATCH_PADDING;
 
     WZ_NINE_PATCH_BITMAP *button_up_patch;
     WZ_NINE_PATCH_BITMAP *button_down_patch;
@@ -306,7 +306,7 @@ struct WZ_BOX : WZ_WIDGET
 {
     WZ_BOX( WZ_WIDGET *parent, float x, float y, float width, float height, int id );
 
-    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto proc( const ALLEGRO_EVENT *event ) -> int override;
 };
 
 /*
@@ -324,7 +324,7 @@ struct WZ_BUTTON : WZ_BOX
 {
     WZ_BUTTON( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id );
 
-    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto proc( const ALLEGRO_EVENT *event ) -> int override;
 
     auto handle_draw() -> int;
 
@@ -358,7 +358,7 @@ struct WZ_IMAGE_BUTTON : WZ_BUTTON
                      ALLEGRO_BITMAP *disabled,
                      int id );
 
-    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto proc( const ALLEGRO_EVENT *event ) -> int override;
 
     ALLEGRO_BITMAP *normal;
     ALLEGRO_BITMAP *down;
@@ -393,7 +393,7 @@ struct WZ_FILL_LAYOUT : WZ_BOX
                     int valign,
                     int id );
 
-    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto proc( const ALLEGRO_EVENT *event ) -> int override;
 
     float h_spacing;
     float v_spacing;
@@ -425,7 +425,7 @@ struct WZ_TEXTBOX : WZ_WIDGET
                 int own,
                 int id );
 
-    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto proc( const ALLEGRO_EVENT *event ) -> int override;
 
     ALLEGRO_USTR *text;
     int own;
@@ -449,7 +449,7 @@ struct WZ_SCROLL : WZ_WIDGET
 {
     WZ_SCROLL( WZ_WIDGET *parent, float x, float y, float width, float height, int max_pos, int slider_size, int id );
 
-    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto proc( const ALLEGRO_EVENT *event ) -> int override;
 
     auto set_scroll_pos( float x, float y ) -> int;
 
@@ -484,7 +484,7 @@ struct WZ_TOGGLE : WZ_BUTTON
                int group,
                int id );
 
-    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto proc( const ALLEGRO_EVENT *event ) -> int override;
 
     int group;
 };
@@ -505,7 +505,7 @@ struct WZ_EDITBOX : WZ_WIDGET
 {
     WZ_EDITBOX( WZ_WIDGET *parent, float x, float y, float width, float height, ALLEGRO_USTR *text, int own, int id );
 
-    virtual auto proc( const ALLEGRO_EVENT *event ) -> int;
+    auto proc( const ALLEGRO_EVENT *event ) -> int override;
 
     void snap();
 

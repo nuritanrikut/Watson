@@ -81,7 +81,9 @@ Detaches a widget tree from its parent
 void WZ_WIDGET::detach()
 {
     if( parent == nullptr )
+    {
         return;
+    }
 
     if( next_sib != nullptr )
     {
@@ -128,7 +130,9 @@ Attaches a widget tree to its parent
 void WZ_WIDGET::attach( WZ_WIDGET *ptr )
 {
     if( ptr == nullptr )
+    {
         return;
+    }
 
     detach();
     parent = ptr;
@@ -140,7 +144,9 @@ void WZ_WIDGET::attach( WZ_WIDGET *ptr )
     }
 
     if( parent->first_child == nullptr )
+    {
         parent->first_child = this;
+    }
 
     parent->last_child = this;
     set_theme( parent->theme );
@@ -158,7 +164,9 @@ sib - Widget after which this widget will be attached. It's parent is used as th
 void WZ_WIDGET::attach_after( WZ_WIDGET *sib )
 {
     if( sib->parent == nullptr )
+    {
         return;
+    }
 
     detach();
 
@@ -189,7 +197,9 @@ sib - Widget before which this widget will be attached. It's parent is used as t
 void WZ_WIDGET::attach_before( WZ_WIDGET *sib )
 {
     if( sib->parent == nullptr )
+    {
         return;
+    }
 
     detach();
 
@@ -479,13 +489,19 @@ auto wz_scale_color( ALLEGRO_COLOR c, float scale ) -> ALLEGRO_COLOR
     ret.b = c.b * scale;
 
     if( ret.r > 1 )
+    {
         ret.r = 1;
+    }
 
     if( ret.g > 1 )
+    {
         ret.g = 1;
+    }
 
     if( ret.b > 1 )
+    {
         ret.b = 1;
+    }
 
     return ret;
 }
@@ -517,10 +533,14 @@ auto WZ_WIDGET::widget_rect_test_all( float x, float y ) -> int
     WZ_WIDGET *child;
 
     if( flags & WZ_STATE_HIDDEN )
+    {
         return 0;
+    }
 
     if( widget_rect_test( x, y ) )
+    {
         return 1;
+    }
 
     child = first_child;
 
@@ -529,7 +549,9 @@ auto WZ_WIDGET::widget_rect_test_all( float x, float y ) -> int
         int ret = child->widget_rect_test_all( x, y );
 
         if( ret )
+        {
             return 1;
+        }
 
         child = child->next_sib;
     }

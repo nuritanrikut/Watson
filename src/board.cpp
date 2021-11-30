@@ -77,7 +77,8 @@ Board::Board()
 
 void Board::destroy_board()
 { // note that vclue.sub and hclue.sub are destroyed elsewhere
-    int i, j;
+    int i;
+    int j;
 
     for( i = 0; i < number_of_columns; i++ )
     {
@@ -96,7 +97,9 @@ void Board::destroy_board()
     panel.sub.clear();
 
     for( i = 0; i < time_panel.number_of_subblocks; i++ )
+    {
         delete time_panel.sub[i];
+    }
     time_panel.sub.clear();
 
     destroy_board_clue_blocks();
@@ -108,11 +111,9 @@ void Board::destroy_board()
 
 void Board::destroy_board_clue_blocks()
 {
-    int i;
-
     if( !hclue.sub.empty() )
     {
-        for( i = 0; i < hclue.number_of_subblocks; i++ )
+        for( int i = 0; i < hclue.number_of_subblocks; i++ )
         {
             delete hclue.sub[i];
         }
@@ -121,7 +122,7 @@ void Board::destroy_board_clue_blocks()
 
     if( !vclue.sub.empty() )
     {
-        for( i = 0; i < vclue.number_of_subblocks; i++ )
+        for( int i = 0; i < vclue.number_of_subblocks; i++ )
         {
             delete vclue.sub[i];
         }
@@ -138,9 +139,17 @@ void Board::clear_info_panel()
 // mode: 1 = create, 0 = update, 2 = create fullscreen
 auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
 {
-    int column_w, column_h, block_w, block_h, block_space;
-    int hclue_tile_w, hclue_tile_h, vclue_tile_w, vclue_tile_h;
-    int panel_tile_w, panel_tile_h;
+    int column_w;
+    int column_h;
+    int block_w;
+    int block_h;
+    int block_space;
+    int hclue_tile_w;
+    int hclue_tile_h;
+    int vclue_tile_w;
+    int vclue_tile_h;
+    int panel_tile_w;
+    int panel_tile_h;
     int cus;
 
     clue_unit_space = CLUE_UNIT_SPACE;
@@ -151,8 +160,10 @@ auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
         clue_tiledblock.resize( game_data->clue_n, nullptr );
     }
 
-    if( max_height * INFO_PANEL_PORTION - 2 * INFO_PANEL_MARGIN < 32 ) // guarantee height of 32 pixels in info panel
+    if( max_height * INFO_PANEL_PORTION - 2 * INFO_PANEL_MARGIN < 32 )
+    { // guarantee height of 32 pixels in info panel
         max_height = ( 32 + 2 * INFO_PANEL_MARGIN ) / INFO_PANEL_PORTION;
+    }
 
     width = max_width;
     height = max_height * ( 1.0 - INFO_PANEL_PORTION );
@@ -201,7 +212,9 @@ auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
 
     // panel columns
     if( mode != CreateMode::Update )
+    {
         panel.sub.resize( number_of_columns, nullptr );
+    }
 
     for( int i = 0; i < number_of_columns; i++ )
     {
@@ -320,9 +333,13 @@ auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
         for( int i = 0; i < game_data->clue_n; i++ )
         {
             if( is_vclue( game_data->clues[i].rel ) )
+            {
                 number_of_vclues++;
+            }
             else
+            {
                 number_of_hclues++;
+            }
         }
     }
     //xxx todo: allow multiple columns/rows of hclues/vclues
@@ -411,7 +428,7 @@ auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
             {
                 vclue.sub[j]->index = i;
                 vclue.sub[j]->hidden = game_data->clues[i].hidden ? TiledBlock::Visibility::PartiallyHidden
-                                                                 : TiledBlock::Visibility::Visible;
+                                                                  : TiledBlock::Visibility::Visible;
                 vclue.sub[j]->bmp = &( clue_bmp[i] );
                 clue_tiledblock[i] = vclue.sub[j];
                 j++;
@@ -420,7 +437,7 @@ auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
             {
                 hclue.sub[k]->index = i;
                 hclue.sub[k]->hidden = game_data->clues[i].hidden ? TiledBlock::Visibility::PartiallyHidden
-                                                                 : TiledBlock::Visibility::Visible;
+                                                                  : TiledBlock::Visibility::Visible;
                 hclue.sub[k]->bmp = &( clue_bmp[i] );
                 clue_tiledblock[i] = hclue.sub[k];
                 k++;
@@ -433,7 +450,9 @@ auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
     height = std::max( hclue.height + 2 * hclue.margin, vclue.y + vclue.height + vclue.margin );
 
     for( int i = 1; i < number_of_columns; i++ )
+    {
         panel.sub[i]->x += i * std::min( int( max_width * H_FLEX_FACTOR ), ( max_width - width ) / number_of_columns );
+    }
     hclue.x +=
         number_of_columns * std::min( int( max_width * H_FLEX_FACTOR ), ( max_width - width ) / number_of_columns );
 
@@ -572,11 +591,17 @@ auto Board::create_board( GameData *game_data, CreateMode mode ) -> int
     }
 
     if( mode != CreateMode::Update )
+    {
         if( init_bitmaps( this ) )
+        {
             return -1;
+        }
+    }
 
     if( update_bitmaps( game_data, this ) )
+    {
         return -1;
+    }
 
     create_font_symbols( this );
 

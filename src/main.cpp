@@ -18,13 +18,19 @@ auto main( int, char ** ) -> int
     Game g;
 
     if( !g.init() )
+    {
         return EXIT_FAILURE;
+    }
 
     if( !g.run() )
+    {
         return EXIT_FAILURE;
+    }
 
     if( !g.cleanup() )
+    {
         return EXIT_FAILURE;
+    }
 
     return EXIT_FAILURE;
 }

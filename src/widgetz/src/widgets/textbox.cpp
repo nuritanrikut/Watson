@@ -69,7 +69,9 @@ auto WZ_TEXTBOX::proc( const ALLEGRO_EVENT *event ) -> int
         case WZ_DESTROY:
         {
             if( this->own )
+            {
                 al_ustr_free( this->text );
+            }
 
             ret = 0;
             break;
@@ -93,7 +95,9 @@ auto WZ_TEXTBOX::proc( const ALLEGRO_EVENT *event ) -> int
     }
 
     if( ret == 0 )
+    {
         ret = WZ_WIDGET::proc( event );
+    }
 
     return ret;
 }

@@ -107,9 +107,13 @@ auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
                 int flags = 0;
 
                 if( this->flags & WZ_STATE_DISABLED )
+                {
                     flags = WZ_STYLE_DISABLED;
+                }
                 else if( this->flags & WZ_STATE_HAS_FOCUS )
+                {
                     flags = WZ_STYLE_FOCUSED;
+                }
 
                 this->theme->draw_editbox(
                     this->local_x, this->local_y, this->width, this->height, pos, (ALLEGRO_USTR *)text, flags );
@@ -134,7 +138,9 @@ auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
                     wz_get_text_pos( font, (ALLEGRO_USTR *)text, event->mouse.x - this->x ) + this->scroll_pos;
             }
             else
+            {
                 ret = 0;
+            }
 
             break;
         }
@@ -156,7 +162,9 @@ auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
                     wz_get_text_pos( font, (ALLEGRO_USTR *)text, event->touch.x - this->x ) + this->scroll_pos;
             }
             else
+            {
                 ret = 0;
+            }
 
             break;
         }
@@ -169,7 +177,9 @@ auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
         case WZ_DESTROY:
         {
             if( this->own )
+            {
                 al_ustr_free( this->text );
+            }
 
             ret = 0;
             break;
@@ -226,7 +236,9 @@ auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
                             this->cursor_pos--;
                         }
                         else
+                        {
                             ret = 0;
+                        }
 
                         break;
                     }
@@ -237,7 +249,9 @@ auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
                             this->cursor_pos++;
                         }
                         else
+                        {
                             ret = 0;
+                        }
 
                         break;
                     }
@@ -277,7 +291,9 @@ auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
                 al_ustr_assign( this->text, (ALLEGRO_USTR *)event->user.data3 );
             }
             else
+            {
                 this->text = (ALLEGRO_USTR *)event->user.data3;
+            }
 
             snap();
             break;
@@ -309,7 +325,9 @@ auto WZ_EDITBOX::proc( const ALLEGRO_EVENT *event ) -> int
     }
 
     if( ret == 0 )
+    {
         ret = WZ_WIDGET::proc( event );
+    }
 
     return ret;
 }

@@ -85,7 +85,9 @@ auto WZ_BOX::proc( const ALLEGRO_EVENT *event ) -> int
     }
 
     if( ret == 0 )
+    {
         ret = WZ_WIDGET::proc( event );
+    }
 
     return ret;
 }

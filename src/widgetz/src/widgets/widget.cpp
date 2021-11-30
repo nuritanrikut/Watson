@@ -156,7 +156,9 @@ auto WZ_WIDGET::handle_take_focus() -> int
     this->flags |= WZ_STATE_HAS_FOCUS;
 
     if( this->first_child )
+    {
         this->first_child->focus( 1 );
+    }
     return ret;
 }
 
@@ -182,7 +184,7 @@ auto WZ_WIDGET::handle_want_focus( const ALLEGRO_EVENT *event ) -> int
     if( all_unfocused )
     {
         wz_craft_event( &ev, WZ_TAKE_FOCUS, this, 0 );
-        WZ_WIDGET *wgt = (WZ_WIDGET *)event->user.data2;
+        auto *wgt = (WZ_WIDGET *)event->user.data2;
         wgt->send_event( &ev );
     }
     return ret;
@@ -215,7 +217,9 @@ auto WZ_WIDGET::handle_key_char( const ALLEGRO_EVENT *event ) -> int
     if( !( ( event->keyboard.keycode == ALLEGRO_KEY_TAB ) || ( event->keyboard.keycode == ALLEGRO_KEY_UP )
            || ( event->keyboard.keycode == ALLEGRO_KEY_RIGHT ) || ( event->keyboard.keycode == ALLEGRO_KEY_DOWN )
            || ( event->keyboard.keycode == ALLEGRO_KEY_LEFT ) ) )
+    {
         return 0;
+    }
 
     if( this->first_child != nullptr || !this->parent )
     {

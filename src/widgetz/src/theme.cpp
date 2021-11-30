@@ -43,7 +43,8 @@ void WZ_DEF_THEME::draw_3d_rectangle( float x1,
                                       bool invert )
 {
     ALLEGRO_VERTEX vtx[6];
-    ALLEGRO_COLOR hi, lo;
+    ALLEGRO_COLOR hi;
+    ALLEGRO_COLOR lo;
     int ii;
 
     if( invert )
@@ -101,7 +102,8 @@ void WZ_DEF_THEME::draw_3d_rectangle( float x1,
 //return the new start
 auto WZ_DEF_THEME::find_eol( ALLEGRO_USTR *text, ALLEGRO_FONT *font, float max_width, int start, int *end ) -> int
 {
-    int a, b;
+    int a;
+    int b;
     int first = 1;
     int last = 0;
     a = start;
@@ -272,9 +274,13 @@ void WZ_DEF_THEME::draw_box( float x, float y, float width, float height, int st
     al_draw_filled_rectangle( x, y, x + width, y + height, wz_scale_color( this->color1, 0.5 ) );
 
     if( style & WZ_STYLE_FOCUSED )
+    {
         al_draw_rectangle( x, y, x + width, y + height, wz_scale_color( this->color1, 1.5 ), 1 );
+    }
     else
+    {
         al_draw_rectangle( x, y, x + width, y + height, this->color1, 1 );
+    }
 }
 
 void WZ_DEF_THEME::draw_button( float x, float y, float width, float height, ALLEGRO_USTR *text, int style )
@@ -317,9 +323,13 @@ void WZ_DEF_THEME::draw_textbox( float x,
     ALLEGRO_COLOR text_col;
 
     if( style & WZ_STYLE_DISABLED )
+    {
         text_col = wz_scale_color( this->color2, 0.5 );
+    }
     else
+    {
         text_col = this->color2;
+    }
 
     draw_multi_text( x, y, width, height, halign, valign, text_col, this->font, text );
 }
@@ -385,7 +395,10 @@ void WZ_DEF_THEME::draw_editbox( float x,
                                  int style )
 {
     int len = wz_get_text_pos( this->font, text, width - 4 );
-    int cx, cy, cw, ch;
+    int cx;
+    int cy;
+    int cw;
+    int ch;
     int len2 = al_ustr_length( text );
     int offset;
     ALLEGRO_USTR_INFO info;

@@ -178,7 +178,9 @@ void Gui::draw_guis()
     WZ_WIDGET *gui;
 
     if( !base_gui )
+    {
         return;
+    }
 
     gui = base_gui->first_child;
 
@@ -193,7 +195,9 @@ void Gui::draw_guis()
 void Gui::init_theme_noskin()
 {
     if( skin_theme )
+    {
         delete skin_theme;
+    }
     auto def_theme = get_def_theme();
     skin_theme = new WZ_SKIN_THEME( def_theme );
 
@@ -206,7 +210,9 @@ void Gui::init_theme_noskin()
 void Gui::init_theme()
 {
     if( skin_theme )
+    {
         delete skin_theme;
+    }
     auto def_skin_theme = get_skin_theme();
     skin_theme = new WZ_SKIN_THEME( def_skin_theme );
 
@@ -246,7 +252,7 @@ void Gui::destroy_theme()
 
 auto Gui::new_widget( int id, int x, int y ) -> WZ_WIDGET *
 {
-    WZ_WIDGET *wgt = new WZ_WIDGET( nullptr, x, y, 0, 0, id );
+    auto *wgt = new WZ_WIDGET( nullptr, x, y, 0, 0, id );
     wgt->set_theme( skin_theme );
     return wgt;
 }
@@ -285,7 +291,9 @@ void Gui::add_gui( WZ_WIDGET *base, WZ_WIDGET *gui )
     if( base )
     {
         if( base->last_child )
+        {
             base->last_child->enable( 0 );
+        }
         gui->attach( base );
         base->update( 0 );
         gui_n++;
@@ -301,7 +309,9 @@ void Gui::add_gui( WZ_WIDGET *base, WZ_WIDGET *gui )
 void Gui::remove_gui( WZ_WIDGET *wgt )
 {
     if( wgt->prev_sib )
+    {
         wgt->prev_sib->enable( 1 );
+    }
     wgt->destroy();
     gui_n--;
     emit_event( EVENT_REDRAW );
@@ -310,7 +320,9 @@ void Gui::remove_gui( WZ_WIDGET *wgt )
 void Gui::remove_all_guis()
 {
     while( base_gui->last_child )
+    {
         remove_gui( base_gui->last_child );
+    }
 }
 
 void Gui::destroy_base_gui()
@@ -354,7 +366,7 @@ auto Gui::create_msg_gui( int id, ALLEGRO_USTR *msg ) -> WZ_WIDGET *
         auto y = fh( 0 );
         auto w = text_width + fh( 2 );
         auto h = text_height + fh( 4 );
-        WZ_WIDGET *wgt = new WZ_BOX( gui, x, y, w, h, -1 );
+        auto *wgt = new WZ_BOX( gui, x, y, w, h, -1 );
         wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
     }
 
@@ -370,7 +382,7 @@ auto Gui::create_msg_gui( int id, ALLEGRO_USTR *msg ) -> WZ_WIDGET *
         auto y = text_height + fh( 2 );
         auto w = fh( 6 );
         auto h = fh( 1.5 );
-        WZ_WIDGET *wgt = new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "OK" ), 1, BUTTON_CLOSE );
+        auto *wgt = new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "OK" ), 1, BUTTON_CLOSE );
         wgt->set_shortcut( ALLEGRO_KEY_ESCAPE, 0 );
     }
 
@@ -397,7 +409,7 @@ auto Gui::create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLE
         auto y = fh( 0 );
         auto w = text_width + fh( 2 );
         auto h = text_height + fh( 4.5 );
-        WZ_WIDGET *wgt = new WZ_BOX( gui, x, y, w, h, -1 );
+        auto *wgt = new WZ_BOX( gui, x, y, w, h, -1 );
         wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
     }
 
@@ -421,7 +433,7 @@ auto Gui::create_yesno_gui( int id, int button_ok_id, int button_cancel_id, ALLE
         auto y = text_height + fh( 2 );
         auto w = fh( 6 );
         auto h = fh( 1.5 );
-        WZ_WIDGET *wgt = new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "Cancel" ), 1, button_cancel_id );
+        auto *wgt = new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "Cancel" ), 1, button_cancel_id );
         wgt->set_shortcut( ALLEGRO_KEY_ESCAPE, 0 );
     }
     return gui;
@@ -463,14 +475,14 @@ auto Gui::create_settings_gui() -> WZ_WIDGET *
         auto y = fh( 0 );
         auto w = gui_w;
         auto h = gui_h + fh( 1 );
-        WZ_WIDGET *wgt = new WZ_BOX( gui, x, y, w, h, -1 );
+        auto *wgt = new WZ_BOX( gui, x, y, w, h, -1 );
         wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
     }
 
     auto create_fill_layout =
         [&]( float x, float y, float width, float height, float hspace, float vspace, int halign, int valign )
     {
-        WZ_WIDGET *wgt = new WZ_FILL_LAYOUT( gui, x, y, width, height, hspace, vspace, halign, valign, -1 );
+        auto *wgt = new WZ_FILL_LAYOUT( gui, x, y, width, height, hspace, vspace, halign, valign, -1 );
         wgt->flags |= WZ_STATE_HIDDEN;
     };
 
@@ -508,7 +520,7 @@ auto Gui::create_settings_gui() -> WZ_WIDGET *
             for( int i = 0; i < 5; i++ )
             {
                 auto str = al_ustr_newf( "%c", '4' + i );
-                WZ_TOGGLE *wgt = new WZ_TOGGLE( gui, 0, 0, but_h, but_h, str, 1, GROUP_ROWS, BUTTON_ROWS );
+                auto *wgt = new WZ_TOGGLE( gui, 0, 0, but_h, but_h, str, 1, GROUP_ROWS, BUTTON_ROWS );
                 if( 4 + i == settings_current.column_height )
                 {
                     wgt->down = 1;
@@ -528,7 +540,7 @@ auto Gui::create_settings_gui() -> WZ_WIDGET *
             for( int i = 0; i < 5; i++ )
             {
                 auto str = al_ustr_newf( "%c", '4' + i );
-                WZ_TOGGLE *wgt = new WZ_TOGGLE( gui, 0, 0, but_h, but_h, str, 1, GROUP_COLS, BUTTON_COLS );
+                auto *wgt = new WZ_TOGGLE( gui, 0, 0, but_h, but_h, str, 1, GROUP_COLS, BUTTON_COLS );
                 if( 4 + i == settings_current.number_of_columns )
                 {
                     wgt->down = 1;
@@ -541,14 +553,14 @@ auto Gui::create_settings_gui() -> WZ_WIDGET *
             auto y = fh( 2.5 ) * ( rn++ );
             create_fill_layout( x, y, w, h, fh( 1 ), 0, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE );
             {
-                WZ_TOGGLE *wgt = new WZ_TOGGLE( gui, 0, 0, but_w, but_h, al_ustr_new( "Zoom" ), 1, -1, BUTTON_ZOOM );
+                auto *wgt = new WZ_TOGGLE( gui, 0, 0, but_w, but_h, al_ustr_new( "Zoom" ), 1, -1, BUTTON_ZOOM );
                 wgt->down = settings_current.fat_fingers;
             }
 
             new WZ_BUTTON( gui, 0, 0, but_w, but_h, al_ustr_new( "Switch tiles" ), 1, BUTTON_TILES );
             {
                 auto str = settings_current.sound_mute ? al_ustr_new( "Sound: off" ) : al_ustr_new( "Sound: on" );
-                WZ_TOGGLE *button_mute = new WZ_TOGGLE( gui, 0, 0, but_w, but_h, str, 1, -1, BUTTON_SOUND );
+                auto *button_mute = new WZ_TOGGLE( gui, 0, 0, but_w, but_h, str, 1, -1, BUTTON_SOUND );
                 button_mute->down = !settings_current.sound_mute;
             }
         }
@@ -560,8 +572,7 @@ auto Gui::create_settings_gui() -> WZ_WIDGET *
             new WZ_BUTTON( gui, 0, 0, but_w, but_h, al_ustr_new( "Advanced" ), 1, BUTTON_PARAMS );
             new WZ_BUTTON( gui, 0, 0, but_w, but_h, al_ustr_new( "Save game" ), 1, BUTTON_SAVE );
             {
-                WZ_TOGGLE *wgt =
-                    new WZ_TOGGLE( gui, 0, 0, but_w, but_h, al_ustr_new( "Load game" ), 1, -1, BUTTON_LOAD );
+                auto *wgt = new WZ_TOGGLE( gui, 0, 0, but_w, but_h, al_ustr_new( "Load game" ), 1, -1, BUTTON_LOAD );
                 wgt->down = !settings_current.saved;
             }
         }
@@ -581,7 +592,7 @@ auto Gui::create_settings_gui() -> WZ_WIDGET *
             create_fill_layout( x, y, w, h, but_w / 3, 0, WZ_ALIGN_CENTRE, WZ_ALIGN_CENTRE );
             new WZ_BUTTON( gui, 0, 0, but_w, but_h, al_ustr_new( "OK" ), 1, BUTTON_OK );
             {
-                WZ_BUTTON *wgt = new WZ_BUTTON( gui, 0, 0, but_w, but_h, al_ustr_new( "Cancel" ), 1, BUTTON_CLOSE );
+                auto *wgt = new WZ_BUTTON( gui, 0, 0, but_w, but_h, al_ustr_new( "Cancel" ), 1, BUTTON_CLOSE );
                 // escape key cancels and exits
                 wgt->set_shortcut( ALLEGRO_KEY_ESCAPE, 0 );
             }
@@ -608,7 +619,9 @@ void Gui::create_win_gui_high_scores( double time, WZ_WIDGET *gui, int gui_w )
         for( hi_score_idx = 0; hi_score_idx < 10; hi_score_idx++ )
         {
             if( hi_score[hi_score_idx] > time )
+            {
                 break;
+            }
         }
     }
     else
@@ -767,7 +780,7 @@ auto Gui::create_win_gui( double time ) -> WZ_WIDGET *
         auto y = fh( 0 );
         auto w = but_w;
         auto h = fh( 1.5 );
-        WZ_BUTTON *wgt = new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "Settings" ), 1, BUTTON_SETTINGS );
+        auto *wgt = new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "Settings" ), 1, BUTTON_SETTINGS );
 
         // avoid focus on the settings button
         gui->update( 0 );
@@ -843,7 +856,7 @@ auto Gui::create_params_gui() -> WZ_WIDGET *
             auto y = fh( 0 );
             auto w = gui_w - rel_w - fh( 3 ) - 2;
             auto h = fh( 0.75 );
-            WZ_SCROLL *wgt = new WZ_SCROLL( gui, x, y, w, h, 50, fh( 1 ), i + 1024 );
+            auto *wgt = new WZ_SCROLL( gui, x, y, w, h, 50, fh( 1 ), i + 1024 );
             wgt->cur_pos = REL_PERCENT[i];
         }
     }
@@ -869,7 +882,7 @@ auto Gui::create_params_gui() -> WZ_WIDGET *
         auto h = fh( 1.5 );
 
         {
-            WZ_TOGGLE *wgt = new WZ_TOGGLE( gui, x, y, w, h, al_ustr_new( "Extra hard" ), 1, -1, BUTTON_EXTRA_HARD );
+            auto *wgt = new WZ_TOGGLE( gui, x, y, w, h, al_ustr_new( "Extra hard" ), 1, -1, BUTTON_EXTRA_HARD );
             wgt->down = settings_new.advanced ? 1 : 0;
         }
 
@@ -877,7 +890,7 @@ auto Gui::create_params_gui() -> WZ_WIDGET *
         new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "OK" ), 1, BUTTON_OK );
 
         {
-            WZ_BUTTON *wgt = new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "Cancel" ), 1, BUTTON_CLOSE );
+            auto *wgt = new WZ_BUTTON( gui, x, y, w, h, al_ustr_new( "Cancel" ), 1, BUTTON_CLOSE );
             wgt->set_shortcut( ALLEGRO_KEY_ESCAPE, 0 );
         }
     }
@@ -919,7 +932,7 @@ auto Gui::create_text_gui( ALLEGRO_USTR *text ) -> WZ_WIDGET *
         auto y = fh( 0 );
         auto w = width + fh( 2 );
         auto h = height + fh( 2 );
-        WZ_BOX *wgt = new WZ_BOX( gui, x, y, w, h, -1 );
+        auto *wgt = new WZ_BOX( gui, x, y, w, h, -1 );
         wgt->flags |= WZ_STATE_NOTWANT_FOCUS;
     }
 
@@ -997,7 +1010,9 @@ void Gui::show_params()
 void Gui::handle_gui_event_text_changed( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui )
 {
     if( wgt->id != EDITBOX_HISCORE )
+    {
         return;
+    }
 
     strncpy( hi_name[hi_pos], al_cstr( ( (WZ_TEXTBOX *)wgt )->text ), 63 );
     wgt->flags &= ~WZ_STATE_HAS_FOCUS;
@@ -1050,7 +1065,9 @@ void Gui::handle_gui_event_settings( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WI
     }
 
     if( event->type != WZ_BUTTON_PRESSED )
+    {
         return;
+    }
 
     switch( wgt->id )
     {
@@ -1108,9 +1125,13 @@ void Gui::handle_gui_event_settings( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WI
 
         case BUTTON_SAVE:
             if( settings_current.saved )
+            {
                 confirm_save();
+            }
             else
+            {
                 emit_event( EVENT_SAVE );
+            }
             break;
 
         case BUTTON_LOAD:
@@ -1137,7 +1158,9 @@ void Gui::handle_gui_event_settings( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WI
 void Gui::handle_gui_event_params( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDGET *gui )
 {
     if( event->type != WZ_BUTTON_PRESSED )
+    {
         return;
+    }
 
     if( wgt->id == BUTTON_EXTRA_HARD )
     {
@@ -1190,8 +1213,8 @@ void Gui::handle_gui_event_params( ALLEGRO_EVENT *event, WZ_WIDGET *wgt, WZ_WIDG
 
 auto Gui::handle_gui_event( ALLEGRO_EVENT *event ) -> int
 {
-    WZ_WIDGET *wgt = (WZ_WIDGET *)event->user.data2;
-    WZ_WIDGET *gui = (WZ_WIDGET *)wgt->parent;
+    auto *wgt = (WZ_WIDGET *)event->user.data2;
+    auto *gui = (WZ_WIDGET *)wgt->parent;
 
     if( !gui )
     {

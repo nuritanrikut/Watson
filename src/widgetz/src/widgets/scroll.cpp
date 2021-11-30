@@ -52,10 +52,14 @@ auto WZ_SCROLL::set_scroll_pos( float x, float y ) -> int
     this->cur_pos = (int)( ( (float)this->max_pos ) * fraction + 0.5f );
 
     if( this->cur_pos < 0 )
+    {
         this->cur_pos = 0;
+    }
 
     if( this->cur_pos > this->max_pos )
+    {
         this->cur_pos = this->max_pos;
+    }
 
     return old_pos != this->cur_pos;
 }
@@ -73,7 +77,8 @@ See also:
 auto WZ_SCROLL::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
-    float x, y;
+    float x;
+    float y;
     int vertical = this->height > this->width;
 
     switch( event->type )
@@ -106,10 +111,14 @@ auto WZ_SCROLL::proc( const ALLEGRO_EVENT *event ) -> int
             this->cur_pos = event->user.data3;
 
             if( this->cur_pos < 0 )
+            {
                 this->cur_pos = 0;
+            }
 
             if( this->cur_pos > this->max_pos )
+            {
                 this->cur_pos = this->max_pos;
+            }
 
             break;
         }
@@ -118,10 +127,14 @@ auto WZ_SCROLL::proc( const ALLEGRO_EVENT *event ) -> int
             this->max_pos = event->user.data3;
 
             if( this->max_pos < 0 )
+            {
                 this->max_pos = 0;
+            }
 
             if( this->cur_pos > this->max_pos )
+            {
                 this->cur_pos = this->max_pos;
+            }
 
             break;
         }
@@ -195,12 +208,16 @@ auto WZ_SCROLL::proc( const ALLEGRO_EVENT *event ) -> int
                 this->hold_focus = 1;
 
                 if( set_scroll_pos( x, y ) )
+                {
                     this->trigger();
+                }
 
                 this->down = 1;
             }
             else
+            {
                 ret = 0;
+            }
 
             break;
         }
@@ -236,36 +253,52 @@ auto WZ_SCROLL::proc( const ALLEGRO_EVENT *event ) -> int
                 case ALLEGRO_KEY_LEFT:
                 {
                     if( !vertical && this->cur_pos > 0 )
+                    {
                         this->cur_pos--;
+                    }
                     else
+                    {
                         ret = 0;
+                    }
 
                     break;
                 }
                 case ALLEGRO_KEY_RIGHT:
                 {
                     if( !vertical && this->cur_pos < this->max_pos )
+                    {
                         this->cur_pos++;
+                    }
                     else
+                    {
                         ret = 0;
+                    }
 
                     break;
                 }
                 case ALLEGRO_KEY_UP:
                 {
                     if( vertical && this->cur_pos > 0 )
+                    {
                         this->cur_pos--;
+                    }
                     else
+                    {
                         ret = 0;
+                    }
 
                     break;
                 }
                 case ALLEGRO_KEY_DOWN:
                 {
                     if( vertical && this->cur_pos < this->max_pos )
+                    {
                         this->cur_pos++;
+                    }
                     else
+                    {
                         ret = 0;
+                    }
 
                     break;
                 }
@@ -298,7 +331,9 @@ auto WZ_SCROLL::proc( const ALLEGRO_EVENT *event ) -> int
     }
 
     if( ret == 0 )
+    {
         ret = WZ_WIDGET::proc( event );
+    }
 
     return ret;
 }

@@ -83,8 +83,8 @@ struct Clue
 
 struct GameData
 {
-    int guess[8][8];   // guessed value for guess[column][row] = cell;
-    int puzzle[8][8];  // [col][block] = [tile]
+    int guess[8][8];    // guessed value for guess[column][row] = cell;
+    int puzzle[8][8];   // [col][block] = [tile]
     int tiles[8][8][8]; // [col][block][tile]
     Clue clues[MAX_CLUES];
     int clue_n;
@@ -156,17 +156,17 @@ struct GameData
     auto is_clue_valid( Clue *clue ) -> int;
 
     auto is_clue_compatible( Clue *clue ) -> int;
-    auto is_clue_compatible_reveal(Clue *clue) -> int;
-    auto is_clue_compatible_one_side(Clue *clue) -> int;
-    auto is_clue_compatible_together_2(Clue *clue) -> int;
-    auto is_clue_compatible_together_3(Clue *clue) -> int;
-    auto is_clue_compatible_together_not_middle(Clue *clue) -> int;
-    auto is_clue_compatible_not_together(Clue *clue) -> int;
-    auto is_clue_compatible_next_to(Clue *clue) -> int;
-    auto is_clue_compatible_not_next_to(Clue *clue) -> int;
-    auto is_clue_compatible_consecutive(Clue *clue) -> int;
-    auto is_clue_compatible_not_middle(Clue *clue) -> int;
-    auto is_clue_compatible_together_first_with_only_one(Clue *clue) -> int;
+    auto is_clue_compatible_reveal( Clue *clue ) -> int;
+    auto is_clue_compatible_one_side( Clue *clue ) -> int;
+    auto is_clue_compatible_together_2( Clue *clue ) -> int;
+    auto is_clue_compatible_together_3( Clue *clue ) -> int;
+    auto is_clue_compatible_together_not_middle( Clue *clue ) -> int;
+    auto is_clue_compatible_not_together( Clue *clue ) -> int;
+    auto is_clue_compatible_next_to( Clue *clue ) -> int;
+    auto is_clue_compatible_not_next_to( Clue *clue ) -> int;
+    auto is_clue_compatible_consecutive( Clue *clue ) -> int;
+    auto is_clue_compatible_not_middle( Clue *clue ) -> int;
+    auto is_clue_compatible_together_first_with_only_one( Clue *clue ) -> int;
 };
 
 void shuffle( int p[], int n );

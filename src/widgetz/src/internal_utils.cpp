@@ -45,17 +45,21 @@ Returns:
 */
 auto WZ_WIDGET::ask_parent_for_focus() -> int
 {
-    if( this->flags & WZ_STATE_HAS_FOCUS )
+    if( this->flags & WZ_STATE_HAS_FOCUS ) {
         return 1;
+}
 
-    if( this->flags & WZ_STATE_NOTWANT_FOCUS )
+    if( this->flags & WZ_STATE_NOTWANT_FOCUS ) {
         return 0;
+}
 
-    if( this->flags & WZ_STATE_DISABLED )
+    if( this->flags & WZ_STATE_DISABLED ) {
         return 0;
+}
 
-    if( this->flags & WZ_STATE_HIDDEN )
+    if( this->flags & WZ_STATE_HIDDEN ) {
         return 0;
+}
 
     if( this->parent == nullptr )
     {
@@ -88,15 +92,17 @@ void WZ_WIDGET::ask_parent_to_focus_next()
 {
     WZ_WIDGET *child;
 
-    if( this->parent == nullptr )
+    if( this->parent == nullptr ) {
         return;
+}
 
     child = this->next_sib;
 
     while( child )
     {
-        if( child->ask_parent_for_focus() )
+        if( child->ask_parent_for_focus() ) {
             return;
+}
 
         child = child->next_sib;
     }
@@ -105,8 +111,9 @@ void WZ_WIDGET::ask_parent_to_focus_next()
 
     while( child != this )
     {
-        if( child->ask_parent_for_focus() )
+        if( child->ask_parent_for_focus() ) {
             return;
+}
 
         child = child->next_sib;
     }
@@ -121,15 +128,17 @@ void WZ_WIDGET::ask_parent_to_focus_prev()
 {
     WZ_WIDGET *child;
 
-    if( this->parent == nullptr )
+    if( this->parent == nullptr ) {
         return;
+}
 
     child = this->prev_sib;
 
     while( child )
     {
-        if( child->ask_parent_for_focus() )
+        if( child->ask_parent_for_focus() ) {
             return;
+}
 
         child = child->prev_sib;
     }
@@ -138,8 +147,9 @@ void WZ_WIDGET::ask_parent_to_focus_prev()
 
     while( child != this )
     {
-        if( child->ask_parent_for_focus() )
+        if( child->ask_parent_for_focus() ) {
             return;
+}
 
         child = child->prev_sib;
     }
@@ -163,8 +173,9 @@ auto WZ_WIDGET::get_widget_dir( int dir ) -> WZ_WIDGET *
     WZ_WIDGET *ret = this;
     WZ_WIDGET *child;
 
-    if( this->parent == nullptr )
+    if( this->parent == nullptr ) {
         return this;
+}
 
     child = this->parent->first_child;
 

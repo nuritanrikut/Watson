@@ -76,7 +76,8 @@ const char *CLUE_CODE[8][8] = { { "A", "B", "C", "D", "E", "F", "G", "H" },
 
 void destroy_all_bitmaps( Board *board )
 {
-    int i, j;
+    int i;
+    int j;
 
     if( board->type_of_tiles != 0 )
     {
@@ -108,7 +109,9 @@ void draw_horizontal_arrow( float x0, float y0, float x1, float y1, ALLEGRO_COLO
     float aw = 4 * thickness;
 
     if( x1 < x0 )
+    {
         aw *= -1;
+    }
 
     al_draw_line( x0, y0, x1 - aw, y1, color, thickness );
 
@@ -175,7 +178,9 @@ void unload_basic_bmps( Board *board, int jj, int kk )
         for( int k = 0; k < board->number_of_columns; k++ )
         {
             if( ( j == jj ) && ( k == kk ) )
+            {
                 return;
+            }
             ndestroy_bitmap( basic_bmp[j][k] );
         }
     }
@@ -202,7 +207,9 @@ auto init_bitmaps( Board *board ) -> int
 
     default_font = al_load_font( DEFAULT_FONT_FILE, 16, 0 );
     if( !default_font )
+    {
         SPDLOG_ERROR( "Error loading default font" );
+    }
 
     board->info_text_bmp = nullptr;
     board->info_panel.bmp = nullptr;
@@ -214,7 +221,9 @@ auto init_bitmaps( Board *board ) -> int
     board->button_bmp[3] = al_load_bitmap( "buttons/undo.png" );
 
     if( board->type_of_tiles == 2 )
+    {
         return init_bitmaps_classic();
+    }
 
     // use bitmaps
     if( board->type_of_tiles == 1 )
@@ -478,11 +487,18 @@ auto draw_classic_symbols( GameData *game_data, Board *board ) -> int
 
 auto update_font_bitmaps( GameData *game_data, Board *board ) -> int
 {
-    int i, j, size;
+    int i;
+    int j;
+    int size;
     float FONT_FACTOR = 1;
-    ALLEGRO_FONT *tile_font1, *tile_font2, *tile_font3;
+    ALLEGRO_FONT *tile_font1;
+    ALLEGRO_FONT *tile_font2;
+    ALLEGRO_FONT *tile_font3;
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
-    int bbx, bby, bbw, bbh;
+    int bbx;
+    int bby;
+    int bbw;
+    int bbh;
 
     al_set_target_bitmap( nullptr );
 
@@ -530,14 +546,18 @@ auto update_font_bitmaps( GameData *game_data, Board *board ) -> int
                            CLUE_CODE[i][j][0] );
             // this draws a border for all tiles, independent of the "bd" setting in sub
             if( TILE_SHADOWS )
+            {
                 draw_shadow( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height, 2 );
+            }
             else
+            {
                 al_draw_rectangle( .5,
                                    .5,
                                    board->panel.sub[0]->sub[0]->width - .5,
                                    board->panel.sub[0]->sub[0]->height - .5,
                                    TILE_GENERAL_BORDER_COLOR,
                                    1 );
+            }
 
             // panel bitmaps
 
@@ -558,10 +578,14 @@ auto update_font_bitmaps( GameData *game_data, Board *board ) -> int
                            ( board->panel_tile_size - bbh ) / 2 - bby,
                            CLUE_CODE[i][j][0] );
             if( TILE_SHADOWS )
+            {
                 draw_shadow( board->panel_tile_size, board->panel_tile_size, 2 );
+            }
             else
+            {
                 al_draw_rectangle(
                     .5, .5, board->panel_tile_size - .5, board->panel_tile_size - .5, TILE_GENERAL_BORDER_COLOR, 1 );
+            }
 
             // clue unit tile bitmaps
             al_set_target_bitmap( board->clue_unit_bmp[i][j] );
@@ -581,15 +605,21 @@ auto update_font_bitmaps( GameData *game_data, Board *board ) -> int
                            ( board->clue_unit_size - bbh ) / 2 - bby,
                            CLUE_CODE[i][j][0] );
             if( TILE_SHADOWS )
+            {
                 draw_shadow( board->clue_unit_size, board->clue_unit_size, 2 );
+            }
             else
+            {
                 al_draw_rectangle(
                     .5, .5, board->clue_unit_size - .5, board->clue_unit_size - .5, TILE_GENERAL_BORDER_COLOR, 1 );
+            }
         }
     }
 
     if( draw_symbols( board ) )
+    {
         return -1;
+    }
 
     al_destroy_font( tile_font1 );
     al_destroy_font( tile_font2 );
@@ -603,11 +633,10 @@ auto update_font_bitmaps( GameData *game_data, Board *board ) -> int
 
 auto make_clue_bitmaps( GameData *game_data, Board *board ) -> int
 {
-    int i;
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
     al_set_target_bitmap( nullptr );
 
-    for( i = 0; i < game_data->clue_n; i++ )
+    for( int i = 0; i < game_data->clue_n; i++ )
     {
         board->clue_bmp[i] = al_create_bitmap( board->clue_tiledblock[i]->width, board->clue_tiledblock[i]->height );
         if( !board->clue_bmp[i] )
@@ -648,7 +677,9 @@ auto make_clue_bitmaps( GameData *game_data, Board *board ) -> int
                 }
 
                 if( ( clue.rel == NOT_MIDDLE ) || ( clue.rel == CONSECUTIVE ) )
+                {
                     al_draw_bitmap( board->symbol_bmp[SYM_SWAPPABLE], 0, 0, 0 );
+                }
 
                 break;
             case ONE_SIDE:
@@ -674,11 +705,15 @@ auto make_clue_bitmaps( GameData *game_data, Board *board ) -> int
                                 board->clue_unit_size + board->clue_unit_space,
                                 0 );
                 if( ( clue.rel == NOT_TOGETHER ) || ( clue.rel == TOGETHER_NOT_MIDDLE ) )
+                {
                     al_draw_bitmap(
                         board->symbol_bmp[SYM_FORBIDDEN], 0, board->clue_unit_size + board->clue_unit_space, 0 );
+                }
                 else if( clue.rel == TOGETHER_FIRST_WITH_ONLY_ONE )
+                {
                     al_draw_bitmap(
                         board->symbol_bmp[SYM_ONLY_ONE], 0, 0, 0 ); //xxx todo: temporary  -- add ONLY_ONE symbol
+                }
                 break;
 
             default:
@@ -714,7 +749,9 @@ void show_info_text( Board *board, ALLEGRO_USTR *msg )
 
 auto update_bitmaps( GameData *game_data, Board *board ) -> int
 {
-    int i, j, size;
+    int i;
+    int j;
+    int size;
 
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
     al_set_target_bitmap( nullptr );
@@ -766,20 +803,28 @@ auto update_bitmaps( GameData *game_data, Board *board ) -> int
 
             // guessed bitmaps
             al_set_target_bitmap( board->guess_bmp[i][j] );
-            if( board->type_of_tiles != 2 ) // not classic tiles
+            if( board->type_of_tiles != 2 )
+            { // not classic tiles
                 al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR_BMP[i] ) );
+            }
             else
+            {
                 al_clear_to_color( board->panel.sub[0]->sub[0]->background_color );
+            }
 
             if( TILE_SHADOWS )
+            {
                 draw_shadow( board->panel.sub[0]->sub[0]->width, board->panel.sub[0]->sub[0]->height, 2 );
+            }
             else
+            {
                 al_draw_rectangle( .5,
                                    .5,
                                    board->panel.sub[0]->sub[0]->width - .5,
                                    board->panel.sub[0]->sub[0]->height - .5,
                                    TILE_GENERAL_BORDER_COLOR,
                                    1 );
+            }
 
             al_draw_scaled_bitmap( basic_bmp[i][j],
                                    0,
@@ -796,10 +841,14 @@ auto update_bitmaps( GameData *game_data, Board *board ) -> int
             al_set_target_bitmap( board->panel_tile_bmp[i][j] );
             al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR_BMP[i] ) );
             if( TILE_SHADOWS )
+            {
                 draw_shadow( board->panel_tile_size, board->panel_tile_size, 1 );
+            }
             else
+            {
                 al_draw_rectangle(
                     .5, .5, board->panel_tile_size - .5, board->panel_tile_size - .5, TILE_GENERAL_BORDER_COLOR, 1 );
+            }
 
             al_draw_scaled_bitmap( basic_bmp[i][j],
                                    0,
@@ -816,10 +865,14 @@ auto update_bitmaps( GameData *game_data, Board *board ) -> int
             al_set_target_bitmap( board->clue_unit_bmp[i][j] );
             al_clear_to_color( al_color_html( CLUE_BACKGROUND_COLOR_BMP[i] ) );
             if( TILE_SHADOWS )
+            {
                 draw_shadow( board->clue_unit_size, board->clue_unit_size, 2 );
+            }
             else
+            {
                 al_draw_rectangle(
                     .5, .5, board->clue_unit_size - .5, board->clue_unit_size - .5, TILE_GENERAL_BORDER_COLOR, 1 );
+            }
 
             al_draw_scaled_bitmap( basic_bmp[i][j],
                                    0,
@@ -837,12 +890,16 @@ auto update_bitmaps( GameData *game_data, Board *board ) -> int
     if( board->type_of_tiles != 2 )
     {
         if( draw_symbols( board ) )
+        {
             return -1;
+        }
     }
     else
     {
         if( draw_classic_symbols( game_data, board ) )
+        {
             return -1;
+        }
     }
 
     al_set_target_bitmap( dispbuf );
@@ -854,7 +911,8 @@ auto update_bitmaps( GameData *game_data, Board *board ) -> int
 auto init_bitmaps_classic() -> int
 {
     ALLEGRO_BITMAP *test_bmp;
-    int i, j;
+    int i;
+    int j;
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
     al_set_target_bitmap( nullptr );
 
@@ -951,7 +1009,8 @@ void draw_title()
 // debug
 auto get_clue_bitmap( Board *board, Clue *clue ) -> ALLEGRO_BITMAP *
 {
-    int width, height;
+    int width;
+    int height;
     int size = board->clue_unit_size;
     if( is_vclue( clue->rel ) )
     {
@@ -999,7 +1058,9 @@ auto get_clue_bitmap( Board *board, Clue *clue ) -> ALLEGRO_BITMAP *
             }
 
             if( ( clue->rel == NOT_MIDDLE ) || ( clue->rel == CONSECUTIVE ) )
+            {
                 al_draw_bitmap( board->symbol_bmp[SYM_SWAPPABLE], 0, 0, 0 );
+            }
 
             break;
         case ONE_SIDE:
@@ -1022,8 +1083,10 @@ auto get_clue_bitmap( Board *board, Clue *clue ) -> ALLEGRO_BITMAP *
             al_draw_bitmap(
                 board->clue_unit_bmp[tile1.row][tile1.cell], 0, board->clue_unit_size + board->clue_unit_space, 0 );
             if( ( clue->rel == NOT_TOGETHER ) || ( clue->rel == TOGETHER_NOT_MIDDLE ) )
+            {
                 al_draw_bitmap(
                     board->symbol_bmp[SYM_FORBIDDEN], 0, board->clue_unit_size + board->clue_unit_space, 0 );
+            }
             break;
 
         case TOGETHER_FIRST_WITH_ONLY_ONE: // temporary debug bmp, shouldn't show up
@@ -1039,14 +1102,18 @@ auto get_clue_bitmap( Board *board, Clue *clue ) -> ALLEGRO_BITMAP *
 
 void create_font_symbols( Board *board )
 {
-    ALLEGRO_BITMAP *bmp = nullptr, *currbuf = al_get_target_bitmap();
+    ALLEGRO_BITMAP *bmp = nullptr;
+    ALLEGRO_BITMAP *currbuf = al_get_target_bitmap();
     ALLEGRO_FONT *newfont = nullptr;
-    int i, j;
+    int i;
+    int j;
     int texth = al_get_font_line_height( board->text_font );
-    int bitmap_w, bitmap_h;
+    int bitmap_w;
+    int bitmap_h;
     int bw = al_get_bitmap_width( board->clue_unit_bmp[0][0] );
     int bh = al_get_bitmap_height( board->clue_unit_bmp[0][0] );
-    int nbw, nbh;
+    int nbw;
+    int nbh;
     int range[2];
     al_set_target_bitmap( nullptr );
     nbw = bw * (float)texth / bh;
@@ -1101,8 +1168,14 @@ void create_font_symbols( Board *board )
 void convert_grayscale( ALLEGRO_BITMAP *bmp )
 {
     ALLEGRO_BITMAP *dispbuf = al_get_target_bitmap();
-    int x, y, width, height, lum;
-    unsigned char r, g, b;
+    int x;
+    int y;
+    int width;
+    int height;
+    int lum;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
     width = al_get_bitmap_width( bmp );
     height = al_get_bitmap_height( bmp );
 

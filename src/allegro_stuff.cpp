@@ -52,7 +52,9 @@ auto load_font_mem( MemFile font_mem, const char *filename, int size ) -> ALLEGR
 
     fp = al_open_memfile( font_mem.mem, font_mem.size, "r" );
     if( !fp )
+    {
         return nullptr;
+    }
 
     font = al_load_ttf_font_f( fp, filename, size, 0 );
     return font;
@@ -88,7 +90,9 @@ auto init_allegro() -> int
         SPDLOG_DEBUG( "Failed to initialize mouse.\n" );
     }
     else
+    {
         no_input = 0;
+    }
 
     init_sound(); // I don't care if there was an error here.
 
@@ -97,7 +101,9 @@ auto init_allegro() -> int
         SPDLOG_DEBUG( "Failed to initialize touch input.\n" );
     }
     else
+    {
         no_input = 0;
+    }
 
     if( no_input )
     {
@@ -125,7 +131,9 @@ auto init_allegro() -> int
     SPDLOG_DEBUG( "initialized primitives addon" );
 
     if( init_fonts() )
+    {
         return -1;
+    }
     return 0;
 }
 
@@ -183,7 +191,9 @@ void get_highest_resolution( int *width, int *height )
     {
         al_get_display_mode( i, &disp_data );
         if( *width < disp_data.width )
+        {
             *width = disp_data.width;
+        }
     }
 
     if( ( *width == disp_data.width ) && ( *height < disp_data.height ) )
@@ -212,11 +222,17 @@ void wait_for_input( ALLEGRO_EVENT_QUEUE *queue )
         queue = al_create_event_queue();
 
         if( al_is_keyboard_installed() )
+        {
             al_register_event_source( queue, al_get_keyboard_event_source() );
+        }
         if( al_is_mouse_installed() )
+        {
             al_register_event_source( queue, al_get_mouse_event_source() );
+        }
         if( al_is_touch_input_installed() )
+        {
             al_register_event_source( queue, al_get_touch_input_event_source() );
+        }
     }
 
     bool done = false;
@@ -224,14 +240,18 @@ void wait_for_input( ALLEGRO_EVENT_QUEUE *queue )
     {
         ALLEGRO_EVENT ev;
         while( !al_peek_next_event( queue, &ev ) )
+        {
             al_rest( 0.001 );
+        }
 
         switch( ev.type )
         {
             case ALLEGRO_EVENT_DISPLAY_RESIZE:
             case ALLEGRO_EVENT_DISPLAY_HALT_DRAWING:
                 if( !own_queue )
+                {
                     done = true;
+                }
                 break;
             case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
             case ALLEGRO_EVENT_KEY_CHAR:
@@ -243,12 +263,14 @@ void wait_for_input( ALLEGRO_EVENT_QUEUE *queue )
     }
 
     if( own_queue )
+    {
         al_destroy_event_queue( queue );
+    }
 }
 
 auto new_ustr( const char *str ) -> ALLEGRO_USTR *
 {
-    Buffer_USTR *buf = new Buffer_USTR();
+    auto *buf = new Buffer_USTR();
     buf->ustr = al_ustr_new( str );
     buf->next = buffer_ustr;
     buffer_ustr = buf;
@@ -260,7 +282,7 @@ void free_ustr()
     while( buffer_ustr )
     {
         al_ustr_free( buffer_ustr->ustr );
-        auto ptr = buffer_ustr;
+        auto *ptr = buffer_ustr;
         buffer_ustr = buffer_ustr->next;
         delete ptr;
     }

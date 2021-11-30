@@ -42,7 +42,8 @@ See also:
 auto WZ_TOGGLE::proc( const ALLEGRO_EVENT *event ) -> int
 {
     int ret = 1;
-    float x, y;
+    float x;
+    float y;
 
     switch( event->type )
     {
@@ -68,7 +69,9 @@ auto WZ_TOGGLE::proc( const ALLEGRO_EVENT *event ) -> int
                 this->trigger();
             }
             else
+            {
                 ret = 0;
+            }
 
             break;
         }
@@ -87,7 +90,9 @@ auto WZ_TOGGLE::proc( const ALLEGRO_EVENT *event ) -> int
                         this->trigger();
                     }
                     else
+                    {
                         ret = 0;
+                    }
 
                     break;
                 }
@@ -150,7 +155,9 @@ auto WZ_TOGGLE::proc( const ALLEGRO_EVENT *event ) -> int
     }
 
     if( ret == 0 )
+    {
         ret = WZ_BUTTON::proc( event );
+    }
 
     return ret;
 }
